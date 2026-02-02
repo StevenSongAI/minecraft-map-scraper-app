@@ -141,8 +141,8 @@ function calculateRelevance(map, query, searchTerms) {
   if (titleLower === queryLower) {
     score += 200; // Exact match
     hasAnyMatch = true;
-  } else if (titleLower.includes(queryLower)) {
-    score += 100; // Contains full query
+  } else if (hasWordMatch(titleLower, queryLower)) {
+    score += 100; // Contains full query as whole word
     hasAnyMatch = true;
   }
   
@@ -164,7 +164,7 @@ function calculateRelevance(map, query, searchTerms) {
   
   // Description match
   const descLower = map.description.toLowerCase();
-  if (descLower.includes(queryLower)) {
+  if (hasWordMatch(descLower, queryLower)) {
     score += 40;
     hasAnyMatch = true;
   }
