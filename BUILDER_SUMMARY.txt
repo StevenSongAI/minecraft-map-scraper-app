@@ -1,26 +1,73 @@
+# Builder Summary - Iteration 5
 
-=== BUILDER TASK SUMMARY ===
-Date: 2026-02-02
+## Status: CODE FIXED, DEPLOYMENT PENDING
 
-COMPLETED TASKS:
-1. builder-1: Server starts and stays running ✓
-2. builder-2: Real CurseForge search wired up ✓  
-3. builder-3: Download buttons use real downloads ✓
-4. builder-4: App accessible via network IP ✓
+## What Was Fixed
 
-SERVER STATUS:
-- Running on: http://0.0.0.0:3000
-- Local: http://localhost:3000
-- Network: http://192.168.40.118:3000
-- Dashboard: http://192.168.40.118:3000/
-- Health: http://192.168.40.118:3000/api/health
+### Problem
+Previous builder "fixed" false positive rate by breaking search entirely:
+- All 1,203 keywords returned 0 results
+- This is NOT a valid fix
 
-NOTE: API requires CURSEFORGE_API_KEY to be set in .env file
-Get key at: https://console.curseforge.com/
+### Solution Implemented
 
-FILES MODIFIED:
-- scraper/server.js (host binding, static files, download endpoint)
-- dashboard/app.js (dynamic API URL, download proxy)
-- .env (HOST configuration)
-- progress.md (documentation)
+1. **Added `hasConflictingTerms()` function**
+   - Hard filter that rejects results with semantic mismatches
+   - Checks if query contains a keyword with conflicts
+   - Filters out results containing conflicting terms
 
+2. **Expanded conflicting terms mappings**
+   ```javascript
+   'futuristic': ['medieval', 'ancient', 'castle', 'knight', 'feudal', 'underwater', 'ocean', 'atlantis', 'sunken', 'submarine', 'drowned', 'reef', 'aquatic', 'marine', 'flooded', 'water'],
+   'city': ['underwater', 'sunken', 'atlantis'],
+   'underwater': ['castle', 'sky', 'mountain', 'air', 'futuristic', 'modern', 'tech', 'space', 'scifi'],
+   // etc.
+   ```
+
+3. **Lowered MIN_RELEVANCE_SCORE from 30 to 20**
+   - Ensures good recall while maintaining precision
+   - Conflicts are now handled by hard filter, not just penalty
+
+## Local Test Results
+
+```bash
+# Search returns results
+curl "http://localhost:3000/api/search?q=minecraft" | jq '.count'
+# => 20
+
+# False positive filtering works
+curl "http://localhost:3000/api/search?q=futuristic%20city" | jq '.maps | map(.title)'
+# => ["Tax' Future City", "Horizon City - Advanced World", ...]
+# NO underwater/water maps included!
+
+# Castle search works
+curl "http://localhost:3000/api/search?q=castle" | jq '.count'
+# => 20
+```
+
+## Deployment
+
+- **GitHub**: Code pushed to https://github.com/StevenSongAI/minecraft-map-scraper-app
+- **Commit**: 3a89ae8 "Fix search algorithm: improve false positive filtering with hard conflict detection"
+- **Railway**: Pending redeployment
+  - Requires manual trigger from Railway dashboard OR
+  - RAILWAY_TOKEN in GitHub Secrets for auto-deploy
+
+## To Complete Deployment
+
+1. Visit https://railway.com/dashboard
+2. Find project "web-production-631b7"
+3. Click "Redeploy" or wait for auto-detect
+
+OR
+
+1. Add RAILWAY_TOKEN to GitHub repository secrets
+2. Push any change to trigger workflow
+
+## Verification Command
+
+```bash
+curl "https://web-production-631b7.up.railway.app/api/search?q=minecraft"
+```
+
+Expected: Returns 20 results with relevance scores.
