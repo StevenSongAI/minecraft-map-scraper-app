@@ -12,6 +12,14 @@
 - Results must have actual CurseForge IDs (not mock IDs like 1001, 1002)
 - Each result must have working thumbnail images (not placeholders)
 
+### Search Accuracy (High Standard)
+- Search must return results that semantically match the user's query intent
+- Minimum 1000 diverse keywords tested and validated for accuracy
+- "Underwater city" must return maps that are actually underwater-themed
+- "Hell" must return nether/demon/inferno themed maps, not random results
+- Accuracy measured by: Result titles/descriptions must contain query keywords OR semantic equivalents
+- False positive rate < 5% across 1000 test queries
+
 ### Download Functionality
 - Download buttons must return valid ZIP files
 - ZIP files must contain actual Minecraft map data (level.dat, region files)
