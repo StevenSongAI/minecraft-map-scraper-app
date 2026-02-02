@@ -707,10 +707,12 @@ function formatFileSize(bytes) {
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
+  const isDemoMode = !process.env.CURSEFORGE_API_KEY || process.env.CURSEFORGE_API_KEY === 'demo';
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
-    apiConfigured: !!CURSEFORGE_API_KEY,
+    apiConfigured: !!CURSEFORGE_API_KEY && CURSEFORGE_API_KEY !== 'demo',
+    demoMode: isDemoMode,
     apiKeyPreview: CURSEFORGE_API_KEY ? CURSEFORGE_API_KEY.substring(0, 10) + '...' : 'Not set'
   });
 });

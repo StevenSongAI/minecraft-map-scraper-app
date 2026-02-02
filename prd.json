@@ -1,16 +1,16 @@
 {
   "tasks": [
     {
-      "id": "red-2",
-      "type": "red-team",
-      "linked_builder_task": "builder-2",
-      "description": "Verify Railway deployment has live API - search returns real CurseForge maps, not mock data",
+      "id": "builder-1",
+      "type": "builder",
+      "description": "Fix Railway deployment to use CURSEFORGE_API_KEY and ensure app serves live CurseForge data instead of demo mode",
       "passes": false
     },
     {
-      "id": "builder-2",
-      "type": "builder",
-      "description": "Fix any issues found by red team - ensure API key properly configured on Railway",
+      "id": "red-1",
+      "type": "red-team",
+      "linked_builder_task": "builder-1",
+      "description": "Find bugs in the Railway deployment - test that search returns real maps and downloads work",
       "passes": false
     }
   ],

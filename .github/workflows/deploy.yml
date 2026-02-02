@@ -10,7 +10,15 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       
-      - name: Deploy to Railway
-        uses: railway/cli@master
-        with:
-          railway_token: ${{ secrets.RAILWAY_TOKEN }}
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+      
+      - name: Deploy to Railway with Environment Variables
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          # Set environment variables on Railway service before deploying
+          railway variables set CURSEFORGE_API_KEY="${{ secrets.CURSEFORGE_API_KEY }}" --service="web-production-631b7"
+          
+          # Deploy the service
+          railway up --service="web-production-631b7"
