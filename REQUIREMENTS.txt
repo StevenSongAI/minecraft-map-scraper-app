@@ -1,0 +1,38 @@
+# Minecraft Map Scraper - QA Requirements
+
+## Absolute Standards (No Compromise)
+
+### API Configuration
+- CURSEFORGE_API_KEY environment variable MUST be configured on Railway deployment
+- Demo/mock mode is FAILURE - app must use live CurseForge API
+- Health check must return apiConfigured: true
+
+### Search Functionality
+- Natural language queries (e.g., "futuristic city with railways") must return 5+ REAL maps from CurseForge
+- Results must have actual CurseForge IDs (not mock IDs like 1001, 1002)
+- Each result must have working thumbnail images (not placeholders)
+
+### Search Accuracy (High Standard)
+- Search must return results that semantically match the user's query intent
+- Minimum 1000 diverse keywords tested and validated for accuracy
+- "Underwater city" must return maps that are actually underwater-themed
+- "Hell" must return nether/demon/inferno themed maps, not random results
+- Accuracy measured by: Result titles/descriptions must contain query keywords OR semantic equivalents
+- False positive rate < 5% across 1000 test queries
+
+### Download Functionality
+- Download buttons must return valid ZIP files
+- ZIP files must contain actual Minecraft map data (level.dat, region files)
+- HTTP 200 responses, not 403 errors or JSON error messages
+
+### Verification Method
+1. Query: "futuristic city with railways" → Check IDs are real (not 1000+)
+2. Query: "medieval castle" → Verify thumbnails load
+3. Click download → Verify ZIP downloads successfully
+4. Check file size > 1KB and contains level.dat
+
+## Success Criteria
+- All search queries return live API data (not mock)
+- All downloads return valid ZIP files
+- Response time < 10 seconds
+- Demo mode indicator = false

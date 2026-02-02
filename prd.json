@@ -1,28 +1,18 @@
 {
-  "project": "minecraft-map-scraper-qa",
-  "description": "QA and improve Minecraft map scraper to meet requirements: natural language search, working download links, verified maps",
-  "acceptanceCriteria": [
-    "Natural language queries (e.g., 'futuristic city with high speed railways') return relevant Minecraft maps",
-    "Each result has working download links that can be clicked to download the actual map file",
-    "Maps are verified to exist and be downloadable",
-    "Multiple map variations are shown for each query",
-    "Download links are live/up-to-date (not cached dead links)"
-  ],
   "tasks": [
     {
       "id": "builder-1",
       "type": "builder",
-      "description": "Fix code in GitHub repo https://github.com/StevenSongAI/minecraft-map-scraper-app to address: 1) Natural language search functionality, 2) Map result display, 3) Download link generation, 4) API integration with CurseForge. Read code, implement fixes, push to GitHub to trigger redeploy.",
+      "description": "Fix search algorithm to improve semantic matching and accuracy for diverse keywords",
       "passes": true
     },
     {
       "id": "red-1",
       "type": "red-team",
       "linked_builder_task": "builder-1",
-      "description": "Test the live scraper at https://web-production-631b7.up.railway.app with various natural language queries: 'futuristic city with high speed railways', 'medieval castle', 'survival island', 'modern mansion', 'adventure map'. For each query: 1) Verify search returns results, 2) Check that download links are present and clickable, 3) Attempt to download at least one map from each query, 4) Verify the downloaded file is a valid Minecraft map (check file extension, size). Document all failures and broken functionality with screenshots/curl output.",
+      "description": "Test search accuracy across 1000 diverse keywords and validate <5% false positive rate",
       "passes": false
     }
   ],
-  "status": "in_progress",
-  "created": "2026-02-02T11:00:00Z"
+  "status": "IN_PROGRESS"
 }

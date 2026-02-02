@@ -1,19 +1,16 @@
-name: Deploy to Railway
+name: Quick Deploy
 
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        
-      - name: Deploy to Railway
+      - uses: actions/checkout@v4
+      
+      - name: Deploy
         uses: bervProject/railway-deploy@main
         with:
           railway_token: ${{ secrets.RAILWAY_TOKEN }}
-          service: "minecraft-map-scraper"
+          service: "web-production-631b7"

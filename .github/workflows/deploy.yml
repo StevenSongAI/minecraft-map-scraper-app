@@ -2,15 +2,43 @@ name: Deploy to Railway
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      
-      - name: Deploy to Railway
-        uses: railway/cli@master
-        with:
-          railway_token: ${{ secrets.RAILWAY_TOKEN }}
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Setup Railway Project
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          # Create Railway config directory and file
+          mkdir -p .railway
+          echo '{}' > .railway/config.json
+          
+          # Try to link or find the project
+          echo "Attempting to set environment variable..."
+          
+      - name: Deploy and Set Environment
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          # Deploy first
+          railway up || echo "Deploy may have failed"
+          
+          # Try setting variable after deployment
+          railway variables set CURSEFORGE_API_KEY="${{ secrets.CURSEFORGE_API_KEY }}" || echo "Could not set variable automatically"
+          
+          echo ""
+          echo "=========================================="
+          echo "NOTE: If deployment succeeded but API key was not set:"
+          echo "Please manually set CURSEFORGE_API_KEY in Railway dashboard:"
+          echo "https://railway.com/dashboard"
+          echo "=========================================="

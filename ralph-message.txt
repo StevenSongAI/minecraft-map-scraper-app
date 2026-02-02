@@ -1,0 +1,17 @@
+{
+  "timestamp": "2026-02-02T21:34:44.743Z",
+  "message": "[RALPH] Status: LOOPING:COMPLETE - /Users/stevenai/clawd/projects/minecraft-map-scraper",
+  "status": "LOOPING:COMPLETE",
+  "projectDir": "/Users/stevenai/clawd/projects/minecraft-map-scraper",
+  "instructions": "BEFORE SPAWNING ANY SUBAGENT: node /Users/stevenai/clawd/scripts/behavior-guard.js \"description of task\"",
+  "guardFile": "/Users/stevenai/clawd/scripts/behavior-guard.js",
+  "subagentRules": [
+    "Read progress.md first for context",
+    "Work on first task where passes=false",
+    "Set passes=true when done",
+    "Output <promise>COMPLETE</promise> if all tasks pass",
+    "IF BLOCKED: Write blocker description to '/Users/stevenai/clawd/projects/minecraft-map-scraper/blocker-active.txt'",
+    "File must be deleted from '/Users/stevenai/clawd/projects/minecraft-map-scraper/blocker-active.txt' when resolved"
+  ],
+  "blockerResolution": null
+}

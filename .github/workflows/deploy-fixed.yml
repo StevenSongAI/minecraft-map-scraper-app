@@ -1,0 +1,27 @@
+name: Deploy to Railway (Fixed)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Deploy to Railway with API Key
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
+        run: |
+          echo "Deploying to Railway project..."
+          railway up --project=a18c5404-6b6a-4d09-936f-e90d391a5a2d
+          
+          echo "Setting CURSEFORGE_API_KEY..."
+          railway variables set CURSEFORGE_API_KEY="$CURSEFORGE_API_KEY" --project=a18c5404-6b6a-4d09-936f-e90d391a5a2d
+          
+          echo "Deployment complete!"
