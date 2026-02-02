@@ -5,8 +5,8 @@ const cors = require('cors');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// CurseForge API Key - use environment variable or fallback
-const CURSEFORGE_API_KEY = process.env.CURSEFORGE_API_KEY || '$2a$10$Q7gD0X8h5K9mN3pL7vW4eO1iU6tR2yA.sF8jK0lM5nB9vC3xZ7qW';
+// CurseForge API Key - use environment variable only (empty = demo mode with mock data)
+const CURSEFORGE_API_KEY = process.env.CURSEFORGE_API_KEY || '';
 const CURSEFORGE_BASE_URL = 'https://api.curseforge.com/v1';
 const MINECRAFT_GAME_ID = 432;
 const WORLDS_CLASS_ID = 17; // Minecraft Worlds/Maps category

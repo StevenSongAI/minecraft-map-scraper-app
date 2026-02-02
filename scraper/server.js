@@ -10,9 +10,9 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 
-// Use environment variable OR fallback to hardcoded API key for Railway deployment
-// This is a valid API key that works with CurseForge API - Updated: 2026-02-02
-const CURSEFORGE_API_KEY = process.env.CURSEFORGE_API_KEY || '$2a$10$Nq62KqieW9UZE94ViLrroOCiMA6jLberrv.6X1pz4iBGOjMM91L5y';
+// Use environment variable only - no hardcoded fallback
+// For demo mode, don't set CURSEFORGE_API_KEY and the app will use mock data
+const CURSEFORGE_API_KEY = process.env.CURSEFORGE_API_KEY || '';
 
 // Track if we're using demo mode (only when NO API key is available at all)
 const IS_DEMO_MODE = !CURSEFORGE_API_KEY || CURSEFORGE_API_KEY === '';
