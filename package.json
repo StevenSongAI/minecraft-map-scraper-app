@@ -1,7 +1,7 @@
 {
   "name": "minecraft-map-scraper",
   "version": "1.0.0",
-  "description": "Minecraft Map Scraper with CurseForge API integration",
+  "description": "Minecraft Map Scraper with Natural Language Search and CurseForge API Integration",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -13,5 +13,14 @@
   },
   "engines": {
     "node": ">=18.0.0"
-  }
+  },
+  "keywords": [
+    "minecraft",
+    "maps",
+    "scraper",
+    "curseforge",
+    "natural-language"
+  ],
+  "author": "Steven Song",
+  "license": "MIT"
 }
