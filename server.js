@@ -147,6 +147,17 @@ async function searchCurseForge(searchTerms, limit) {
   const allResults = [];
   const seenIds = new Set();
   
+  // Check if we're in demo mode (no valid API key)
+  const isDemoMode = !process.env.CURSEFORGE_API_KEY || process.env.CURSEFORGE_API_KEY === 'demo';
+  
+  // If in demo mode, skip API calls entirely and return mock data
+  if (isDemoMode) {
+    console.log('DEMO MODE: Using mock data (no API key configured)');
+    const mockMaps = getMockMaps();
+    const filtered = filterMockMaps(mockMaps, searchTerms);
+    return filtered.slice(0, limit);
+  }
+  
   // Search with primary query first (most specific), then expanded terms
   const priorityTerms = searchTerms.slice(0, 4); // Limit API calls
   
@@ -337,6 +348,352 @@ app.get('/api/download-file/:modId/:fileId', async (req, res) => {
     res.status(500).json({ error: 'Download failed' });
   }
 });
+
+// Filter mock maps based on search terms
+function filterMockMaps(maps, searchTerms) {
+  if (!searchTerms || searchTerms.length === 0) return maps;
+  
+  return maps.filter(m => {
+    const searchText = `${m.title} ${m.description} ${m.tags.join(' ')} ${m.category}`.toLowerCase();
+    return searchTerms.some(term => searchText.includes(term.toLowerCase()));
+  });
+}
+
+// Mock data for fallback - 22 diverse Minecraft maps
+function getMockMaps() {
+  return [
+    {
+      id: 1001,
+      title: "Neo Tokyo 2150",
+      author: "CyberArchitect",
+      description: "A stunning cyberpunk city with neon-lit skyscrapers, high-speed maglev railways, and flying vehicle lanes.",
+      url: "https://www.curseforge.com/minecraft/worlds/neo-tokyo-2150",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/neo-tokyo-2150/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Neo+Tokyo+2150",
+      downloads: 245000,
+      likes: 18200,
+      category: "City",
+      version: "1.20.4",
+      tags: ["city", "futuristic", "cyberpunk", "railway", "modern"],
+      source: "CurseForge"
+    },
+    {
+      id: 1002,
+      title: "Metro City Transport Hub",
+      author: "RailMaster",
+      description: "Massive railway station complex with automated trains, cargo systems, and passenger terminals.",
+      url: "https://www.curseforge.com/minecraft/worlds/metro-city-transport-hub",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/metro-city-transport-hub/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Metro+City",
+      downloads: 178000,
+      likes: 12400,
+      category: "City",
+      version: "1.20.1",
+      tags: ["railway", "city", "train", "modern", "transport"],
+      source: "CurseForge"
+    },
+    {
+      id: 1003,
+      title: "Space Colony Alpha",
+      author: "GalacticBuilder",
+      description: "Futuristic space station with zero-gravity sections, hydroponic farms, and a tram system.",
+      url: "https://www.curseforge.com/minecraft/worlds/space-colony-alpha",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/space-colony-alpha/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Space+Colony",
+      downloads: 156000,
+      likes: 11300,
+      category: "Sci-Fi",
+      version: "1.19.4",
+      tags: ["futuristic", "space", "scifi", "modern", "city"],
+      source: "CurseForge"
+    },
+    {
+      id: 1004,
+      title: "Stormwind Citadel",
+      author: "MedievalMaster",
+      description: "Epic medieval fortress with towering walls, battlements, throne rooms, and a working drawbridge.",
+      url: "https://www.curseforge.com/minecraft/worlds/stormwind-citadel",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/stormwind-citadel/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Stormwind+Citadel",
+      downloads: 312000,
+      likes: 24800,
+      category: "Castle",
+      version: "1.20.1",
+      tags: ["castle", "medieval", "fortress", "pvp", "adventure"],
+      source: "CurseForge"
+    },
+    {
+      id: 1005,
+      title: "Dragonstone Fortress",
+      author: "CastleBuilderKing",
+      description: "Massive stone fortress built into a mountain, featuring secret tunnels, dragon keep, and defensive siege positions.",
+      url: "https://www.curseforge.com/minecraft/worlds/dragonstone-fortress",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/dragonstone-fortress/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Dragonstone",
+      downloads: 289000,
+      likes: 21500,
+      category: "Fortress",
+      version: "1.20.4",
+      tags: ["fortress", "castle", "medieval", "fantasy", "adventure"],
+      source: "CurseForge"
+    },
+    {
+      id: 1006,
+      title: "Camelot Castle Complex",
+      author: "ArthurianCraft",
+      description: "Complete medieval castle with tournament grounds, wizard tower, knights' quarters, and a grand royal hall.",
+      url: "https://www.curseforge.com/minecraft/worlds/camelot-castle-complex",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/camelot-castle-complex/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Camelot",
+      downloads: 267000,
+      likes: 19800,
+      category: "Castle",
+      version: "1.19.4",
+      tags: ["castle", "medieval", "fantasy", "rpg", "adventure"],
+      source: "CurseForge"
+    },
+    {
+      id: 1007,
+      title: "Ironhold Stronghold",
+      author: "FortressForge",
+      description: "Impenetrable dwarven stronghold with deep mines, forge chambers, and defensive ballista towers.",
+      url: "https://www.curseforge.com/minecraft/worlds/ironhold-stronghold",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/ironhold-stronghold/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Ironhold",
+      downloads: 198000,
+      likes: 15600,
+      category: "Fortress",
+      version: "1.20.2",
+      tags: ["fortress", "dwarf", "medieval", "castle", "underground"],
+      source: "CurseForge"
+    },
+    {
+      id: 1008,
+      title: "Stranded: Lost Islands",
+      author: "SurvivalExpert",
+      description: "Multi-island survival map with limited resources, shipwrecks, and hidden treasures.",
+      url: "https://www.curseforge.com/minecraft/worlds/stranded-lost-islands",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/stranded-lost-islands/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Lost+Islands",
+      downloads: 223000,
+      likes: 17600,
+      category: "Survival",
+      version: "1.20.1",
+      tags: ["survival", "island", "ocean", "challenge", "adventure"],
+      source: "CurseForge"
+    },
+    {
+      id: 1009,
+      title: "Ocean Survival Odyssey",
+      author: "SeaSurvivor",
+      description: "Start on a tiny ocean platform and expand to build your floating empire.",
+      url: "https://www.curseforge.com/minecraft/worlds/ocean-survival-odyssey",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/ocean-survival-odyssey/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Ocean+Odyssey",
+      downloads: 187000,
+      likes: 14300,
+      category: "Survival",
+      version: "1.20.4",
+      tags: ["survival", "ocean", "island", "challenge", "water"],
+      source: "CurseForge"
+    },
+    {
+      id: 1010,
+      title: "Tropical Paradise Hardcore",
+      author: "IslandBuilder",
+      description: "Beautiful tropical islands with volcanoes, waterfalls, and hidden caves.",
+      url: "https://www.curseforge.com/minecraft/worlds/tropical-paradise-hardcore",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/tropical-paradise-hardcore/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Tropical+Paradise",
+      downloads: 165000,
+      likes: 12900,
+      category: "Survival",
+      version: "1.19.4",
+      tags: ["survival", "island", "tropical", "hardcore", "challenge"],
+      source: "CurseForge"
+    },
+    {
+      id: 1011,
+      title: "Atlantis Underwater City",
+      author: "OceanArchitect",
+      description: "Explore the lost underwater city of Atlantis with air bubble systems and submersible transport.",
+      url: "https://www.curseforge.com/minecraft/worlds/atlantis-underwater-city",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/atlantis-underwater-city/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Atlantis",
+      downloads: 198000,
+      likes: 16200,
+      category: "City",
+      version: "1.20.1",
+      tags: ["ocean", "underwater", "city", "adventure", "exploration"],
+      source: "CurseForge"
+    },
+    {
+      id: 1012,
+      title: "Beverly Hills Mega Mansion",
+      author: "LuxuryHomes",
+      description: "Ultra-modern mansion with infinity pool, home theater, garage with cars, and smart home automation.",
+      url: "https://www.curseforge.com/minecraft/worlds/beverly-hills-mega-mansion",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/beverly-hills-mega-mansion/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Mega+Mansion",
+      downloads: 234000,
+      likes: 18900,
+      category: "House",
+      version: "1.20.4",
+      tags: ["mansion", "modern", "house", "luxury", "contemporary"],
+      source: "CurseForge"
+    },
+    {
+      id: 1013,
+      title: "Modern Cliffside Villa",
+      author: "ArchitecturePro",
+      description: "Stunning modern villa built into a cliff face with glass walls and panoramic views.",
+      url: "https://www.curseforge.com/minecraft/worlds/modern-cliffside-villa",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/modern-cliffside-villa/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Cliffside+Villa",
+      downloads: 187000,
+      likes: 15200,
+      category: "House",
+      version: "1.20.1",
+      tags: ["house", "modern", "mansion", "luxury", "contemporary"],
+      source: "CurseForge"
+    },
+    {
+      id: 1014,
+      title: "Smart Home Estate",
+      author: "TechBuilder",
+      description: "Modern estate with working redstone automation, security systems, and auto-farms.",
+      url: "https://www.curseforge.com/minecraft/worlds/smart-home-estate",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/smart-home-estate/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Smart+Home",
+      downloads: 156000,
+      likes: 12300,
+      category: "House",
+      version: "1.19.4",
+      tags: ["house", "modern", "redstone", "automatic", "mansion"],
+      source: "CurseForge"
+    },
+    {
+      id: 1015,
+      title: "Hamptons Beach House",
+      author: "CoastalLiving",
+      description: "Luxurious beachfront property with private dock, boathouse, pool deck, and coastal interior design.",
+      url: "https://www.curseforge.com/minecraft/worlds/hamptons-beach-house",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/hamptons-beach-house/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Beach+House",
+      downloads: 143000,
+      likes: 11500,
+      category: "House",
+      version: "1.20.2",
+      tags: ["house", "modern", "beach", "mansion", "luxury"],
+      source: "CurseForge"
+    },
+    {
+      id: 1016,
+      title: "The Legend of Zelda: Crafted",
+      author: "QuestMaster",
+      description: "Epic adventure map with dungeons, puzzles, boss battles, and an immersive storyline.",
+      url: "https://www.curseforge.com/minecraft/worlds/zelda-crafted",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/zelda-crafted/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Zelda+Crafted",
+      downloads: 345000,
+      likes: 28700,
+      category: "Adventure",
+      version: "1.20.1",
+      tags: ["adventure", "quest", "puzzle", "rpg", "story"],
+      source: "CurseForge"
+    },
+    {
+      id: 1017,
+      title: "Escape Room Challenge",
+      author: "PuzzleMaster",
+      description: "10 intricate escape rooms with logic puzzles, redstone mechanisms, and hidden clues.",
+      url: "https://www.curseforge.com/minecraft/worlds/escape-room-challenge",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/escape-room-challenge/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Escape+Room",
+      downloads: 278000,
+      likes: 22300,
+      category: "Puzzle",
+      version: "1.20.4",
+      tags: ["puzzle", "adventure", "challenge", "logic", "quest"],
+      source: "CurseForge"
+    },
+    {
+      id: 1018,
+      title: "The Lost Temple of Doom",
+      author: "IndianaCraft",
+      description: "Explore ancient ruins, avoid traps, solve mysteries, and find the legendary treasure.",
+      url: "https://www.curseforge.com/minecraft/worlds/lost-temple-doom",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/lost-temple-doom/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Lost+Temple",
+      downloads: 256000,
+      likes: 20100,
+      category: "Adventure",
+      version: "1.19.4",
+      tags: ["adventure", "quest", "temple", "exploration", "puzzle"],
+      source: "CurseForge"
+    },
+    {
+      id: 1019,
+      title: "RPG Quest: Hero's Journey",
+      author: "RPGDesigner",
+      description: "Complete RPG experience with quests, NPCs, custom items, skill trees, and branching storyline.",
+      url: "https://www.curseforge.com/minecraft/worlds/rpg-quest-heros-journey",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/rpg-quest-heros-journey/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Hero's+Journey",
+      downloads: 312000,
+      likes: 25400,
+      category: "Adventure",
+      version: "1.20.1",
+      tags: ["adventure", "rpg", "quest", "story", "fantasy"],
+      source: "CurseForge"
+    },
+    {
+      id: 1020,
+      title: "Parkour Legends Championship",
+      author: "ParkourKing",
+      description: "100+ levels of increasing difficulty with checkpoints, timers, and leaderboards.",
+      url: "https://www.curseforge.com/minecraft/worlds/parkour-legends",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/parkour-legends/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Parkour+Legends",
+      downloads: 398000,
+      likes: 32100,
+      category: "Parkour",
+      version: "1.20.1",
+      tags: ["parkour", "challenge", "jump", "minigame", "competition"],
+      source: "CurseForge"
+    },
+    {
+      id: 1021,
+      title: "Extreme Dropper Challenge",
+      author: "DropperPro",
+      description: "50 unique dropper levels with obstacles, moving platforms, and precise landing zones.",
+      url: "https://www.curseforge.com/minecraft/worlds/extreme-dropper",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/extreme-dropper/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Extreme+Dropper",
+      downloads: 267000,
+      likes: 21800,
+      category: "Parkour",
+      version: "1.20.4",
+      tags: ["parkour", "dropper", "challenge", "minigame", "hard"],
+      source: "CurseForge"
+    },
+    {
+      id: 1022,
+      title: "Speed Run Stadium",
+      author: "SpeedRunner",
+      description: "Competitive parkour stadium with race modes, time trials, and multiplayer racing.",
+      url: "https://www.curseforge.com/minecraft/worlds/speed-run-stadium",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/speed-run-stadium/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Speed+Run",
+      downloads: 189000,
+      likes: 15600,
+      category: "Parkour",
+      version: "1.19.4",
+      tags: ["parkour", "speedrun", "challenge", "race", "competition"],
+      source: "CurseForge"
+    }
+  ];
+}
 
 // Helper function to format file size
 function formatFileSize(bytes) {
