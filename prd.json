@@ -28,9 +28,14 @@
       "id": "builder-2",
       "type": "builder",
       "description": "Fix all issues identified by red-1. This may include: fixing broken CurseForge API integration, updating download link generation, improving search algorithm for natural language queries, adding map verification, ensuring download links are live and not cached. Push fixes and redeploy.",
-      "passes": true,
-      "completedAt": "2026-02-02T06:45:00Z",
-      "summary": "Fixed ALL critical issues from red-1: 1) Added IS_DEMO_MODE flag with API key fallback, 2) Rewrote download endpoint with ZIP generation, 3) Created proper Minecraft map structure (level.dat, region/, session.lock) for demo files, 4) Added clear demo mode UI indicators (status, banner, badges), 5) Ensured minimum 5 results per query, 6) Added jszip dependency. All downloads now provide valid ZIP files."
+      "passes": false,
+      "summary": "BLOCKED: Code updated with working CURSEFORGE_API_KEY, but Railway deployment failing. GitHub Actions require RAILWAY_TOKEN secret which is not configured. Railway GitHub App auto-deploy also failing. Manual intervention required: either set RAILWAY_TOKEN in GitHub Secrets or manually configure CURSEFORGE_API_KEY env var in Railway dashboard (https://railway.com/project/a18c5404-6b6a-4d09-936f-e90d391a5a2d).",
+      "blockers": [
+        "RAILWAY_TOKEN not set in GitHub Secrets - GitHub Actions cannot deploy",
+        "Railway GitHub App auto-deployment failing with 'failure' status",
+        "CURSEFORGE_API_KEY is valid (tested with curl) but not deployed to Railway",
+        "Code fix ready: server.js has working API key as fallback"
+      ]
     },
     {
       "id": "red-2",
