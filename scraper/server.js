@@ -84,122 +84,426 @@ app.get('/api/health', async (req, res) => {
  * @param {number} count - Number of results to generate
  * @returns {Array} Mock map data
  */
-function generateMockMaps(query, count = 5) {
+function generateMockMaps(query, count = 10) {
   const mockMaps = [
+    // FUTURISTIC / CITY / RAILWAYS
     {
       id: 1001,
-      name: 'Epic Castle Adventure',
-      slug: 'epic-castle-adventure',
-      summary: 'Explore a massive medieval castle with hidden secrets and treasure rooms. Perfect for roleplay servers.',
-      description: 'A detailed castle map with over 200 rooms, dungeons, and a complete story to explore.',
-      author: { name: 'BuilderPro', url: 'https://www.curseforge.com/members/BuilderPro' },
-      thumbnail: 'https://via.placeholder.com/300x200/4a90d9/ffffff?text=Castle+Map',
+      name: 'Neo Tokyo 2088',
+      slug: 'neo-tokyo-2088',
+      summary: 'A futuristic cyberpunk city with high-speed magnetic railways, neon skyscrapers, and automated transport systems.',
+      description: 'Experience the future in this massive cyberpunk metropolis featuring working high-speed rail networks, flying car pathways, and stunning neon-lit architecture.',
+      author: { name: 'FutureBuilder', url: 'https://www.curseforge.com/members/FutureBuilder' },
+      thumbnail: 'https://placehold.co/300x200/1a1a2e/00d4ff?text=Neo+Tokyo+2088',
       screenshots: [],
-      downloadUrl: 'https://www.curseforge.com/minecraft/worlds/epic-castle-adventure',
-      downloadCount: 45200,
-      gameVersions: ['1.20.1', '1.19.4', '1.18.2'],
+      downloadUrl: 'https://www.curseforge.com/minecraft/worlds/neo-tokyo-2088',
+      downloadCount: 125400,
+      gameVersions: ['1.20.4', '1.20.1', '1.19.4'],
       category: 'World',
-      dateCreated: '2023-06-15T00:00:00Z',
+      dateCreated: '2023-08-15T00:00:00Z',
       dateModified: '2024-01-20T00:00:00Z',
-      source: 'mock'
+      source: 'mock',
+      tags: ['futuristic', 'city', 'railways', 'cyberpunk', 'train', 'metro', 'modern', 'transport']
     },
     {
       id: 1002,
-      name: 'Skyblock Challenges',
-      slug: 'skyblock-challenges',
-      summary: 'Classic skyblock with 100+ custom challenges. Start on a floating island and survive!',
-      description: 'The ultimate skyblock experience with custom islands, achievements, and multiplayer support.',
-      author: { name: 'SkyMaster', url: 'https://www.curseforge.com/members/SkyMaster' },
-      thumbnail: 'https://via.placeholder.com/300x200/5cb85c/ffffff?text=Skyblock',
+      name: 'SkyRail Metropolis',
+      slug: 'skyrail-metropolis',
+      summary: 'Modern city with elevated high-speed rail systems connecting residential, commercial, and industrial districts.',
+      description: 'A functional modern city featuring an extensive network of elevated railways, subway systems, and automated trains connecting all districts.',
+      author: { name: 'UrbanPlanner', url: 'https://www.curseforge.com/members/UrbanPlanner' },
+      thumbnail: 'https://placehold.co/300x200/2c3e50/3498db?text=SkyRail+Metropolis',
       screenshots: [],
-      downloadUrl: 'https://www.curseforge.com/minecraft/worlds/skyblock-challenges',
-      downloadCount: 128000,
-      gameVersions: ['1.20.4', '1.20.1', '1.19.4'],
+      downloadUrl: 'https://www.curseforge.com/minecraft/worlds/skyrail-metropolis',
+      downloadCount: 89300,
+      gameVersions: ['1.20.4', '1.20.1'],
       category: 'World',
-      dateCreated: '2022-03-10T00:00:00Z',
+      dateCreated: '2023-11-10T00:00:00Z',
       dateModified: '2024-02-01T00:00:00Z',
-      source: 'mock'
+      source: 'mock',
+      tags: ['city', 'modern', 'railways', 'train', 'transport', 'urban', 'subway']
     },
     {
       id: 1003,
-      name: 'Horror Hospital',
-      slug: 'horror-hospital',
-      summary: 'A terrifying horror map set in an abandoned hospital. Can you escape?',
-      description: 'Psychological horror experience with custom sound effects and jump scares.',
-      author: { name: 'ScareCreator', url: 'https://www.curseforge.com/members/ScareCreator' },
-      thumbnail: 'https://via.placeholder.com/300x200/d9534f/ffffff?text=Horror',
+      name: 'HyperLoop Central',
+      slug: 'hyperloop-central',
+      summary: 'Futuristic transport hub with vacuum tube high-speed trains connecting multiple biomes and city zones.',
+      description: 'Experience next-generation transport with vacuum-sealed hyperloop trains reaching incredible speeds between connected districts.',
+      author: { name: 'TechArchitect', url: 'https://www.curseforge.com/members/TechArchitect' },
+      thumbnail: 'https://placehold.co/300x200/0f3460/e94560?text=HyperLoop+Central',
       screenshots: [],
-      downloadUrl: 'https://www.curseforge.com/minecraft/worlds/horror-hospital',
-      downloadCount: 67800,
-      gameVersions: ['1.20.1', '1.19.2'],
+      downloadUrl: 'https://www.curseforge.com/minecraft/worlds/hyperloop-central',
+      downloadCount: 67200,
+      gameVersions: ['1.20.4', '1.20.1', '1.19.4'],
       category: 'World',
-      dateCreated: '2023-10-31T00:00:00Z',
-      dateModified: '2023-12-15T00:00:00Z',
-      source: 'mock'
+      dateCreated: '2024-01-05T00:00:00Z',
+      dateModified: '2024-02-15T00:00:00Z',
+      source: 'mock',
+      tags: ['futuristic', 'high speed', 'railways', 'train', 'transport', 'modern', 'tech']
     },
+    // MEDIEVAL / CASTLE
     {
       id: 1004,
-      name: 'Parkour Paradise',
-      slug: 'parkour-paradise',
-      summary: '100 levels of parkour madness. From easy jumps to impossible challenges!',
-      description: 'The ultimate parkour map with checkpoints, timer system, and multiplayer races.',
-      author: { name: 'JumpKing', url: 'https://www.curseforge.com/members/JumpKing' },
-      thumbnail: 'https://via.placeholder.com/300x200/f0ad4e/ffffff?text=Parkour',
+      name: 'Kingslanding Fortress',
+      slug: 'kingslanding-fortress',
+      summary: 'Epic medieval castle with towering walls, secret passages, and a grand throne room fit for royalty.',
+      description: 'An authentic medieval fortress complete with defensive walls, a keep, stables, armory, and living quarters. Perfect for roleplay servers.',
+      author: { name: 'CastleBuilder', url: 'https://www.curseforge.com/members/CastleBuilder' },
+      thumbnail: 'https://placehold.co/300x200/4a3728/c9b896?text=Kingslanding+Fortress',
       screenshots: [],
-      downloadUrl: 'https://www.curseforge.com/minecraft/worlds/parkour-paradise',
-      downloadCount: 234000,
-      gameVersions: ['1.20.4', '1.20.1', '1.19.4', '1.18.2'],
-      category: 'World',
-      dateCreated: '2021-05-20T00:00:00Z',
-      dateModified: '2024-01-15T00:00:00Z',
-      source: 'mock'
-    },
-    {
-      id: 1005,
-      name: 'Medieval City RPG',
-      slug: 'medieval-city-rpg',
-      summary: 'A complete medieval city with NPCs, quests, and a living economy system.',
-      description: 'RPG experience with custom dialogue, trading, and an open world to explore.',
-      author: { name: 'RPGMaster', url: 'https://www.curseforge.com/members/RPGMaster' },
-      thumbnail: 'https://via.placeholder.com/300x200/9b59b6/ffffff?text=RPG+City',
-      screenshots: [],
-      downloadUrl: 'https://www.curseforge.com/minecraft/worlds/medieval-city-rpg',
-      downloadCount: 89100,
-      gameVersions: ['1.20.1', '1.19.4'],
-      category: 'World',
-      dateCreated: '2023-01-10T00:00:00Z',
-      dateModified: '2024-01-30T00:00:00Z',
-      source: 'mock'
-    },
-    {
-      id: 1006,
-      name: 'Survival Island',
-      slug: 'survival-island',
-      summary: 'Stranded on a deserted island. Gather resources, build shelter, and survive!',
-      description: 'Hardcore survival map with limited resources and hidden treasures.',
-      author: { name: 'IslandBuilder', url: 'https://www.curseforge.com/members/IslandBuilder' },
-      thumbnail: 'https://via.placeholder.com/300x200/1abc9c/ffffff?text=Survival',
-      screenshots: [],
-      downloadUrl: 'https://www.curseforge.com/minecraft/worlds/survival-island',
+      downloadUrl: 'https://www.curseforge.com/minecraft/worlds/kingslanding-fortress',
       downloadCount: 156000,
       gameVersions: ['1.20.1', '1.19.4', '1.18.2'],
       category: 'World',
-      dateCreated: '2022-08-15T00:00:00Z',
-      dateModified: '2023-11-20T00:00:00Z',
-      source: 'mock'
+      dateCreated: '2023-03-20T00:00:00Z',
+      dateModified: '2023-12-10T00:00:00Z',
+      source: 'mock',
+      tags: ['medieval', 'castle', 'fortress', 'roleplay', 'kingdom', 'royal']
+    },
+    {
+      id: 1005,
+      name: 'Dragonstone Citadel',
+      slug: 'dragonstone-citadel',
+      summary: 'Ancient castle built into a volcanic mountain, featuring dragon nests and obsidian architecture.',
+      description: 'A dark and mysterious fortress carved from volcanic stone with dragon-themed architecture, lava moats, and hidden caverns.',
+      author: { name: 'DarkBuilder', url: 'https://www.curseforge.com/members/DarkBuilder' },
+      thumbnail: 'https://placehold.co/300x200/2d1b1b/e74c3c?text=Dragonstone+Citadel',
+      screenshots: [],
+      downloadUrl: 'https://www.curseforge.com/minecraft/worlds/dragonstone-citadel',
+      downloadCount: 98700,
+      gameVersions: ['1.20.1', '1.19.4'],
+      category: 'World',
+      dateCreated: '2023-06-15T00:00:00Z',
+      dateModified: '2024-01-15T00:00:00Z',
+      source: 'mock',
+      tags: ['medieval', 'castle', 'dragon', 'dark', 'fortress', 'fantasy']
+    },
+    {
+      id: 1006,
+      name: 'Rivendell Estate',
+      slug: 'rivendell-estate',
+      summary: 'Elven palace with elegant architecture, waterfalls, and lush gardens in a scenic valley.',
+      description: 'A breathtaking elven sanctuary featuring flowing water features, ethereal lighting, and nature-integrated architecture.',
+      author: { name: 'ElvenArchitect', url: 'https://www.curseforge.com/members/ElvenArchitect' },
+      thumbnail: 'https://placehold.co/300x200/27ae60/a8e6cf?text=Rivendell+Estate',
+      screenshots: [],
+      downloadUrl: 'https://www.curseforge.com/minecraft/worlds/rivendell-estate',
+      downloadCount: 134200,
+      gameVersions: ['1.20.4', '1.20.1', '1.19.4'],
+      category: 'World',
+      dateCreated: '2023-09-01T00:00:00Z',
+      dateModified: '2024-01-30T00:00:00Z',
+      source: 'mock',
+      tags: ['medieval', 'elven', 'palace', 'fantasy', 'nature', 'elegant']
+    },
+    // SURVIVAL / ISLAND / ADVENTURE
+    {
+      id: 1007,
+      name: 'Stranded Deep',
+      slug: 'stranded-deep',
+      summary: 'Hardcore survival on a deserted tropical island with limited resources and hidden dangers.',
+      description: 'Test your survival skills on this challenging island map with scarce resources, hostile mobs, and secrets to discover.',
+      author: { name: 'SurvivalExpert', url: 'https://www.curseforge.com/members/SurvivalExpert' },
+      thumbnail: 'https://placehold.co/300x200/f39c12/f1c40f?text=Stranded+Deep',
+      screenshots: [],
+      downloadUrl: 'https://www.curseforge.com/minecraft/worlds/stranded-deep',
+      downloadCount: 201000,
+      gameVersions: ['1.20.4', '1.20.1', '1.19.4', '1.18.2'],
+      category: 'World',
+      dateCreated: '2022-05-10T00:00:00Z',
+      dateModified: '2023-12-01T00:00:00Z',
+      source: 'mock',
+      tags: ['survival', 'island', 'ocean', 'hardcore', 'adventure', 'deserted']
+    },
+    {
+      id: 1008,
+      name: 'Arctic Survival',
+      slug: 'arctic-survival',
+      summary: 'Survive the frozen wilderness with limited supplies in this ice-covered archipelago.',
+      description: 'Face the challenges of extreme cold, scarce food sources, and isolation in this brutal arctic survival scenario.',
+      author: { name: 'IceExplorer', url: 'https://www.curseforge.com/members/IceExplorer' },
+      thumbnail: 'https://placehold.co/300x200/a8dadc/457b9d?text=Arctic+Survival',
+      screenshots: [],
+      downloadUrl: 'https://www.curseforge.com/minecraft/worlds/arctic-survival',
+      downloadCount: 87600,
+      gameVersions: ['1.20.1', '1.19.4', '1.18.2'],
+      category: 'World',
+      dateCreated: '2023-01-20T00:00:00Z',
+      dateModified: '2023-11-15T00:00:00Z',
+      source: 'mock',
+      tags: ['survival', 'arctic', 'ice', 'snow', 'cold', 'hardcore', 'island']
+    },
+    // MODERN / MANSION / HOUSE
+    {
+      id: 1009,
+      name: 'Beverly Hills Mansion',
+      slug: 'beverly-hills-mansion',
+      summary: 'Luxurious modern mansion with pool, garage, cinema room, and stunning ocean views.',
+      description: 'Live the high life in this fully furnished modern estate featuring a home theater, infinity pool, and smart home automation.',
+      author: { name: 'LuxuryLiving', url: 'https://www.curseforge.com/members/LuxuryLiving' },
+      thumbnail: 'https://placehold.co/300x200/34495e/bdc3c7?text=Beverly+Hills+Mansion',
+      screenshots: [],
+      downloadUrl: 'https://www.curseforge.com/minecraft/worlds/beverly-hills-mansion',
+      downloadCount: 178000,
+      gameVersions: ['1.20.4', '1.20.1', '1.19.4'],
+      category: 'World',
+      dateCreated: '2023-07-15T00:00:00Z',
+      dateModified: '2024-01-10T00:00:00Z',
+      source: 'mock',
+      tags: ['modern', 'mansion', 'house', 'luxury', 'pool', 'contemporary']
+    },
+    {
+      id: 1010,
+      name: 'Glass House Modern',
+      slug: 'glass-house-modern',
+      summary: 'Stunning contemporary home with floor-to-ceiling glass walls and minimalist design.',
+      description: 'An architectural masterpiece featuring transparent walls, open floor plans, and seamless indoor-outdoor living spaces.',
+      author: { name: 'Modernist', url: 'https://www.curseforge.com/members/Modernist' },
+      thumbnail: 'https://placehold.co/300x200/95a5a6/ecf0f1?text=Glass+House',
+      screenshots: [],
+      downloadUrl: 'https://www.curseforge.com/minecraft/worlds/glass-house-modern',
+      downloadCount: 92300,
+      gameVersions: ['1.20.4', '1.20.1'],
+      category: 'World',
+      dateCreated: '2023-10-05T00:00:00Z',
+      dateModified: '2024-02-10T00:00:00Z',
+      source: 'mock',
+      tags: ['modern', 'house', 'glass', 'contemporary', 'minimalist', 'architecture']
+    },
+    // HORROR / SCARY
+    {
+      id: 1011,
+      name: 'Asylum of Shadows',
+      slug: 'asylum-of-shadows',
+      summary: 'Terrifying horror map in an abandoned mental institution with dark secrets and supernatural entities.',
+      description: 'Face your fears in this psychological horror experience featuring custom sound design, atmospheric lighting, and intense jump scares.',
+      author: { name: 'NightmareMaker', url: 'https://www.curseforge.com/members/NightmareMaker' },
+      thumbnail: 'https://placehold.co/300x200/1a1a1a/8e44ad?text=Asylum+of+Shadows',
+      screenshots: [],
+      downloadUrl: 'https://www.curseforge.com/minecraft/worlds/asylum-of-shadows',
+      downloadCount: 145600,
+      gameVersions: ['1.20.1', '1.19.4'],
+      category: 'World',
+      dateCreated: '2023-10-31T00:00:00Z',
+      dateModified: '2024-01-05T00:00:00Z',
+      source: 'mock',
+      tags: ['horror', 'scary', 'spooky', 'dark', 'adventure', 'asylum']
+    },
+    {
+      id: 1012,
+      name: 'The Haunted Manor',
+      slug: 'the-haunted-manor',
+      summary: 'Explore a Victorian mansion haunted by tragic spirits and uncover its dark history.',
+      description: 'A story-driven horror experience with puzzles, exploration, and encounters with the supernatural in a classic haunted house setting.',
+      author: { name: 'GhostWriter', url: 'https://www.curseforge.com/members/GhostWriter' },
+      thumbnail: 'https://placehold.co/300x200/2c3e50/7f8c8d?text=Haunted+Manor',
+      screenshots: [],
+      downloadUrl: 'https://www.curseforge.com/minecraft/worlds/the-haunted-manor',
+      downloadCount: 112300,
+      gameVersions: ['1.20.1', '1.19.4', '1.18.2'],
+      category: 'World',
+      dateCreated: '2023-09-15T00:00:00Z',
+      dateModified: '2023-12-20T00:00:00Z',
+      source: 'mock',
+      tags: ['horror', 'haunted', 'mansion', 'scary', 'story', 'adventure']
+    },
+    // PARKOUR / MINIGAME
+    {
+      id: 1013,
+      name: 'Neon Parkour City',
+      slug: 'neon-parkour-city',
+      summary: 'Cyberpunk-themed parkour map with 50+ levels of increasing difficulty in a futuristic cityscape.',
+      description: 'Jump, sprint, and navigate through a neon-lit metropolis with carefully designed parkour courses for all skill levels.',
+      author: { name: 'ParkourPro', url: 'https://www.curseforge.com/members/ParkourPro' },
+      thumbnail: 'https://placehold.co/300x200/8e44ad/00ffff?text=Neon+Parkour',
+      screenshots: [],
+      downloadUrl: 'https://www.curseforge.com/minecraft/worlds/neon-parkour-city',
+      downloadCount: 234000,
+      gameVersions: ['1.20.4', '1.20.1', '1.19.4', '1.18.2'],
+      category: 'World',
+      dateCreated: '2022-08-20T00:00:00Z',
+      dateModified: '2024-01-25T00:00:00Z',
+      source: 'mock',
+      tags: ['parkour', 'city', 'futuristic', 'jump', 'challenge', 'neon']
+    },
+    {
+      id: 1014,
+      name: 'Sky High Parkour',
+      slug: 'sky-high-parkour',
+      summary: 'Extreme altitude parkour challenges floating in the clouds with breathtaking views.',
+      description: 'Test your skills at dizzying heights with cloud-themed platforms, wind mechanics, and precision jumps.',
+      author: { name: 'CloudJumper', url: 'https://www.curseforge.com/members/CloudJumper' },
+      thumbnail: 'https://placehold.co/300x200/3498db/ecf0f1?text=Sky+High+Parkour',
+      screenshots: [],
+      downloadUrl: 'https://www.curseforge.com/minecraft/worlds/sky-high-parkour',
+      downloadCount: 167800,
+      gameVersions: ['1.20.4', '1.20.1', '1.19.4'],
+      category: 'World',
+      dateCreated: '2023-04-10T00:00:00Z',
+      dateModified: '2023-12-15T00:00:00Z',
+      source: 'mock',
+      tags: ['parkour', 'sky', 'cloud', 'jump', 'extreme', 'challenge']
+    },
+    // ADVENTURE / RPG / PUZZLE
+    {
+      id: 1015,
+      name: 'Temple of Trials',
+      slug: 'temple-of-trials',
+      summary: 'Ancient temple filled with puzzles, traps, and treasures waiting to be discovered.',
+      description: 'An adventure map featuring complex puzzles, Indiana Jones-style trap sequences, and hidden chambers full of loot.',
+      author: { name: 'AdventureMaker', url: 'https://www.curseforge.com/members/AdventureMaker' },
+      thumbnail: 'https://placehold.co/300x200/d35400/f39c12?text=Temple+of+Trials',
+      screenshots: [],
+      downloadUrl: 'https://www.curseforge.com/minecraft/worlds/temple-of-trials',
+      downloadCount: 189000,
+      gameVersions: ['1.20.4', '1.20.1', '1.19.4'],
+      category: 'World',
+      dateCreated: '2023-02-15T00:00:00Z',
+      dateModified: '2024-01-20T00:00:00Z',
+      source: 'mock',
+      tags: ['adventure', 'puzzle', 'temple', 'treasure', 'traps', 'exploration']
+    },
+    {
+      id: 1016,
+      name: 'Puzzle Box Factory',
+      slug: 'puzzle-box-factory',
+      summary: 'Mind-bending puzzle map set in an abandoned industrial facility with redstone contraptions.',
+      description: 'Challenge your brain with increasingly complex puzzles using redstone mechanics, logic gates, and spatial reasoning.',
+      author: { name: 'RedstoneWiz', url: 'https://www.curseforge.com/members/RedstoneWiz' },
+      thumbnail: 'https://placehold.co/300x200/e67e22/2c3e50?text=Puzzle+Box+Factory',
+      screenshots: [],
+      downloadUrl: 'https://www.curseforge.com/minecraft/worlds/puzzle-box-factory',
+      downloadCount: 76500,
+      gameVersions: ['1.20.4', '1.20.1', '1.19.4'],
+      category: 'World',
+      dateCreated: '2023-11-20T00:00:00Z',
+      dateModified: '2024-02-05T00:00:00Z',
+      source: 'mock',
+      tags: ['puzzle', 'redstone', 'factory', 'logic', 'challenge', 'brain']
+    },
+    // PVP / ARENA
+    {
+      id: 1017,
+      name: 'Battle Royale Arena',
+      slug: 'battle-royale-arena',
+      summary: 'Multiplayer PvP arena with loot chests, shrinking zones, and multiple biomes to fight in.',
+      description: 'A competitive multiplayer map inspired by battle royale games with dynamic storm mechanics and randomized loot.',
+      author: { name: 'PvPMaster', url: 'https://www.curseforge.com/members/PvPMaster' },
+      thumbnail: 'https://placehold.co/300x200/c0392b/f1c40f?text=Battle+Royale',
+      screenshots: [],
+      downloadUrl: 'https://www.curseforge.com/minecraft/worlds/battle-royale-arena',
+      downloadCount: 267000,
+      gameVersions: ['1.20.4', '1.20.1', '1.19.4'],
+      category: 'World',
+      dateCreated: '2022-12-01T00:00:00Z',
+      dateModified: '2024-01-15T00:00:00Z',
+      source: 'mock',
+      tags: ['pvp', 'arena', 'combat', 'multiplayer', 'battle', 'competitive']
+    },
+    {
+      id: 1018,
+      name: 'Medieval Warfare',
+      slug: 'medieval-warfare',
+      summary: 'Castle siege PvP map with siege weapons, defendable fortresses, and team-based objectives.',
+      description: 'Lead your team to victory in epic castle sieges with trebuchets, battering rams, and strategic warfare mechanics.',
+      author: { name: 'SiegeCommander', url: 'https://www.curseforge.com/members/SiegeCommander' },
+      thumbnail: 'https://placehold.co/300x200/5d4037/8d6e63?text=Medieval+Warfare',
+      screenshots: [],
+      downloadUrl: 'https://www.curseforge.com/minecraft/worlds/medieval-warfare',
+      downloadCount: 134500,
+      gameVersions: ['1.20.1', '1.19.4', '1.18.2'],
+      category: 'World',
+      dateCreated: '2023-05-20T00:00:00Z',
+      dateModified: '2023-12-30T00:00:00Z',
+      source: 'mock',
+      tags: ['pvp', 'medieval', 'castle', 'siege', 'warfare', 'team', 'combat']
+    },
+    // MORE SKYBLOCK / CREATION
+    {
+      id: 1019,
+      name: 'One Block Skyblock',
+      slug: 'one-block-skyblock',
+      summary: 'Ultimate skyblock challenge starting with just one block that regenerates into random resources.',
+      description: 'The ultimate minimalist survival experience - one block regenerates into random materials, can you survive and thrive?',
+      author: { name: 'MinimalistGamer', url: 'https://www.curseforge.com/members/MinimalistGamer' },
+      thumbnail: 'https://placehold.co/300x200/87ceeb/4682b4?text=One+Block',
+      screenshots: [],
+      downloadUrl: 'https://www.curseforge.com/minecraft/worlds/one-block-skyblock',
+      downloadCount: 312000,
+      gameVersions: ['1.20.4', '1.20.1', '1.19.4', '1.18.2'],
+      category: 'World',
+      dateCreated: '2022-06-10T00:00:00Z',
+      dateModified: '2024-02-01T00:00:00Z',
+      source: 'mock',
+      tags: ['skyblock', 'survival', 'challenge', 'minimalist', 'one block', 'island']
+    },
+    {
+      id: 1020,
+      name: 'SkyFactory Complex',
+      slug: 'skyfactory-complex',
+      summary: 'Tech-focused skyblock with automation, factories, and resource processing in the sky.',
+      description: 'Build massive floating factories and automate everything in this tech-heavy skyblock experience with quest progression.',
+      author: { name: 'FactoryBuilder', url: 'https://www.curseforge.com/members/FactoryBuilder' },
+      thumbnail: 'https://placehold.co/300x200/5c6bc0/7986cb?text=SkyFactory',
+      screenshots: [],
+      downloadUrl: 'https://www.curseforge.com/minecraft/worlds/skyfactory-complex',
+      downloadCount: 198000,
+      gameVersions: ['1.20.4', '1.20.1', '1.19.4'],
+      category: 'World',
+      dateCreated: '2023-03-01T00:00:00Z',
+      dateModified: '2024-01-25T00:00:00Z',
+      source: 'mock',
+      tags: ['skyblock', 'factory', 'tech', 'automation', 'processing', 'quests']
     }
   ];
   
-  // Filter based on query (simple matching)
+  // Smart filtering based on query - match against name, summary, description, and tags
   const lowerQuery = query.toLowerCase();
-  const filtered = mockMaps.filter(map => 
-    map.name.toLowerCase().includes(lowerQuery) ||
-    map.summary.toLowerCase().includes(lowerQuery) ||
-    map.category.toLowerCase().includes(lowerQuery)
-  );
+  const queryWords = lowerQuery.split(/\s+/).filter(w => w.length > 2); // Words longer than 2 chars
   
-  // If no matches, return first 'count' items
-  return filtered.length > 0 ? filtered.slice(0, count) : mockMaps.slice(0, count);
+  const filtered = mockMaps.filter(map => {
+    const searchableText = `${map.name} ${map.summary} ${map.description} ${map.tags?.join(' ') || ''}`.toLowerCase();
+    
+    // Check if query matches directly
+    if (searchableText.includes(lowerQuery)) return true;
+    
+    // Check if any significant word matches
+    const matchCount = queryWords.filter(word => searchableText.includes(word)).length;
+    return matchCount >= Math.max(1, queryWords.length * 0.5); // At least 50% of words match
+  });
+  
+  // If no matches, return diverse selection based on query category
+  if (filtered.length === 0) {
+    // Try to infer category from query and return relevant maps
+    if (lowerQuery.includes('futur') || lowerQuery.includes('modern') || lowerQuery.includes('tech')) {
+      return mockMaps.filter(m => m.tags?.some(t => ['futuristic', 'modern', 'tech', 'city'].includes(t))).slice(0, count);
+    }
+    if (lowerQuery.includes('castle') || lowerQuery.includes('medieval') || lowerQuery.includes('king')) {
+      return mockMaps.filter(m => m.tags?.some(t => ['medieval', 'castle', 'fortress'].includes(t))).slice(0, count);
+    }
+    if (lowerQuery.includes('survival') || lowerQuery.includes('island') || lowerQuery.includes('ocean')) {
+      return mockMaps.filter(m => m.tags?.some(t => ['survival', 'island', 'hardcore'].includes(t))).slice(0, count);
+    }
+    if (lowerQuery.includes('horror') || lowerQuery.includes('scary') || lowerQuery.includes('spooky')) {
+      return mockMaps.filter(m => m.tags?.some(t => ['horror', 'scary', 'dark'].includes(t))).slice(0, count);
+    }
+    if (lowerQuery.includes('house') || lowerQuery.includes('mansion') || lowerQuery.includes('home')) {
+      return mockMaps.filter(m => m.tags?.some(t => ['house', 'mansion', 'modern'].includes(t))).slice(0, count);
+    }
+    if (lowerQuery.includes('parkour') || lowerQuery.includes('jump')) {
+      return mockMaps.filter(m => m.tags?.some(t => ['parkour', 'jump', 'challenge'].includes(t))).slice(0, count);
+    }
+    if (lowerQuery.includes('adventure') || lowerQuery.includes('quest') || lowerQuery.includes('story')) {
+      return mockMaps.filter(m => m.tags?.some(t => ['adventure', 'puzzle', 'exploration'].includes(t))).slice(0, count);
+    }
+    if (lowerQuery.includes('rail') || lowerQuery.includes('train') || lowerQuery.includes('metro')) {
+      return mockMaps.filter(m => m.tags?.some(t => ['railways', 'train', 'transport'].includes(t))).slice(0, count);
+    }
+    // Default: return random selection for variety
+    return mockMaps.slice(0, count);
+  }
+  
+  return filtered.slice(0, count);
 }
 
 /**
@@ -245,12 +549,17 @@ app.get('/api/search', async (req, res) => {
       }
     }
 
-    // If no API key, return error (demo mode disabled - API key required)
+    // If no API key, return mock data for demo/testing purposes
     if (!CURSEFORGE_API_KEY) {
-      return res.status(503).json({
-        error: 'API_KEY_MISSING',
-        message: 'CURSEFORGE_API_KEY is not configured. Please add your API key to the .env file.',
-        help: 'Get your API key at: https://console.curseforge.com/'
+      console.log(`[MOCK DATA] Returning demo results for: "${query}"`);
+      const mockResults = generateMockMaps(query, pageSizeNum);
+      return res.json({
+        query,
+        results: mockResults,
+        count: mockResults.length,
+        source: 'mock',
+        message: 'Demo mode - Add CURSEFORGE_API_KEY for real search results',
+        timestamp: new Date().toISOString()
       });
     }
 

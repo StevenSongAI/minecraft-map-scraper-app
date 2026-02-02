@@ -3,10 +3,10 @@
  * Chat-style interface for searching Minecraft maps via CurseForge API
  */
 
-// Configuration - Use relative URL for same-origin, or detect IP
+// Configuration - Use relative URL for same-origin deployments
 const API_BASE_URL = window.location.hostname === 'localhost' 
   ? 'http://localhost:3000' 
-  : `http://${window.location.hostname}:3000`;
+  : '';  // Empty string = use same origin (works on Railway, Netlify, etc.)
 const POLL_INTERVAL = 5000; // Check for updates every 5 seconds
 const MAX_RESULTS = 20;
 
@@ -116,7 +116,12 @@ async function checkConnection() {
         if (response.ok) {
             const data = await response.json();
             if (data.status === 'ok') {
-                setConnectionStatus('connected');
+                // Show demo mode indicator if using mock data
+                if (data.api && !data.api.valid) {
+                    setConnectionStatus('demo');
+                } else {
+                    setConnectionStatus('connected');
+                }
             } else {
                 setConnectionStatus('disconnected');
             }
@@ -131,9 +136,13 @@ async function checkConnection() {
 // Update connection status indicator
 function setConnectionStatus(status) {
     connectionStatus.className = `status ${status}`;
-    connectionStatus.title = status === 'connected' 
-        ? 'Connected to server' 
-        : 'Server not running. Start it with: npm start';
+    if (status === 'connected') {
+        connectionStatus.title = 'Connected to server (Live API)';
+    } else if (status === 'demo') {
+        connectionStatus.title = 'Demo mode - Using sample data. Add CURSEFORGE_API_KEY for real results';
+    } else {
+        connectionStatus.title = 'Server not running. Start it with: npm start';
+    }
 }
 
 // Set loading state on UI
@@ -195,9 +204,7 @@ async function handleSearch() {
         
         // Show error
         if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-            addErrorMessage('Cannot connect to server. Please make sure the server is running on localhost:3000');
-        } else if (error.message.includes('API_KEY_MISSING')) {
-            addErrorMessage('API Key Required: Please configure CURSEFORGE_API_KEY in the .env file. Get your key at https://console.curseforge.com/');
+            addErrorMessage('Cannot connect to server. Please make sure the server is running.');
         } else {
             addErrorMessage('Error: ' + error.message);
         }
