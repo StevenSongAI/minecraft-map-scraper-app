@@ -22,11 +22,12 @@ let isSearching = false;
 let lastSearchQuery = null;
 let lastSearchResults = null;
 let pollTimer = null;
+let isDemoMode = false;
 
 // Initialize
-function init() {
-    // Check server connection
-    checkConnection();
+async function init() {
+    // Check server connection and mode
+    await checkConnection();
     setInterval(checkConnection, 10000);
 
     // Event listeners
@@ -40,14 +41,11 @@ function init() {
     // Event delegation for download buttons
     chatContainer.addEventListener('click', handleDownloadClick);
 
-    // Auto-focus input
-    searchInput.focus();
-
     console.log('[Dashboard] Initialized');
 }
 
 // Handle download button clicks
-function handleDownloadClick(e) {
+async function handleDownloadClick(e) {
     const downloadBtn = e.target.closest('.download-btn');
     if (!downloadBtn) return;
 
@@ -55,7 +53,8 @@ function handleDownloadClick(e) {
     e.stopPropagation();
 
     const url = downloadBtn.dataset.downloadUrl;
-    const filename = downloadBtn.dataset.filename || 'download.zip';
+    const filename = downloadBtn.dataset.filename || 'minecraft-map.zip';
+    const mapId = downloadBtn.dataset.mapId;
 
     if (!url) {
         console.error('[Dashboard] No download URL found');
@@ -64,45 +63,84 @@ function handleDownloadClick(e) {
 
     // Show loading state
     const originalText = downloadBtn.textContent;
-    downloadBtn.textContent = 'Downloading...';
+    downloadBtn.textContent = '⏳ Downloading...';
     downloadBtn.classList.add('loading');
+    downloadBtn.disabled = true;
 
-    // Fetch and download using blob approach
-    fetch(url)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-            return response.blob();
-        })
-        .then(blob => {
-            // Create object URL and trigger download
-            const blobUrl = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = blobUrl;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-
-            // Cleanup
-            setTimeout(() => {
-                document.body.removeChild(a);
-                window.URL.revokeObjectURL(blobUrl);
-            }, 100);
-
-            console.log('[Dashboard] Download triggered:', filename);
-        })
-        .catch(error => {
-            console.error('[Dashboard] Download failed:', error);
-            // Fallback: navigate to URL directly
-            window.location.href = url;
-        })
-        .finally(() => {
-            // Reset button state
+    try {
+        // Use the download API endpoint
+        const downloadApiUrl = `${API_BASE_URL}/api/download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}${mapId ? '&id=' + mapId : ''}`;
+        
+        console.log('[Dashboard] Downloading from:', downloadApiUrl);
+        
+        const response = await fetch(downloadApiUrl);
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || `HTTP ${response.status}`);
+        }
+        
+        // Check if response is JSON (error) or binary (file)
+        const contentType = response.headers.get('content-type') || '';
+        
+        if (contentType.includes('application/json')) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Download failed');
+        }
+        
+        // Get the blob
+        const blob = await response.blob();
+        
+        // Verify it's a reasonable file size (not an error page)
+        if (blob.size < 100) {
+            throw new Error('Downloaded file is too small, possibly an error');
+        }
+        
+        // Create download
+        const blobUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        
+        // Cleanup
+        setTimeout(() => {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(blobUrl);
+        }, 100);
+        
+        console.log('[Dashboard] Download complete:', filename, `(${blob.size} bytes)`);
+        
+        // Show success state
+        downloadBtn.textContent = '✓ Downloaded!';
+        downloadBtn.classList.remove('loading');
+        downloadBtn.classList.add('success');
+        
+        setTimeout(() => {
             downloadBtn.textContent = originalText;
-            downloadBtn.classList.remove('loading');
-        });
+            downloadBtn.classList.remove('success');
+            downloadBtn.disabled = false;
+        }, 2000);
+        
+    } catch (error) {
+        console.error('[Dashboard] Download failed:', error);
+        
+        // Show error state
+        downloadBtn.textContent = '❌ Failed';
+        downloadBtn.classList.remove('loading');
+        downloadBtn.classList.add('error');
+        
+        // Show error message
+        addErrorMessage(`Download failed: ${error.message}. Please try again or visit the map page directly.`);
+        
+        setTimeout(() => {
+            downloadBtn.textContent = originalText;
+            downloadBtn.classList.remove('error');
+            downloadBtn.disabled = false;
+        }, 3000);
+    }
 }
 
 // Check server connection
@@ -116,12 +154,9 @@ async function checkConnection() {
         if (response.ok) {
             const data = await response.json();
             if (data.status === 'ok') {
-                // Show demo mode indicator if using mock data
-                if (data.api && !data.api.valid) {
-                    setConnectionStatus('demo');
-                } else {
-                    setConnectionStatus('connected');
-                }
+                // Update demo mode status
+                isDemoMode = data.demoMode || data.mode === 'demo';
+                setConnectionStatus(isDemoMode ? 'demo' : 'connected');
             } else {
                 setConnectionStatus('disconnected');
             }
@@ -137,9 +172,9 @@ async function checkConnection() {
 function setConnectionStatus(status) {
     connectionStatus.className = `status ${status}`;
     if (status === 'connected') {
-        connectionStatus.title = 'Connected to server (Live API)';
+        connectionStatus.title = 'Connected to live CurseForge API';
     } else if (status === 'demo') {
-        connectionStatus.title = 'Demo mode - Using sample data. Add CURSEFORGE_API_KEY for real results';
+        connectionStatus.title = 'Demo Mode: Using sample map data';
     } else {
         connectionStatus.title = 'Server not running. Start it with: npm start';
     }
@@ -233,6 +268,13 @@ async function searchMaps(query) {
     }
     
     const data = await response.json();
+    
+    // Update demo mode based on response
+    if (data.mode === 'demo') {
+        isDemoMode = true;
+        setConnectionStatus('demo');
+    }
+    
     return data.results || [];
 }
 
@@ -339,9 +381,15 @@ function addResultsMessage(results) {
     // Update results count
     resultsCount.textContent = `${results.length} map${results.length !== 1 ? 's' : ''} found`;
     
+    // Add demo mode banner if in demo mode
+    const demoBanner = isDemoMode 
+        ? '<div class="demo-banner">⚠️ Demo Mode: These are sample results. Downloads provide demo map files.</div>'
+        : '';
+    
     // Build results HTML
     const resultsHtml = `
         <div class="message-bubble" style="max-width: 100%; background: transparent; padding: 0;">
+            ${demoBanner}
             <div class="results-container">
                 ${results.map(map => renderMapCard(map)).join('')}
             </div>
@@ -369,7 +417,7 @@ function addResultsMessage(results) {
 // Render a single map card
 function renderMapCard(map) {
     const thumbnail = map.thumbnail 
-        ? `<img src="${escapeHtml(map.thumbnail)}" alt="${escapeHtml(map.name)}" class="map-thumbnail" loading="lazy">`
+        ? `<img src="${escapeHtml(map.thumbnail)}" alt="${escapeHtml(map.name)}" class="map-thumbnail" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22200%22><rect fill=%22%23333%22 width=%22300%22 height=%22200%22/><text fill=%22%23666%22 x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22>🗺️</text></svg>'">`
         : `<div class="map-thumbnail-placeholder">🗺️</div>`;
     
     const authorName = map.author?.name || 'Unknown';
@@ -388,24 +436,31 @@ function renderMapCard(map) {
         ? `<div class="map-versions">${versions.map(v => `<span class="version-tag">${escapeHtml(v)}</span>`).join('')}</div>`
         : '';
     
-    // Download URL - use proxy for direct downloads, fallback to CurseForge page
-    const viewUrl = `https://www.curseforge.com/minecraft/worlds/${map.slug}`;
+    // Download URL - use our API for downloads
+    const viewUrl = map.slug 
+        ? `https://www.curseforge.com/minecraft/worlds/${map.slug}`
+        : '#';
     
-    // Build download URL - use proxy if it's a direct file URL, otherwise use CurseForge page
-    let downloadUrl;
-    if (map.downloadUrl && (map.downloadUrl.includes('media.forgecdn.net') || map.downloadUrl.includes('.zip') || map.downloadUrl.includes('.jar'))) {
-      // Use proxy for direct file downloads
-      downloadUrl = `${API_BASE_URL}/api/download?url=${encodeURIComponent(map.downloadUrl)}&filename=${encodeURIComponent(map.name + '.zip')}`;
+    // Build download URL - use our proxy API
+    let downloadApiUrl;
+    if (map.source === 'demo' || (map.id >= 1001 && map.id <= 1020)) {
+        // Demo map - use API with ID
+        downloadApiUrl = `${API_BASE_URL}/api/download?id=${map.id}&filename=${encodeURIComponent(map.name.replace(/[^a-zA-Z0-9]/g, '_') + '.zip')}`;
     } else {
-      // Fallback to CurseForge page
-      downloadUrl = viewUrl;
+        // Live map - use download URL if available, otherwise view URL
+        const fileUrl = map.downloadUrl || viewUrl;
+        downloadApiUrl = `${API_BASE_URL}/api/download?url=${encodeURIComponent(fileUrl)}&filename=${encodeURIComponent(map.name.replace(/[^a-zA-Z0-9]/g, '_') + '.zip')}&id=${map.id}`;
     }
+    
+    const sourceBadge = map.source === 'mock' || map.id >= 1001 && map.id <= 1020
+        ? '<span class="source-badge demo">Demo</span>'
+        : '<span class="source-badge live">Live</span>';
     
     return `
         <div class="map-card" data-map-id="${map.id}">
             ${thumbnail}
             <div class="map-info">
-                <h3 class="map-title">${escapeHtml(map.name)}</h3>
+                <h3 class="map-title">${escapeHtml(map.name)} ${sourceBadge}</h3>
                 <div class="map-author">
                     by <a href="${escapeHtml(authorUrl)}" target="_blank" rel="noopener">${escapeHtml(authorName)}</a>
                 </div>
@@ -422,7 +477,12 @@ function renderMapCard(map) {
                 </div>
                 ${versionsHtml}
                 <div class="map-actions">
-                    <a href="${escapeHtml(downloadUrl)}" download="${escapeHtml(map.name + '.zip')}" class="btn btn-primary download-btn" data-download-url="${escapeHtml(downloadUrl)}" data-filename="${escapeHtml(map.name + '.zip')}">Download</a>
+                    <button class="btn btn-primary download-btn" 
+                            data-download-url="${escapeHtml(downloadApiUrl)}" 
+                            data-filename="${escapeHtml(map.name.replace(/[^a-zA-Z0-9]/g, '_') + '.zip')}" 
+                            data-map-id="${map.id}">
+                        Download
+                    </button>
                     <a href="${escapeHtml(viewUrl)}" target="_blank" rel="noopener" class="btn btn-secondary">View</a>
                 </div>
             </div>

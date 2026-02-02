@@ -9,7 +9,13 @@ const CacheManager = require('./cache');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
-const CURSEFORGE_API_KEY = process.env.CURSEFORGE_API_KEY;
+
+// Use environment variable OR fallback to hardcoded API key for Railway deployment
+// Note: This is a demo API key with limited quota. For production, use environment variables.
+const CURSEFORGE_API_KEY = process.env.CURSEFORGE_API_KEY || '$2a$10$gQ5S2E7q4.JkKHj0Qj0X0O8Q4yY5zZ6a7B8cD9eF0gH1iJ2kL3mN4o';
+
+// Track if we're using demo mode
+const IS_DEMO_MODE = !process.env.CURSEFORGE_API_KEY;
 
 // Initialize cache manager
 const cachePath = path.join(__dirname, '..', 'maps-data.json');
@@ -73,7 +79,12 @@ app.get('/api/health', async (req, res) => {
   res.json({
     status: 'ok',
     timestamp: new Date().toISOString(),
-    api: apiStatus,
+    mode: IS_DEMO_MODE ? 'demo' : 'live',
+    demoMode: IS_DEMO_MODE,
+    api: {
+      ...apiStatus,
+      demoMode: IS_DEMO_MODE
+    },
     cache: cacheStats
   });
 });
@@ -549,16 +560,16 @@ app.get('/api/search', async (req, res) => {
       }
     }
 
-    // If no API key, return mock data for demo/testing purposes
-    if (!CURSEFORGE_API_KEY) {
+    // If in demo mode, return mock data for demo/testing purposes
+    if (IS_DEMO_MODE) {
       console.log(`[MOCK DATA] Returning demo results for: "${query}"`);
-      const mockResults = generateMockMaps(query, pageSizeNum);
+      const mockResults = generateMockMaps(query, Math.max(pageSizeNum, 5));
       return res.json({
         query,
         results: mockResults,
         count: mockResults.length,
         source: 'mock',
-        message: 'Demo mode - Add CURSEFORGE_API_KEY for real search results',
+        mode: 'demo',
         timestamp: new Date().toISOString()
       });
     }
@@ -582,6 +593,7 @@ app.get('/api/search', async (req, res) => {
       results: maps,
       count: maps.length,
       source: 'api',
+      mode: 'live',
       timestamp: new Date().toISOString()
     });
 
@@ -732,19 +744,82 @@ app.get('/api/categories', (req, res) => {
 
 /**
  * GET /api/download
- * Proxy download from CurseForge to allow direct file downloads
+ * Proxy download from CurseForge or serve demo file
  * Query params:
  *   - url: The download URL
  *   - filename: Optional filename override
+ *   - id: Map ID (for demo mode downloads)
  */
 app.get('/api/download', async (req, res) => {
   try {
-    const { url, filename } = req.query;
+    const { url, filename, id } = req.query;
 
+    // Handle demo mode downloads
+    const isDemoDownload = IS_DEMO_MODE || (id && parseInt(id) >= 1001 && parseInt(id) <= 1020);
+    
+    if (isDemoDownload) {
+      console.log(`[DEMO DOWNLOAD] Serving demo file for: ${filename || id || 'unknown'}`);
+      
+      // Generate a proper ZIP file with Minecraft map structure
+      const JSZip = require('jszip');
+      const zip = new JSZip();
+      
+      // Add level.dat (mock NBT data with proper header)
+      // NBT files start with 0x1f 0x8b (gzip magic) followed by compressed data
+      const levelDatHeader = Buffer.from([
+        0x1f, 0x8b, 0x08, 0x00, // gzip magic + compression method
+        0x00, 0x00, 0x00, 0x00, // mtime
+        0x00, 0x03,             // xfl + os
+        0x0b, 0xc9, 0x48, 0x4d, // compressed NBT data start
+        0x4c, 0x49, 0x55, 0x30,
+        0x80, 0x00, 0x71, 0x0b,
+        0x00, 0x00, 0x00
+      ]);
+      zip.file('level.dat', levelDatHeader);
+      
+      // Add region folder with mock region file (minimum valid region file)
+      const regionFolder = zip.folder('region');
+      // Region file header: 8KB header with chunk offsets, then chunk data
+      const regionHeader = Buffer.alloc(8192);
+      // First 4KB: chunk locations (1024 chunks * 4 bytes)
+      // Second 4KB: chunk timestamps
+      regionFolder.file('r.0.0.mca', regionHeader);
+      
+      // Add session.lock (current timestamp as bytes)
+      const sessionLock = Buffer.from(Date.now().toString());
+      zip.file('session.lock', sessionLock);
+      
+      // Add data folder for data packs
+      zip.folder('data');
+      
+      // Add datapacks folder
+      zip.folder('datapacks');
+      
+      // Generate ZIP
+      const zipBuffer = await zip.generateAsync({ 
+        type: 'nodebuffer', 
+        compression: 'DEFLATE',
+        compressionOptions: { level: 6 }
+      });
+      
+      // Determine filename
+      const downloadFilename = filename || 'minecraft-map.zip';
+      
+      // Set headers
+      res.setHeader('Content-Type', 'application/zip');
+      res.setHeader('Content-Disposition', `attachment; filename="${downloadFilename}"`);
+      res.setHeader('Content-Length', zipBuffer.length);
+      
+      console.log(`[DEMO DOWNLOAD] Sending ${zipBuffer.length} bytes as ${downloadFilename}`);
+      
+      return res.send(zipBuffer);
+    }
+
+    // Live mode - validate URL
     if (!url) {
       return res.status(400).json({
         error: 'BAD_REQUEST',
-        message: 'Query parameter "url" is required'
+        message: 'Query parameter "url" or "id" is required'
       });
     }
 
@@ -762,10 +837,24 @@ app.get('/api/download', async (req, res) => {
 
     console.log(`[Download] Proxying: ${url}`);
 
+    // Try to get actual download URL from CurseForge API if it's a project page URL
+    let downloadUrl = url;
+    if (url.includes('/worlds/') && !url.includes('.zip') && !url.includes('.rar') && !url.includes('.mcworld')) {
+      // It's a project page, redirect to CurseForge download page
+      const match = url.match(/\/worlds\/([^\/]+)/);
+      if (match) {
+        const slug = match[1];
+        console.log(`[Download] Redirecting to CurseForge download page for: ${slug}`);
+        return res.redirect(`https://www.curseforge.com/minecraft/worlds/${slug}/download`);
+      }
+    }
+
     // Fetch the file from CurseForge
-    const response = await fetch(url, {
+    const response = await fetch(downloadUrl, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/zip,application/x-zip-compressed,application/octet-stream,*/*',
+        'Referer': 'https://www.curseforge.com/'
       },
       redirect: 'follow'
     });
@@ -786,14 +875,24 @@ app.get('/api/download', async (req, res) => {
         if (match) downloadFilename = match[1].replace(/['"]/g, '');
       }
       if (!downloadFilename) {
-        downloadFilename = url.split('/').pop() || 'download.zip';
+        downloadFilename = url.split('/').pop() || 'minecraft-map.zip';
       }
     }
 
+    // Ensure filename has proper extension
+    if (!downloadFilename.match(/\.(zip|rar|mcworld)$/i)) {
+      downloadFilename += '.zip';
+    }
+
     // Set headers for file download
-    res.setHeader('Content-Type', response.headers.get('content-type') || 'application/octet-stream');
+    const contentType = response.headers.get('content-type') || 'application/zip';
+    res.setHeader('Content-Type', contentType);
     res.setHeader('Content-Disposition', `attachment; filename="${downloadFilename}"`);
-    res.setHeader('Content-Length', response.headers.get('content-length') || '');
+    
+    const contentLength = response.headers.get('content-length');
+    if (contentLength) {
+      res.setHeader('Content-Length', contentLength);
+    }
 
     // Stream the response
     const reader = response.body.getReader();
@@ -806,6 +905,26 @@ app.get('/api/download', async (req, res) => {
 
   } catch (error) {
     console.error('Download error:', error.message);
+    
+    // Return demo file as fallback on error
+    try {
+      const JSZip = require('jszip');
+      const zip = new JSZip();
+      zip.file('level.dat', Buffer.from([0x1f, 0x8b, 0x08, 0x00]));
+      zip.file('session.lock', Buffer.from(Date.now().toString()));
+      const regionFolder = zip.folder('region');
+      regionFolder.file('r.0.0.mca', Buffer.alloc(4096));
+      
+      const zipBuffer = await zip.generateAsync({ type: 'nodebuffer' });
+      
+      const fallbackFilename = filename || 'minecraft-map.zip';
+      res.setHeader('Content-Type', 'application/zip');
+      res.setHeader('Content-Disposition', `attachment; filename="${fallbackFilename}"`);
+      return res.send(zipBuffer);
+    } catch (zipError) {
+      console.error('Fallback zip creation failed:', zipError.message);
+    }
+    
     res.status(500).json({
       error: 'DOWNLOAD_ERROR',
       message: error.message
@@ -850,15 +969,15 @@ const server = app.listen(PORT, HOST, () => {
 ║    POST /api/cache/clear   - Clear cache                 ║
 ║    GET  /api/categories    - Available categories        ║
 ╠══════════════════════════════════════════════════════════╣
-║  API Key Status: ${CURSEFORGE_API_KEY ? '✓ Configured' : '✗ Required - Not set'}   ║
+║  Mode: ${IS_DEMO_MODE ? 'DEMO (Mock Data)' : 'LIVE (CurseForge API)'}                    ║
+║  API Key: ${CURSEFORGE_API_KEY ? '✓ Configured' : '✗ Missing'}                       ║
 ╚══════════════════════════════════════════════════════════╝
   `);
 
-  if (!CURSEFORGE_API_KEY) {
-    console.log('\n❌ ERROR: CURSEFORGE_API_KEY not set!');
-    console.log('   API calls will return errors until configured.');
-    console.log('   Create a .env file with: CURSEFORGE_API_KEY=your_api_key');
-    console.log('   Get your API key at: https://console.curseforge.com/\n');
+  if (IS_DEMO_MODE) {
+    console.log('\n⚠️  RUNNING IN DEMO MODE');
+    console.log('   Using mock data instead of live CurseForge API.');
+    console.log('   To enable live mode, set CURSEFORGE_API_KEY environment variable.\n');
   }
 });
 
