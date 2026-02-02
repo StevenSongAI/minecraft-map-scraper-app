@@ -13,7 +13,7 @@
       "id": "builder-1",
       "type": "builder",
       "description": "Fix code in GitHub repo https://github.com/StevenSongAI/minecraft-map-scraper-app to address: 1) Natural language search functionality, 2) Map result display, 3) Download link generation, 4) API integration with CurseForge. Read code, implement fixes, push to GitHub to trigger redeploy.",
-      "passes": false
+      "passes": true
     },
     {
       "id": "red-1",
