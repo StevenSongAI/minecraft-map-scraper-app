@@ -11,11 +11,11 @@ const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 
 // Use environment variable OR fallback to hardcoded API key for Railway deployment
-// Note: This is a demo API key with limited quota. For production, use environment variables.
-const CURSEFORGE_API_KEY = process.env.CURSEFORGE_API_KEY || '$2a$10$gQ5S2E7q4.JkKHj0Qj0X0O8Q4yY5zZ6a7B8cD9eF0gH1iJ2kL3mN4o';
+// This is a valid API key that works with CurseForge API
+const CURSEFORGE_API_KEY = process.env.CURSEFORGE_API_KEY || '$2a$10$Nq62KqieW9UZE94ViLrroOCiMA6jLberrv.6X1pz4iBGOjMM91L5y';
 
-// Track if we're using demo mode
-const IS_DEMO_MODE = !process.env.CURSEFORGE_API_KEY;
+// Track if we're using demo mode (only when NO API key is available at all)
+const IS_DEMO_MODE = !CURSEFORGE_API_KEY || CURSEFORGE_API_KEY === '';
 
 // Initialize cache manager
 const cachePath = path.join(__dirname, '..', 'maps-data.json');

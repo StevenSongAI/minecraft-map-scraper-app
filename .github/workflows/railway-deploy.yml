@@ -1,4 +1,4 @@
-name: Deploy to Railway with API Key
+name: Deploy to Railway
 
 on:
   push:
@@ -11,15 +11,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
-        
-      - name: Set CURSEFORGE_API_KEY on Railway
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: |
-          railway variables set CURSEFORGE_API_KEY="$2a$10$Nq62KqieW9UZE94ViLrroOCiMA6jLberrv.6X1pz4iBGOjMM91L5y" --service="minecraft-map-scraper"
         
       - name: Deploy to Railway
         uses: bervProject/railway-deploy@main
