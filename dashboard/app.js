@@ -68,30 +68,33 @@ async function handleDownloadClick(e) {
     downloadBtn.disabled = true;
 
     try {
-        // Use the download API endpoint
-        const downloadApiUrl = `${API_BASE_URL}/api/download?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}${mapId ? '&id=' + mapId : ''}`;
+        // Step 1: Get download info from API
+        const downloadInfoUrl = `${API_BASE_URL}/api/download/${mapId}`;
+        console.log('[Dashboard] Getting download info from:', downloadInfoUrl);
         
-        console.log('[Dashboard] Downloading from:', downloadApiUrl);
-        
-        const response = await fetch(downloadApiUrl);
-        
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || `HTTP ${response.status}`);
+        const infoResponse = await fetch(downloadInfoUrl);
+        if (!infoResponse.ok) {
+            const errorData = await infoResponse.json().catch(() => ({}));
+            throw new Error(errorData.error || errorData.message || `HTTP ${infoResponse.status}`);
         }
         
-        // Check if response is JSON (error) or binary (file)
-        const contentType = response.headers.get('content-type') || '';
+        const downloadInfo = await infoResponse.json();
+        if (!downloadInfo.success || !downloadInfo.downloadUrl) {
+            throw new Error('No download URL available from API');
+        }
         
-        if (contentType.includes('application/json')) {
-            const errorData = await response.json();
-            throw new Error(errorData.message || 'Download failed');
+        // Step 2: Download the actual file
+        console.log('[Dashboard] Downloading file from:', downloadInfo.downloadUrl);
+        const fileResponse = await fetch(downloadInfo.downloadUrl);
+        
+        if (!fileResponse.ok) {
+            throw new Error(`Download failed: HTTP ${fileResponse.status}`);
         }
         
         // Get the blob
-        const blob = await response.blob();
+        const blob = await fileResponse.blob();
         
-        // Verify it's a reasonable file size (not an error page)
+        // Verify it's a reasonable file size
         if (blob.size < 100) {
             throw new Error('Downloaded file is too small, possibly an error');
         }
@@ -101,7 +104,7 @@ async function handleDownloadClick(e) {
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = blobUrl;
-        a.download = filename;
+        a.download = downloadInfo.fileName || filename;
         document.body.appendChild(a);
         a.click();
         
@@ -111,7 +114,7 @@ async function handleDownloadClick(e) {
             window.URL.revokeObjectURL(blobUrl);
         }, 100);
         
-        console.log('[Dashboard] Download complete:', filename, `(${blob.size} bytes)`);
+        console.log('[Dashboard] Download complete:', downloadInfo.fileName || filename, `(${blob.size} bytes)`);
         
         // Show success state
         downloadBtn.textContent = '✓ Downloaded!';
@@ -441,16 +444,8 @@ function renderMapCard(map) {
         ? `https://www.curseforge.com/minecraft/worlds/${map.slug}`
         : '#';
     
-    // Build download URL - use our proxy API
-    let downloadApiUrl;
-    if (map.source === 'demo' || (map.id >= 1001 && map.id <= 1020)) {
-        // Demo map - use API with ID
-        downloadApiUrl = `${API_BASE_URL}/api/download?id=${map.id}&filename=${encodeURIComponent(map.name.replace(/[^a-zA-Z0-9]/g, '_') + '.zip')}`;
-    } else {
-        // Live map - use download URL if available, otherwise view URL
-        const fileUrl = map.downloadUrl || viewUrl;
-        downloadApiUrl = `${API_BASE_URL}/api/download?url=${encodeURIComponent(fileUrl)}&filename=${encodeURIComponent(map.name.replace(/[^a-zA-Z0-9]/g, '_') + '.zip')}&id=${map.id}`;
-    }
+    // Build download URL - use /api/download/:id endpoint
+    const downloadApiUrl = `${API_BASE_URL}/api/download/${map.id}`;
     
     const sourceBadge = map.source === 'mock' || map.id >= 1001 && map.id <= 1020
         ? '<span class="source-badge demo">Demo</span>'
