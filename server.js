@@ -122,6 +122,13 @@ function expandQuery(query) {
   return [...new Set(searchTerms)];
 }
 
+// Helper function for word boundary matching
+function hasWordMatch(text, word) {
+  if (!text || !word) return false;
+  const regex = new RegExp(`\\b${word}\\b`, 'i');
+  return regex.test(text);
+}
+
 // Calculate relevance score with semantic matching and threshold filtering
 function calculateRelevance(map, query, searchTerms) {
   const queryLower = query.toLowerCase();
@@ -139,17 +146,17 @@ function calculateRelevance(map, query, searchTerms) {
     hasAnyMatch = true;
   }
   
-  // Query words in title
+  // Query words in title (whole word match)
   queryWords.forEach(word => {
-    if (titleLower.includes(word)) {
+    if (hasWordMatch(titleLower, word)) {
       score += 30;
       hasAnyMatch = true;
     }
   });
   
-  // Expanded semantic terms in title
+  // Expanded semantic terms in title (whole word match)
   searchTerms.forEach(term => {
-    if (term !== query && titleLower.includes(term.toLowerCase())) {
+    if (term !== query && hasWordMatch(titleLower, term.toLowerCase())) {
       score += 25;
       hasAnyMatch = true;
     }
@@ -162,36 +169,38 @@ function calculateRelevance(map, query, searchTerms) {
     hasAnyMatch = true;
   }
   
+  // Query words in description (whole word match)
   queryWords.forEach(word => {
-    if (descLower.includes(word)) {
+    if (hasWordMatch(descLower, word)) {
       score += 10;
       hasAnyMatch = true;
     }
   });
   
+  // Expanded terms in description (whole word match)
   searchTerms.forEach(term => {
-    if (term !== query && descLower.includes(term.toLowerCase())) {
+    if (term !== query && hasWordMatch(descLower, term.toLowerCase())) {
       score += 8;
       hasAnyMatch = true;
     }
   });
   
-  // Tag match
+  // Tag match (whole word match)
   if (map.tags) {
     map.tags.forEach(tag => {
       const tagLower = tag.toLowerCase();
-      if (tagLower.includes(queryLower)) {
+      if (hasWordMatch(tagLower, queryLower)) {
         score += 40;
         hasAnyMatch = true;
       }
       queryWords.forEach(word => {
-        if (tagLower.includes(word)) {
+        if (hasWordMatch(tagLower, word)) {
           score += 15;
           hasAnyMatch = true;
         }
       });
       searchTerms.forEach(term => {
-        if (term !== query && tagLower.includes(term.toLowerCase())) {
+        if (term !== query && hasWordMatch(tagLower, term.toLowerCase())) {
           score += 12;
           hasAnyMatch = true;
         }
@@ -201,7 +210,7 @@ function calculateRelevance(map, query, searchTerms) {
   
   // Category match
   const categoryLower = (map.category || '').toLowerCase();
-  if (categoryLower && searchTerms.some(t => categoryLower.includes(t.toLowerCase()))) {
+  if (categoryLower && searchTerms.some(t => hasWordMatch(categoryLower, t.toLowerCase()))) {
     score += 15;
     hasAnyMatch = true;
   }
