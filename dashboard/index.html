@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft Map Scraper</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <div class="logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="2" width="20" height="20" rx="2" ry="2"/>
+                    <rect x="7" y="7" width="3" height="3"/>
+                    <rect x="14" y="7" width="3" height="3"/>
+                    <rect x="7" y="14" width="3" height="3"/>
+                    <rect x="14" y="14" width="3" height="3"/>
+                </svg>
+                <h1>Minecraft Map Scraper</h1>
+            </div>
+            <div class="header-actions">
+                <span id="connection-status" class="status disconnected">●</span>
+            </div>
+        </header>
+
+        <main class="chat-container" id="chat-container">
+            <div class="welcome-message">
+                <div class="bot-avatar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="2" width="20" height="20" rx="2" ry="2"/>
+                        <rect x="7" y="7" width="3" height="3"/>
+                        <rect x="14" y="7" width="3" height="3"/>
+                        <rect x="7" y="14" width="3" height="3"/>
+                        <rect x="14" y="14" width="3" height="3"/>
+                    </svg>
+                </div>
+                <div class="message-content">
+                    <p>👋 Welcome to Minecraft Map Scraper!</p>
+                    <p>I can search CurseForge for Minecraft maps. Try searching for:</p>
+                    <ul class="suggestions">
+                        <li><code>skyblock</code> - Skyblock survival maps</li>
+                        <li><code>adventure</code> - Adventure maps</li>
+                        <li><code>parkour</code> - Parkour challenge maps</li>
+                        <li><code>horror</code> - Horror/suspense maps</li>
+                    </ul>
+                </div>
+            </div>
+        </main>
+
+        <footer class="input-container">
+            <div class="input-wrapper">
+                <input 
+                    type="text" 
+                    id="search-input" 
+                    placeholder="Search for Minecraft maps..." 
+                    autocomplete="off"
+                >
+                <button id="search-btn" class="send-btn" aria-label="Search">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13"/>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="input-hint">
+                <span>Press Enter to search</span>
+                <span id="results-count"></span>
+            </div>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

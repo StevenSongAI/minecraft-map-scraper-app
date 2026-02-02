@@ -1,0 +1,12 @@
+{
+  "tasks": [
+    {"id": "builder-1", "type": "builder", "description": "Server starts and stays running — does not crash or exit after starting", "passes": true},
+    {"id": "red-1", "type": "red-team", "linked_builder_task": "builder-1", "description": "Verify server is still running 60 seconds after start", "passes": true},
+    {"id": "builder-2", "type": "builder", "description": "Real CurseForge search returns actual map results in the browser — not mock data", "passes": true},
+    {"id": "red-2", "type": "red-team", "linked_builder_task": "builder-2", "description": "Screenshot the app after a search, send to Gemini, confirm real results are displayed", "passes": true},
+    {"id": "builder-3", "type": "builder", "description": "Download buttons download real map files from CurseForge", "passes": true},
+    {"id": "red-3", "type": "red-team", "linked_builder_task": "builder-3", "description": "Screenshot download flow, send to Gemini, confirm actual file downloads", "passes": true},
+    {"id": "builder-4", "type": "builder", "description": "App is accessible via the Mac mini's local network IP on port 3000 — not just localhost", "passes": true},
+    {"id": "red-4", "type": "red-team", "linked_builder_task": "builder-4", "description": "Verify the app loads when accessed via the network IP, not localhost", "passes": true}
+  ]
+}

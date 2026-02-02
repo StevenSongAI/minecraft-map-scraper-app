@@ -1,0 +1,26 @@
+
+=== BUILDER TASK SUMMARY ===
+Date: 2026-02-02
+
+COMPLETED TASKS:
+1. builder-1: Server starts and stays running ✓
+2. builder-2: Real CurseForge search wired up ✓  
+3. builder-3: Download buttons use real downloads ✓
+4. builder-4: App accessible via network IP ✓
+
+SERVER STATUS:
+- Running on: http://0.0.0.0:3000
+- Local: http://localhost:3000
+- Network: http://192.168.40.118:3000
+- Dashboard: http://192.168.40.118:3000/
+- Health: http://192.168.40.118:3000/api/health
+
+NOTE: API requires CURSEFORGE_API_KEY to be set in .env file
+Get key at: https://console.curseforge.com/
+
+FILES MODIFIED:
+- scraper/server.js (host binding, static files, download endpoint)
+- dashboard/app.js (dynamic API URL, download proxy)
+- .env (HOST configuration)
+- progress.md (documentation)
+
