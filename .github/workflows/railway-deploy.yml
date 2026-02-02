@@ -18,9 +18,15 @@ jobs:
       - name: Deploy to Railway
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: railway deploy --service=minecraft-map-scraper --detach
+        run: |
+          railway login --token "$RAILWAY_TOKEN"
+          railway link --project a18c5404-6b6a-4d09-936f-e90d391a5a2d
+          railway up --detach
         
       - name: Set CURSEFORGE_API_KEY
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: railway variables set CURSEFORGE_API_KEY="${{ secrets.CURSEFORGE_API_KEY }}"
+        run: |
+          railway login --token "$RAILWAY_TOKEN"
+          railway link --project a18c5404-6b6a-4d09-936f-e90d391a5a2d
+          railway variables set CURSEFORGE_API_KEY="${{ secrets.CURSEFORGE_API_KEY }}"
