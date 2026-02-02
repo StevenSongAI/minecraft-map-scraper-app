@@ -3,6 +3,86 @@ const MINECRAFT_GAME_ID = 432;
 const WORLDS_CLASS_ID = 17; // Maps/Worlds category
 
 /**
+ * Enhanced semantic keyword mappings for accurate search
+ * Maps user query concepts to all related semantic equivalents
+ */
+const SEMANTIC_KEYWORD_MAP = {
+  // Underwater themes
+  'underwater': ['underwater', 'ocean', 'sea', 'atlantis', 'submarine', 'aquatic', 'marine', 'deep sea', 'undersea', 'sunken'],
+  'ocean': ['ocean', 'sea', 'underwater', 'aquatic', 'marine', 'nautical', 'submarine', 'atlantis'],
+  'sea': ['sea', 'ocean', 'underwater', 'aquatic', 'marine', 'nautical'],
+  'atlantis': ['atlantis', 'underwater', 'sunken', 'lost city', 'ocean'],
+  
+  // Hell/Nether themes
+  'hell': ['hell', 'nether', 'inferno', 'demon', 'demonic', 'underworld', 'hades', 'lava', 'fire', 'flame', 'brimstone'],
+  'nether': ['nether', 'hell', 'inferno', 'demon', 'demonic', 'underworld', 'lava', 'fire', 'flame'],
+  'inferno': ['inferno', 'hell', 'nether', 'fire', 'flame', 'lava', 'demon'],
+  'demon': ['demon', 'demonic', 'hell', 'nether', 'underworld', 'satan'],
+  
+  // Fantasy/Medieval themes
+  'castle': ['castle', 'fortress', 'citadel', 'stronghold', 'palace', 'keep', 'tower', 'bastion', 'chateau'],
+  'medieval': ['medieval', 'fantasy', 'ancient', 'historical', 'middle ages', 'knights', 'kingdom', 'feudal'],
+  'fantasy': ['fantasy', 'magic', 'wizard', 'sorcery', 'enchanted', 'mystical', 'medieval'],
+  'dragon': ['dragon', 'wyvern', 'drake', 'wyrm', 'fantasy'],
+  
+  // Modern/Futuristic themes
+  'modern': ['modern', 'contemporary', 'urban', 'city', 'skyscraper', 'downtown'],
+  'futuristic': ['futuristic', 'future', 'scifi', 'sci-fi', 'space', 'advanced', 'tech', 'cyberpunk', 'neon'],
+  'cyberpunk': ['cyberpunk', 'neon', 'futuristic', 'dystopian', 'tech', 'hacker'],
+  'space': ['space', 'sci-fi', 'scifi', 'starship', 'planet', 'cosmic', 'galaxy', 'asteroid'],
+  
+  // City/Urban themes
+  'city': ['city', 'town', 'village', 'metropolis', 'urban', 'settlement', 'kingdom', 'municipal'],
+  'town': ['town', 'city', 'village', 'settlement', 'hamlet', 'community'],
+  
+  // Transportation themes
+  'railway': ['railway', 'rail', 'train', 'subway', 'metro', 'transport', 'track', 'locomotive', 'station'],
+  'train': ['train', 'railway', 'rail', 'locomotive', 'subway', 'metro', 'tram'],
+  'highway': ['highway', 'road', 'path', 'bridge', 'tunnel', 'transportation', 'freeway', 'motorway'],
+  
+  // Building types
+  'house': ['house', 'home', 'mansion', 'estate', 'building', 'residence', 'villa', 'cottage', 'dwelling'],
+  'mansion': ['mansion', 'estate', 'villa', 'manor', 'house', 'home', 'luxury'],
+  
+  // Game modes
+  'adventure': ['adventure', 'quest', 'story', 'rpg', 'campaign', 'journey', 'exploration', 'dungeon'],
+  'survival': ['survival', 'survive', 'hardcore', 'stranded', 'island', 'wilderness', 'challenge'],
+  'skyblock': ['skyblock', 'sky', 'island', 'void', 'floating', 'void world', 'floating islands'],
+  'parkour': ['parkour', 'jump', 'challenge', 'obstacle', 'parkor', 'jumping', 'speedrun', 'sprint'],
+  'puzzle': ['puzzle', 'mystery', 'riddle', 'logic', 'brain', 'maze', 'labyrinth', 'escape room'],
+  'horror': ['horror', 'scary', 'spooky', 'haunted', 'creepy', 'terror', 'nightmare', 'fear', 'dark'],
+  'pvp': ['pvp', 'arena', 'battle', 'combat', 'fight', 'war', 'duel', 'faction'],
+  'minigame': ['minigame', 'mini-game', 'game', 'arcade', 'party game', 'multiplayer', 'party'],
+  
+  // Environment themes
+  'dungeon': ['dungeon', 'cave', 'underground', 'mines', 'cavern', 'tomb', 'catacomb', 'prison'],
+  'forest': ['forest', 'woods', 'jungle', 'woodland', 'grove', 'taiga'],
+  'desert': ['desert', 'sandy', 'oasis', 'pyramid', 'egypt', 'sahara'],
+  'winter': ['winter', 'snow', 'ice', 'frozen', 'arctic', 'christmas', 'holiday'],
+  'jungle': ['jungle', 'rainforest', 'tropical', 'amazon', 'wilderness'],
+  
+  // Redstone/Tech
+  'redstone': ['redstone', 'mechanism', 'automatic', 'contraption', 'circuit', 'wire', 'computer', 'tech'],
+  
+  // Biome-specific
+  'end': ['end', 'ender', 'enderman', 'void', 'dragon', 'outer islands'],
+  'swamp': ['swamp', 'marsh', 'bog', 'wetland', 'bayou'],
+  'mountain': ['mountain', 'alpine', 'peak', 'cliff', 'highlands', 'valley'],
+  
+  // Special themes
+  'pixelart': ['pixelart', 'pixel art', 'pixel', '2d', 'image', 'picture'],
+  'replica': ['replica', 'realistic', 'real world', 'landmark', 'famous', 'building'],
+  'park': ['park', 'amusement', 'theme park', 'zoo', 'garden', 'playground'],
+  'school': ['school', 'academy', 'university', 'college', 'campus', 'classroom'],
+  'hospital': ['hospital', 'medical', 'clinic', 'asylum', 'sanatorium']
+};
+
+/**
+ * Score thresholds for result filtering
+ */
+const RELEVANCE_THRESHOLD = 15; // Minimum score to be included in results
+
+/**
  * CurseForge API Client for Minecraft Maps
  * 
  * Get API key from: https://console.curseforge.com/
@@ -13,68 +93,191 @@ class CurseForgeClient {
   }
 
   /**
-   * Extract search keywords from natural language query
+   * Extract search keywords from natural language query with semantic expansion
    * @param {string} query - Natural language query
-   * @returns {Object} Extracted keywords and search terms
+   * @returns {Object} Extracted keywords and expanded search terms
    */
   extractSearchTerms(query) {
-    const lowerQuery = query.toLowerCase();
+    const lowerQuery = query.toLowerCase().trim();
+    const queryWords = lowerQuery.split(/\s+/).filter(w => w.length > 2);
     
-    // Map category keywords
-    const categoryMap = {
-      'adventure': ['adventure', 'quest', 'story', 'rpg', 'exploration'],
-      'survival': ['survival', 'island', 'skyblock', 'hardcore', 'stranded'],
-      'parkour': ['parkour', 'jump', 'jumping', 'obstacle', 'course'],
-      'horror': ['horror', 'scary', 'spooky', 'haunted', 'creepy', 'dark'],
-      'puzzle': ['puzzle', 'maze', 'brain', 'logic', 'redstone'],
-      'pvp': ['pvp', 'arena', 'combat', 'battle', 'fight', 'war'],
-      'creation': ['creation', 'build', 'city', 'town', 'village', 'castle'],
-      'modern': ['modern', 'contemporary', 'futuristic', 'sci-fi', 'cyberpunk'],
-      'medieval': ['medieval', 'castle', 'fortress', 'kingdom', 'fantasy'],
-      'house': ['house', 'home', 'mansion', 'estate', 'building']
-    };
+    // Collect all semantic equivalents for matched keywords
+    const expandedKeywords = new Set();
+    const matchedCategories = [];
     
-    // Detect categories from query
-    const detectedCategories = [];
-    for (const [category, keywords] of Object.entries(categoryMap)) {
-      if (keywords.some(kw => lowerQuery.includes(kw))) {
-        detectedCategories.push(category);
+    for (const [concept, synonyms] of Object.entries(SEMANTIC_KEYWORD_MAP)) {
+      // Check if query contains this concept or any of its synonyms
+      const isMatch = synonyms.some(term => 
+        lowerQuery.includes(term) || 
+        queryWords.some(word => term.includes(word) || word.includes(term))
+      );
+      
+      if (isMatch) {
+        matchedCategories.push(concept);
+        synonyms.forEach(syn => expandedKeywords.add(syn));
       }
     }
     
-    // Extract key features
-    const features = [];
-    const featureKeywords = [
-      'redstone', 'railway', 'rail', 'train', 'metro', 'subway',
-      'multiplayer', 'singleplayer', 'coop', 'co-op',
-      'checkpoints', 'secrets', 'hidden', 'easter egg',
-      'decorated', 'detailed', 'large', 'small', 'mini',
-      'automatic', 'flying', 'underwater', 'space', 'nether', 'end'
-    ];
-    
-    for (const feature of featureKeywords) {
-      if (lowerQuery.includes(feature)) {
-        features.push(feature);
-      }
+    // If no semantic matches, use the query words themselves
+    if (expandedKeywords.size === 0) {
+      queryWords.forEach(word => expandedKeywords.add(word));
     }
     
-    // Build optimized search query
-    const searchTerms = [...new Set([...detectedCategories, ...features])];
+    // Always include the original query
+    const allSearchTerms = [lowerQuery, ...Array.from(expandedKeywords)];
     
-    const optimizedQuery = searchTerms.length > 0 
-      ? `${query} ${searchTerms.join(' ')}`
-      : query;
+    // Remove duplicates and limit to reasonable number for API
+    const uniqueTerms = [...new Set(allSearchTerms)].slice(0, 8);
     
+    // Create optimized search query - prioritize important terms
+    const primaryTerm = lowerQuery;
+    const secondaryTerms = Array.from(expandedKeywords)
+      .filter(t => t !== lowerQuery)
+      .slice(0, 5)
+      .join(' ');
+    
+    const optimizedQuery = secondaryTerms 
+      ? `${primaryTerm} ${secondaryTerms}`
+      : primaryTerm;
+
     return {
       originalQuery: query,
       optimizedQuery: optimizedQuery,
-      categories: detectedCategories,
-      features: features
+      primaryTerm: primaryTerm,
+      expandedTerms: Array.from(expandedKeywords),
+      matchedCategories: matchedCategories,
+      allSearchTerms: uniqueTerms
     };
   }
 
   /**
-   * Search for Minecraft maps on CurseForge with natural language support
+   * Calculate relevance score with semantic matching
+   * @param {Object} map - Map object
+   * @param {string} query - Original query
+   * @param {Object} searchTerms - Extracted search terms
+   * @returns {number} Relevance score
+   */
+  calculateRelevanceScore(map, query, searchTerms) {
+    const lowerQuery = query.toLowerCase();
+    const queryWords = lowerQuery.split(/\s+/).filter(w => w.length > 2);
+    
+    const nameLower = (map.name || '').toLowerCase();
+    const summaryLower = (map.summary || '').toLowerCase();
+    const descLower = (map.description || '').toLowerCase();
+    const searchableText = `${nameLower} ${summaryLower} ${descLower}`;
+    
+    let score = 0;
+    let hasAnyMatch = false;
+    
+    // === TITLE MATCHES (Highest weight) ===
+    
+    // Exact title match
+    if (nameLower === lowerQuery) {
+      score += 200;
+      hasAnyMatch = true;
+    }
+    // Title contains full query
+    else if (nameLower.includes(lowerQuery)) {
+      score += 100;
+      hasAnyMatch = true;
+    }
+    
+    // Title contains query words
+    for (const word of queryWords) {
+      if (nameLower.includes(word)) {
+        score += 30;
+        hasAnyMatch = true;
+      }
+    }
+    
+    // Title contains expanded semantic terms
+    for (const term of searchTerms.expandedTerms) {
+      if (nameLower.includes(term.toLowerCase())) {
+        score += 25;
+        hasAnyMatch = true;
+      }
+    }
+    
+    // === DESCRIPTION MATCHES ===
+    
+    // Full query in description
+    if (summaryLower.includes(lowerQuery) || descLower.includes(lowerQuery)) {
+      score += 40;
+      hasAnyMatch = true;
+    }
+    
+    // Query words in description
+    for (const word of queryWords) {
+      if (summaryLower.includes(word) || descLower.includes(word)) {
+        score += 10;
+        hasAnyMatch = true;
+      }
+    }
+    
+    // Expanded terms in description
+    for (const term of searchTerms.expandedTerms) {
+      if (summaryLower.includes(term.toLowerCase()) || descLower.includes(term.toLowerCase())) {
+        score += 8;
+        hasAnyMatch = true;
+      }
+    }
+    
+    // === CATEGORY/CONCEPT MATCHES ===
+    
+    for (const category of searchTerms.matchedCategories) {
+      const categoryTerms = SEMANTIC_KEYWORD_MAP[category] || [category];
+      for (const catTerm of categoryTerms) {
+        if (searchableText.includes(catTerm.toLowerCase())) {
+          score += 15;
+          hasAnyMatch = true;
+          break; // Only count once per category
+        }
+      }
+    }
+    
+    // === PENALTY FOR IRRELEVANCE ===
+    
+    // If no keyword matches at all, heavily penalize
+    if (!hasAnyMatch) {
+      score -= 100;
+    }
+    
+    // === POPULARITY BONUS (Secondary factor) ===
+    
+    // Add small bonus for popularity (logarithmic to prevent dominance)
+    const popularityBonus = Math.log10((map.downloadCount || 0) + 1) * 2;
+    score += popularityBonus;
+    
+    return Math.max(0, score); // Ensure non-negative
+  }
+
+  /**
+   * Filter and sort results by relevance
+   * @param {Array} maps - Array of map objects
+   * @param {string} query - Original search query
+   * @param {Object} searchTerms - Extracted search terms
+   * @param {number} minScore - Minimum relevance score threshold
+   * @returns {Array} Filtered and sorted maps
+   */
+  filterAndSortByRelevance(maps, query, searchTerms, minScore = RELEVANCE_THRESHOLD) {
+    // Calculate scores for all maps
+    const scoredMaps = maps.map(map => ({
+      ...map,
+      _relevanceScore: this.calculateRelevanceScore(map, query, searchTerms)
+    }));
+    
+    // Filter out results below threshold
+    const filteredMaps = scoredMaps.filter(map => map._relevanceScore >= minScore);
+    
+    // Sort by relevance score (descending)
+    const sortedMaps = filteredMaps.sort((a, b) => b._relevanceScore - a._relevanceScore);
+    
+    // Remove internal score field before returning
+    return sortedMaps.map(({ _relevanceScore, ...map }) => map);
+  }
+
+  /**
+   * Search for Minecraft maps on CurseForge with enhanced semantic search
    * @param {string} query - Search query (natural language supported)
    * @param {Object} options - Search options
    * @param {string} options.gameVersion - Filter by Minecraft version
@@ -89,155 +292,97 @@ class CurseForgeClient {
 
     const { gameVersion, pageSize = 20, index = 0, sortBy = 'popularity' } = options;
     
-    // Extract and optimize search terms for natural language queries
+    // Extract and expand search terms
     const searchTerms = this.extractSearchTerms(query);
     console.log(`[CurseForge] Searching for: "${query}"`);
-    console.log(`[CurseForge] Optimized query: "${searchTerms.optimizedQuery}"`);
-    console.log(`[CurseForge] Detected categories: ${searchTerms.categories.join(', ') || 'none'}`);
+    console.log(`[CurseForge] Expanded terms: ${searchTerms.expandedTerms.join(', ')}`);
+    console.log(`[CurseForge] Categories: ${searchTerms.matchedCategories.join(', ') || 'none'}`);
 
-    const url = new URL(`${CURSEFORGE_API_BASE}/mods/search`);
-    url.searchParams.append('gameId', MINECRAFT_GAME_ID.toString());
-    url.searchParams.append('classId', WORLDS_CLASS_ID.toString());
-    url.searchParams.append('searchFilter', searchTerms.optimizedQuery);
-    url.searchParams.append('pageSize', Math.min(pageSize, 50).toString());
-    url.searchParams.append('index', index.toString());
+    // Try multiple search strategies
+    const allResults = [];
+    const seenIds = new Set();
     
-    // Sort by popularity
-    if (sortBy === 'popularity') {
-      url.searchParams.append('sortField', '6'); // 6 = Popularity
-      url.searchParams.append('sortOrder', 'desc');
-    }
+    // Strategy 1: Search with primary query
+    const searchQueries = [
+      searchTerms.primaryTerm,
+      ...searchTerms.expandedTerms.slice(0, 3) // Add top expanded terms
+    ];
     
-    if (gameVersion) {
-      url.searchParams.append('gameVersion', gameVersion);
-    }
+    for (const searchQuery of searchQueries) {
+      try {
+        const url = new URL(`${CURSEFORGE_API_BASE}/mods/search`);
+        url.searchParams.append('gameId', MINECRAFT_GAME_ID.toString());
+        url.searchParams.append('classId', WORLDS_CLASS_ID.toString());
+        url.searchParams.append('searchFilter', searchQuery);
+        url.searchParams.append('pageSize', Math.min(pageSize * 2, 50).toString()); // Get more for filtering
+        url.searchParams.append('index', index.toString());
+        
+        // Sort by popularity initially
+        if (sortBy === 'popularity') {
+          url.searchParams.append('sortField', '6'); // 6 = Popularity
+          url.searchParams.append('sortOrder', 'desc');
+        }
+        
+        if (gameVersion) {
+          url.searchParams.append('gameVersion', gameVersion);
+        }
 
-    try {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 15000); // 15s timeout
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
 
-      const response = await fetch(url.toString(), {
-        headers: {
-          'x-api-key': this.apiKey,
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        signal: controller.signal
-      });
+        const response = await fetch(url.toString(), {
+          headers: {
+            'x-api-key': this.apiKey,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          signal: controller.signal
+        });
 
-      clearTimeout(timeout);
+        clearTimeout(timeout);
 
-      if (response.status === 429) {
-        const retryAfter = response.headers.get('Retry-After') || '60';
-        throw new Error(`RATE_LIMITED: Rate limit exceeded. Retry after ${retryAfter} seconds.`);
-      }
+        if (response.status === 429) {
+          const retryAfter = response.headers.get('Retry-After') || '60';
+          throw new Error(`RATE_LIMITED: Rate limit exceeded. Retry after ${retryAfter} seconds.`);
+        }
 
-      if (response.status === 401 || response.status === 403) {
-        throw new Error(`AUTH_ERROR: Invalid API key. Check your CURSEFORGE_API_KEY. Status: ${response.status}`);
-      }
+        if (response.status === 401 || response.status === 403) {
+          throw new Error(`AUTH_ERROR: Invalid API key. Check your CURSEFORGE_API_KEY. Status: ${response.status}`);
+        }
 
-      if (!response.ok) {
-        const errorText = await response.text().catch(() => 'Unknown error');
-        throw new Error(`API_ERROR: CurseForge API returned ${response.status}: ${errorText}`);
-      }
+        if (!response.ok) {
+          console.warn(`[CurseForge] Search failed for "${searchQuery}": ${response.status}`);
+          continue;
+        }
 
-      const data = await response.json();
-      
-      if (!data.data || !Array.isArray(data.data)) {
-        throw new Error('API_ERROR: Invalid response format from CurseForge API');
-      }
-
-      // Transform and sort by relevance
-      const maps = data.data.map(mod => this.transformMapData(mod));
-      return this.sortByRelevance(maps, query, searchTerms);
-
-    } catch (error) {
-      if (error.name === 'AbortError') {
-        throw new Error('TIMEOUT: Request to CurseForge API timed out after 15 seconds');
-      }
-      
-      if (error.message.startsWith('RATE_LIMITED') || 
-          error.message.startsWith('AUTH_ERROR') || 
-          error.message.startsWith('API_ERROR') ||
-          error.message.startsWith('TIMEOUT')) {
-        throw error;
-      }
-      
-      throw new Error(`NETWORK_ERROR: ${error.message}`);
-    }
-  }
-
-  /**
-   * Sort maps by relevance to the query
-   * @param {Array} maps - Array of map objects
-   * @param {string} query - Original search query
-   * @param {Object} searchTerms - Extracted search terms
-   * @returns {Array} Sorted maps
-   */
-  sortByRelevance(maps, query, searchTerms) {
-    const lowerQuery = query.toLowerCase();
-    const queryWords = lowerQuery.split(/\s+/).filter(w => w.length > 2);
-    
-    return maps.sort((a, b) => {
-      let scoreA = this.calculateRelevanceScore(a, lowerQuery, queryWords, searchTerms);
-      let scoreB = this.calculateRelevanceScore(b, lowerQuery, queryWords, searchTerms);
-      
-      // Factor in popularity
-      scoreA += Math.log10((a.downloadCount || 0) + 1) * 0.5;
-      scoreB += Math.log10((b.downloadCount || 0) + 1) * 0.5;
-      
-      return scoreB - scoreA;
-    });
-  }
-
-  /**
-   * Calculate relevance score for a map
-   */
-  calculateRelevanceScore(map, lowerQuery, queryWords, searchTerms) {
-    let score = 0;
-    const nameLower = (map.name || '').toLowerCase();
-    const summaryLower = (map.summary || '').toLowerCase();
-    const descLower = (map.description || '').toLowerCase();
-    const searchableText = `${nameLower} ${summaryLower} ${descLower}`;
-    
-    // Exact name match gets highest score
-    if (nameLower.includes(lowerQuery)) {
-      score += 100;
-    }
-    
-    // Partial name match
-    for (const word of queryWords) {
-      if (nameLower.includes(word)) {
-        score += 20;
+        const data = await response.json();
+        
+        if (data.data && Array.isArray(data.data)) {
+          for (const mod of data.data) {
+            if (!seenIds.has(mod.id)) {
+              seenIds.add(mod.id);
+              allResults.push(this.transformMapData(mod));
+            }
+          }
+        }
+      } catch (error) {
+        if (error.message.startsWith('RATE_LIMITED') || 
+            error.message.startsWith('AUTH_ERROR')) {
+          throw error;
+        }
+        console.warn(`[CurseForge] Error searching "${searchQuery}":`, error.message);
       }
     }
+
+    console.log(`[CurseForge] Raw results: ${allResults.length}`);
     
-    // Summary/description matches
-    if (summaryLower.includes(lowerQuery) || descLower.includes(lowerQuery)) {
-      score += 30;
-    }
+    // Filter and sort by semantic relevance
+    const filteredResults = this.filterAndSortByRelevance(allResults, query, searchTerms);
     
-    for (const word of queryWords) {
-      if (summaryLower.includes(word) || descLower.includes(word)) {
-        score += 5;
-      }
-    }
+    console.log(`[CurseForge] Filtered results: ${filteredResults.length} (threshold: ${RELEVANCE_THRESHOLD})`);
     
-    // Category matches
-    for (const cat of searchTerms.categories) {
-      if (searchableText.includes(cat)) {
-        score += 15;
-      }
-    }
-    
-    // Feature matches
-    for (const feature of searchTerms.features) {
-      if (searchableText.includes(feature)) {
-        score += 10;
-      }
-    }
-    
-    return score;
+    // Limit to requested page size
+    return filteredResults.slice(0, pageSize);
   }
 
   /**

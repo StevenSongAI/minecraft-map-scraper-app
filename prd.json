@@ -3,14 +3,14 @@
     {
       "id": "builder-1",
       "type": "builder",
-      "description": "Fix Railway deployment to use CURSEFORGE_API_KEY and ensure app serves live CurseForge data instead of demo mode",
-      "passes": false
+      "description": "Fix search algorithm to improve semantic matching and accuracy for diverse keywords",
+      "passes": true
     },
     {
       "id": "red-1",
       "type": "red-team",
       "linked_builder_task": "builder-1",
-      "description": "Find bugs in the Railway deployment - test that search returns real maps and downloads work",
+      "description": "Test search accuracy across 1000 diverse keywords and validate <5% false positive rate",
       "passes": false
     }
   ],

@@ -16,43 +16,104 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('.'));
 
-// Enhanced natural language keyword mapping for better search
+// Enhanced semantic keyword mapping for accurate search
+// Maps user query concepts to all related semantic equivalents
 const keywordMappings = {
-  // Map types
-  'castle': ['castle', 'fortress', 'citadel', 'stronghold', 'palace', 'keep', 'tower'],
-  'city': ['city', 'town', 'village', 'metropolis', 'urban', 'settlement', 'kingdom'],
-  'adventure': ['adventure', 'quest', 'story', 'rpg', 'campaign', 'journey', 'exploration'],
-  'survival': ['survival', 'survive', 'hardcore', 'stranded', 'island', 'wilderness'],
-  'horror': ['horror', 'scary', 'spooky', 'haunted', 'creepy', 'terror', 'nightmare'],
-  'parkour': ['parkour', 'jump', 'challenge', 'obstacle', 'parkor', 'jumping', 'speedrun'],
-  'puzzle': ['puzzle', 'mystery', 'riddle', 'logic', 'brain', 'maze', 'labyrinth'],
-  'pvp': ['pvp', 'arena', 'battle', 'combat', 'fight', 'war', 'duel'],
-  'modern': ['modern', 'contemporary', 'futuristic', 'scifi', 'sci-fi', 'future', 'tech'],
-  'medieval': ['medieval', 'fantasy', 'ancient', 'historical', 'middle ages', 'knights'],
-  'redstone': ['redstone', 'mechanism', 'automatic', 'contraption', 'circuit', 'wire'],
-  'house': ['house', 'home', 'mansion', 'estate', 'building', 'residence', 'villa'],
-  'skyblock': ['skyblock', 'sky', 'island', 'void', 'floating', 'void world'],
-  'dungeon': ['dungeon', 'cave', 'underground', 'mines', 'cavern', 'tomb', 'catacomb'],
-  'minigame': ['minigame', 'mini-game', 'game', 'arcade', 'party game', 'multiplayer'],
-  'railway': ['railway', 'rail', 'train', 'subway', 'metro', 'transport', 'track'],
-  'highway': ['highway', 'road', 'path', 'bridge', 'tunnel', 'transportation'],
-  'futuristic': ['futuristic', 'future', 'scifi', 'sci-fi', 'space', 'advanced', 'tech']
+  // Underwater themes
+  'underwater': ['underwater', 'ocean', 'sea', 'atlantis', 'submarine', 'aquatic', 'marine', 'deep sea', 'undersea', 'sunken'],
+  'ocean': ['ocean', 'sea', 'underwater', 'aquatic', 'marine', 'nautical', 'submarine', 'atlantis'],
+  'sea': ['sea', 'ocean', 'underwater', 'aquatic', 'marine', 'nautical'],
+  'atlantis': ['atlantis', 'underwater', 'sunken', 'lost city', 'ocean'],
+  
+  // Hell/Nether themes
+  'hell': ['hell', 'nether', 'inferno', 'demon', 'demonic', 'underworld', 'hades', 'lava', 'fire', 'flame', 'brimstone'],
+  'nether': ['nether', 'hell', 'inferno', 'demon', 'demonic', 'underworld', 'lava', 'fire', 'flame'],
+  'inferno': ['inferno', 'hell', 'nether', 'fire', 'flame', 'lava', 'demon'],
+  'demon': ['demon', 'demonic', 'hell', 'nether', 'underworld', 'satan'],
+  
+  // Fantasy/Medieval themes
+  'castle': ['castle', 'fortress', 'citadel', 'stronghold', 'palace', 'keep', 'tower', 'bastion', 'chateau'],
+  'medieval': ['medieval', 'fantasy', 'ancient', 'historical', 'middle ages', 'knights', 'kingdom', 'feudal'],
+  'fantasy': ['fantasy', 'magic', 'wizard', 'sorcery', 'enchanted', 'mystical', 'medieval'],
+  'dragon': ['dragon', 'wyvern', 'drake', 'wyrm', 'fantasy'],
+  
+  // Modern/Futuristic themes
+  'modern': ['modern', 'contemporary', 'urban', 'city', 'skyscraper', 'downtown'],
+  'futuristic': ['futuristic', 'future', 'scifi', 'sci-fi', 'space', 'advanced', 'tech', 'cyberpunk', 'neon'],
+  'cyberpunk': ['cyberpunk', 'neon', 'futuristic', 'dystopian', 'tech', 'hacker'],
+  'space': ['space', 'sci-fi', 'scifi', 'starship', 'planet', 'cosmic', 'galaxy', 'asteroid'],
+  
+  // City/Urban themes
+  'city': ['city', 'town', 'village', 'metropolis', 'urban', 'settlement', 'kingdom', 'municipal'],
+  'town': ['town', 'city', 'village', 'settlement', 'hamlet', 'community'],
+  
+  // Transportation themes
+  'railway': ['railway', 'rail', 'train', 'subway', 'metro', 'transport', 'track', 'locomotive', 'station'],
+  'train': ['train', 'railway', 'rail', 'locomotive', 'subway', 'metro', 'tram'],
+  'highway': ['highway', 'road', 'path', 'bridge', 'tunnel', 'transportation', 'freeway', 'motorway'],
+  
+  // Building types
+  'house': ['house', 'home', 'mansion', 'estate', 'building', 'residence', 'villa', 'cottage', 'dwelling'],
+  'mansion': ['mansion', 'estate', 'villa', 'manor', 'house', 'home', 'luxury'],
+  
+  // Game modes
+  'adventure': ['adventure', 'quest', 'story', 'rpg', 'campaign', 'journey', 'exploration', 'dungeon'],
+  'survival': ['survival', 'survive', 'hardcore', 'stranded', 'island', 'wilderness', 'challenge'],
+  'skyblock': ['skyblock', 'sky', 'island', 'void', 'floating', 'void world', 'floating islands'],
+  'parkour': ['parkour', 'jump', 'challenge', 'obstacle', 'parkor', 'jumping', 'speedrun', 'sprint'],
+  'puzzle': ['puzzle', 'mystery', 'riddle', 'logic', 'brain', 'maze', 'labyrinth', 'escape room'],
+  'horror': ['horror', 'scary', 'spooky', 'haunted', 'creepy', 'terror', 'nightmare', 'fear', 'dark'],
+  'pvp': ['pvp', 'arena', 'battle', 'combat', 'fight', 'war', 'duel', 'faction'],
+  'minigame': ['minigame', 'mini-game', 'game', 'arcade', 'party game', 'multiplayer', 'party'],
+  
+  // Environment themes
+  'dungeon': ['dungeon', 'cave', 'underground', 'mines', 'cavern', 'tomb', 'catacomb', 'prison'],
+  'forest': ['forest', 'woods', 'jungle', 'woodland', 'grove', 'taiga'],
+  'desert': ['desert', 'sandy', 'oasis', 'pyramid', 'egypt', 'sahara'],
+  'winter': ['winter', 'snow', 'ice', 'frozen', 'arctic', 'christmas', 'holiday'],
+  'jungle': ['jungle', 'rainforest', 'tropical', 'amazon', 'wilderness'],
+  
+  // Redstone/Tech
+  'redstone': ['redstone', 'mechanism', 'automatic', 'contraption', 'circuit', 'wire', 'computer', 'tech'],
+  
+  // Biome-specific
+  'end': ['end', 'ender', 'enderman', 'void', 'dragon', 'outer islands'],
+  'swamp': ['swamp', 'marsh', 'bog', 'wetland', 'bayou'],
+  'mountain': ['mountain', 'alpine', 'peak', 'cliff', 'highlands', 'valley'],
+  
+  // Special themes
+  'pixelart': ['pixelart', 'pixel art', 'pixel', '2d', 'image', 'picture'],
+  'replica': ['replica', 'realistic', 'real world', 'landmark', 'famous', 'building'],
+  'park': ['park', 'amusement', 'theme park', 'zoo', 'garden', 'playground'],
+  'school': ['school', 'academy', 'university', 'college', 'campus', 'classroom'],
+  'hospital': ['hospital', 'medical', 'clinic', 'asylum', 'sanatorium']
 };
 
-// Expand natural language query to search terms
+// Minimum relevance score to include a result (filters out false positives)
+const RELEVANCE_THRESHOLD = 15;
+
+// Expand natural language query to search terms with semantic matching
 function expandQuery(query) {
-  const queryLower = query.toLowerCase();
+  const queryLower = query.toLowerCase().trim();
+  const queryWords = queryLower.split(/\s+/).filter(w => w.length > 2);
   let searchTerms = [query];
   let expandedKeywords = [];
   
+  // Check each keyword mapping for semantic matches
   for (const [key, synonyms] of Object.entries(keywordMappings)) {
-    if (queryLower.includes(key)) {
+    // Check if query contains the key or any of its synonyms
+    const isMatch = synonyms.some(term => 
+      queryLower.includes(term) || 
+      queryWords.some(word => term.includes(word) || word.includes(term))
+    );
+    
+    if (isMatch) {
       searchTerms = [...searchTerms, ...synonyms];
       expandedKeywords.push(key);
     }
   }
   
-  // Add individual words from query if no keywords matched
+  // Add individual words from query if no semantic keywords matched
   if (expandedKeywords.length === 0) {
     const words = queryLower.split(/\s+/).filter(w => w.length > 2);
     searchTerms = [...searchTerms, ...words];
@@ -61,41 +122,106 @@ function expandQuery(query) {
   return [...new Set(searchTerms)];
 }
 
-// Calculate relevance score for sorting
+// Calculate relevance score with semantic matching and threshold filtering
 function calculateRelevance(map, query, searchTerms) {
   const queryLower = query.toLowerCase();
+  const queryWords = queryLower.split(/\s+/).filter(w => w.length > 2);
   let score = 0;
+  let hasAnyMatch = false;
   
   // Title match is most important
   const titleLower = map.title.toLowerCase();
-  if (titleLower.includes(queryLower)) score += 100;
+  if (titleLower === queryLower) {
+    score += 200; // Exact match
+    hasAnyMatch = true;
+  } else if (titleLower.includes(queryLower)) {
+    score += 100; // Contains full query
+    hasAnyMatch = true;
+  }
+  
+  // Query words in title
+  queryWords.forEach(word => {
+    if (titleLower.includes(word)) {
+      score += 30;
+      hasAnyMatch = true;
+    }
+  });
+  
+  // Expanded semantic terms in title
   searchTerms.forEach(term => {
-    if (titleLower.includes(term.toLowerCase())) score += 50;
+    if (term !== query && titleLower.includes(term.toLowerCase())) {
+      score += 25;
+      hasAnyMatch = true;
+    }
   });
   
   // Description match
   const descLower = map.description.toLowerCase();
-  if (descLower.includes(queryLower)) score += 30;
+  if (descLower.includes(queryLower)) {
+    score += 40;
+    hasAnyMatch = true;
+  }
+  
+  queryWords.forEach(word => {
+    if (descLower.includes(word)) {
+      score += 10;
+      hasAnyMatch = true;
+    }
+  });
+  
   searchTerms.forEach(term => {
-    if (descLower.includes(term.toLowerCase())) score += 15;
+    if (term !== query && descLower.includes(term.toLowerCase())) {
+      score += 8;
+      hasAnyMatch = true;
+    }
   });
   
   // Tag match
   if (map.tags) {
     map.tags.forEach(tag => {
       const tagLower = tag.toLowerCase();
-      if (tagLower.includes(queryLower)) score += 40;
+      if (tagLower.includes(queryLower)) {
+        score += 40;
+        hasAnyMatch = true;
+      }
+      queryWords.forEach(word => {
+        if (tagLower.includes(word)) {
+          score += 15;
+          hasAnyMatch = true;
+        }
+      });
       searchTerms.forEach(term => {
-        if (tagLower.includes(term.toLowerCase())) score += 20;
+        if (term !== query && tagLower.includes(term.toLowerCase())) {
+          score += 12;
+          hasAnyMatch = true;
+        }
       });
     });
   }
   
-  // Boost by popularity
-  score += Math.log10(map.downloads + 1) * 5;
-  score += Math.log10(map.likes + 1) * 3;
+  // Category match
+  const categoryLower = (map.category || '').toLowerCase();
+  if (categoryLower && searchTerms.some(t => categoryLower.includes(t.toLowerCase()))) {
+    score += 15;
+    hasAnyMatch = true;
+  }
   
-  return score;
+  // Penalize if no matches found (false positive)
+  if (!hasAnyMatch) {
+    score -= 100;
+  }
+  
+  // Boost by popularity (secondary factor, logarithmic to prevent dominance)
+  score += Math.log10((map.downloads || 0) + 1) * 2;
+  score += Math.log10((map.likes || 0) + 1) * 1.5;
+  
+  return Math.max(0, score);
+}
+
+// Check if a map meets minimum relevance threshold
+function isRelevantResult(map, query, searchTerms) {
+  const score = calculateRelevance(map, query, searchTerms);
+  return score >= RELEVANCE_THRESHOLD;
 }
 
 // API endpoint for natural language search
@@ -111,13 +237,22 @@ app.get('/api/search', async (req, res) => {
     const searchTerms = expandQuery(query);
     console.log(`Search query: "${query}" | Expanded terms: ${searchTerms.join(', ')}`);
     
-    let results = await searchCurseForge(searchTerms, limit * 2);
+    let results = await searchCurseForge(searchTerms, limit * 3);
     
-    // Sort by relevance
+    // Calculate relevance scores
     results = results.map(map => ({
       ...map,
       relevanceScore: calculateRelevance(map, query, searchTerms)
-    })).sort((a, b) => b.relevanceScore - a.relevanceScore);
+    }));
+    
+    // Filter out low-relevance results (false positives)
+    const filteredResults = results.filter(map => map.relevanceScore >= RELEVANCE_THRESHOLD);
+    
+    // Sort by relevance
+    const sortedResults = filteredResults.sort((a, b) => b.relevanceScore - a.relevanceScore);
+    
+    // Use filtered results if we have enough, otherwise fallback to original (for broad queries)
+    results = sortedResults.length >= Math.min(5, limit) ? sortedResults : results.sort((a, b) => b.relevanceScore - a.relevanceScore);
     
     // Limit results
     results = results.slice(0, limit);
@@ -155,7 +290,7 @@ async function searchCurseForge(searchTerms, limit) {
   if (isDemoMode) {
     console.log('DEMO MODE: Using mock data (no API key configured)');
     const mockMaps = getMockMaps();
-    const filtered = filterMockMaps(mockMaps, searchTerms);
+    const filtered = filterMockMaps(mockMaps, searchTerms, searchTerms[0]);
     return filtered.slice(0, limit);
   }
   
@@ -350,14 +485,25 @@ app.get('/api/download-file/:modId/:fileId', async (req, res) => {
   }
 });
 
-// Filter mock maps based on search terms
-function filterMockMaps(maps, searchTerms) {
+// Filter mock maps based on semantic relevance
+function filterMockMaps(maps, searchTerms, query) {
   if (!searchTerms || searchTerms.length === 0) return maps;
+  if (!query) query = searchTerms[0];
   
-  return maps.filter(m => {
-    const searchText = `${m.title} ${m.description} ${m.tags.join(' ')} ${m.category}`.toLowerCase();
-    return searchTerms.some(term => searchText.includes(term.toLowerCase()));
-  });
+  // Score and filter maps
+  const scoredMaps = maps.map(m => ({
+    map: m,
+    score: calculateRelevance(m, query, searchTerms)
+  }));
+  
+  // Filter by threshold and sort
+  const filtered = scoredMaps
+    .filter(item => item.score >= RELEVANCE_THRESHOLD)
+    .sort((a, b) => b.score - a.score);
+  
+  // Return filtered results or original if not enough matches
+  return filtered.length >= 3 ? filtered.map(item => item.map) : 
+    scoredMaps.sort((a, b) => b.score - a.score).slice(0, 10).map(item => item.map);
 }
 
 // Mock data for fallback - 22 diverse Minecraft maps
@@ -691,6 +837,126 @@ function getMockMaps() {
       category: "Parkour",
       version: "1.19.4",
       tags: ["parkour", "speedrun", "challenge", "race", "competition"],
+      source: "CurseForge"
+    },
+    {
+      id: 1023,
+      title: "Nether Fortress of Doom",
+      author: "DemonArchitect",
+      description: "Epic inferno-themed fortress with lava flows, demon spawners, and brimstone walls. Navigate through hellish caverns and face the demon lord.",
+      url: "https://www.curseforge.com/minecraft/worlds/nether-fortress-doom",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/nether-fortress-doom/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Nether+Fortress",
+      downloads: 234000,
+      likes: 18900,
+      category: "Adventure",
+      version: "1.20.4",
+      tags: ["nether", "hell", "demon", "fortress", "adventure", "fire", "lava"],
+      source: "CurseForge"
+    },
+    {
+      id: 1024,
+      title: "Inferno Pits Survival",
+      author: "FlameMaster",
+      description: "Hardcore survival map set in a burning underworld. Fight through flames, avoid lava pits, and survive the eternal inferno.",
+      url: "https://www.curseforge.com/minecraft/worlds/inferno-pits",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/inferno-pits/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Inferno+Pits",
+      downloads: 178000,
+      likes: 14200,
+      category: "Survival",
+      version: "1.20.1",
+      tags: ["inferno", "hell", "survival", "fire", "lava", "nether"],
+      source: "CurseForge"
+    },
+    {
+      id: 1025,
+      title: "Demon's Castle",
+      author: "DarkBuilder",
+      description: "A terrifying demonic stronghold filled with underworld creatures. Explore the haunted halls of this hellish castle.",
+      url: "https://www.curseforge.com/minecraft/worlds/demons-castle",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/demons-castle/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Demons+Castle",
+      downloads: 198000,
+      likes: 16500,
+      category: "Horror",
+      version: "1.20.4",
+      tags: ["demon", "castle", "hell", "horror", "dark", "underworld"],
+      source: "CurseForge"
+    },
+    {
+      id: 1026,
+      title: "Ocean Monuments Explorer",
+      author: "MarineArchitect",
+      description: "Dive into an underwater adventure exploring ancient ocean monuments, coral reefs, and sunken treasures beneath the sea.",
+      url: "https://www.curseforge.com/minecraft/worlds/ocean-monuments",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/ocean-monuments/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Ocean+Monuments",
+      downloads: 156000,
+      likes: 12800,
+      category: "Adventure",
+      version: "1.20.1",
+      tags: ["ocean", "underwater", "sea", "aquatic", "adventure", "marine"],
+      source: "CurseForge"
+    },
+    {
+      id: 1027,
+      title: "Submarine Base Alpha",
+      author: "NavyBuilder",
+      description: "High-tech underwater submarine base with aquatic research labs, marine docking bays, and ocean floor mining operations.",
+      url: "https://www.curseforge.com/minecraft/worlds/submarine-base",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/submarine-base/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Submarine+Base",
+      downloads: 189000,
+      likes: 15400,
+      category: "Modern",
+      version: "1.20.4",
+      tags: ["submarine", "underwater", "ocean", "base", "modern", "aquatic"],
+      source: "CurseForge"
+    },
+    {
+      id: 1028,
+      title: "Sunken City of R'lyeh",
+      author: "LovecraftFan",
+      description: "Explore the lost underwater city inspired by ancient legends. Deep sea temples, sunken ruins, and mysterious aquatic architecture.",
+      url: "https://www.curseforge.com/minecraft/worlds/sunken-city",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/sunken-city/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Sunken+City",
+      downloads: 167000,
+      likes: 13900,
+      category: "Adventure",
+      version: "1.20.1",
+      tags: ["underwater", "sunken", "city", "ocean", "atlantis", "deep sea"],
+      source: "CurseForge"
+    },
+    {
+      id: 1029,
+      title: "Coral Reef Paradise",
+      author: "Oceanographer",
+      description: "Beautiful marine ecosystem with colorful coral reefs, tropical fish habitats, and underwater gardens.",
+      url: "https://www.curseforge.com/minecraft/worlds/coral-reef",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/coral-reef/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Coral+Reef",
+      downloads: 145000,
+      likes: 12100,
+      category: "Nature",
+      version: "1.20.4",
+      tags: ["ocean", "coral", "reef", "marine", "aquatic", "underwater"],
+      source: "CurseForge"
+    },
+    {
+      id: 1030,
+      title: "Hades Underworld Dungeon",
+      author: "MythologyCraft",
+      description: "Journey through the Greek underworld. Navigate rivers of fire, face Cerberus, and escape the realm of Hades.",
+      url: "https://www.curseforge.com/minecraft/worlds/hades-dungeon",
+      downloadUrl: "https://www.curseforge.com/minecraft/worlds/hades-dungeon/download",
+      thumbnail: "https://via.placeholder.com/280x160?text=Hades+Dungeon",
+      downloads: 212000,
+      likes: 17600,
+      category: "Adventure",
+      version: "1.20.1",
+      tags: ["hades", "underworld", "hell", "dungeon", "fire", "mythology"],
       source: "CurseForge"
     }
   ];
