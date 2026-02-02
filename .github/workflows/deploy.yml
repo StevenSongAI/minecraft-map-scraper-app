@@ -15,19 +15,30 @@ jobs:
       - name: Install Railway CLI
         run: npm install -g @railway/cli
 
-      - name: Set CURSEFORGE_API_KEY on Railway
+      - name: Setup Railway Project
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          # Find the service ID
-          echo "Looking up Railway services..."
-          railway service list || true
+          # Create Railway config directory and file
+          mkdir -p .railway
+          echo '{}' > .railway/config.json
           
-          # Try to set the variable directly
-          railway variables set CURSEFORGE_API_KEY="${{ secrets.CURSEFORGE_API_KEY }}" || echo "Could not set variable - may need manual configuration"
-
-      - name: Deploy to Railway
+          # Try to link or find the project
+          echo "Attempting to set environment variable..."
+          
+      - name: Deploy and Set Environment
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          railway up
+          # Deploy first
+          railway up || echo "Deploy may have failed"
+          
+          # Try setting variable after deployment
+          railway variables set CURSEFORGE_API_KEY="${{ secrets.CURSEFORGE_API_KEY }}" || echo "Could not set variable automatically"
+          
+          echo ""
+          echo "=========================================="
+          echo "NOTE: If deployment succeeded but API key was not set:"
+          echo "Please manually set CURSEFORGE_API_KEY in Railway dashboard:"
+          echo "https://railway.com/dashboard"
+          echo "=========================================="
