@@ -169,6 +169,12 @@ class CurseForgeClient {
     let score = 0;
     let hasAnyMatch = false;
     
+    // Helper function for word boundary matching
+    const hasWordMatch = (text, word) => {
+      const regex = new RegExp(`\\b${word}\\b`, 'i');
+      return regex.test(text);
+    };
+    
     // === TITLE MATCHES (Highest weight) ===
     
     // Exact title match
@@ -182,17 +188,17 @@ class CurseForgeClient {
       hasAnyMatch = true;
     }
     
-    // Title contains query words
+    // Title contains query words (whole word match)
     for (const word of queryWords) {
-      if (nameLower.includes(word)) {
+      if (hasWordMatch(nameLower, word)) {
         score += 30;
         hasAnyMatch = true;
       }
     }
     
-    // Title contains expanded semantic terms
+    // Title contains expanded semantic terms (whole word match)
     for (const term of searchTerms.expandedTerms) {
-      if (nameLower.includes(term.toLowerCase())) {
+      if (hasWordMatch(nameLower, term.toLowerCase())) {
         score += 25;
         hasAnyMatch = true;
       }
@@ -206,17 +212,17 @@ class CurseForgeClient {
       hasAnyMatch = true;
     }
     
-    // Query words in description
+    // Query words in description (whole word match)
     for (const word of queryWords) {
-      if (summaryLower.includes(word) || descLower.includes(word)) {
+      if (hasWordMatch(summaryLower, word) || hasWordMatch(descLower, word)) {
         score += 10;
         hasAnyMatch = true;
       }
     }
     
-    // Expanded terms in description
+    // Expanded terms in description (whole word match)
     for (const term of searchTerms.expandedTerms) {
-      if (summaryLower.includes(term.toLowerCase()) || descLower.includes(term.toLowerCase())) {
+      if (hasWordMatch(summaryLower, term.toLowerCase()) || hasWordMatch(descLower, term.toLowerCase())) {
         score += 8;
         hasAnyMatch = true;
       }
@@ -227,7 +233,7 @@ class CurseForgeClient {
     for (const category of searchTerms.matchedCategories) {
       const categoryTerms = SEMANTIC_KEYWORD_MAP[category] || [category];
       for (const catTerm of categoryTerms) {
-        if (searchableText.includes(catTerm.toLowerCase())) {
+        if (hasWordMatch(searchableText, catTerm.toLowerCase())) {
           score += 15;
           hasAnyMatch = true;
           break; // Only count once per category
