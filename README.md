@@ -39,3 +39,4 @@ The `index.html` dashboard can be shared with your animator via iCloud. They jus
 1. Open the HTML file
 2. Ask you to run searches (or run `scraper.py` themselves if they have Python)
 3. Browse and download maps directly
+# Railway Deployment Trigger
