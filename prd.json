@@ -3,7 +3,7 @@
     {
       "id": "builder-1",
       "type": "builder",
-      "description": "Fix demo mode - serve mock maps when API key is missing",
+      "description": "Fix CurseForge API integration - configure API key correctly",
       "passes": true,
       "completedAt": "2026-02-02T17:15:00Z"
     }
