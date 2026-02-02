@@ -1,12 +1,18 @@
 {
   "tasks": [
     {
-      "id": "builder-1",
+      "id": "red-2",
+      "type": "red-team",
+      "linked_builder_task": "builder-2",
+      "description": "Verify Railway deployment has live API - search returns real CurseForge maps, not mock data",
+      "passes": false
+    },
+    {
+      "id": "builder-2",
       "type": "builder",
-      "description": "Fix CurseForge API integration - configure API key correctly",
-      "passes": true,
-      "completedAt": "2026-02-02T17:15:00Z"
+      "description": "Fix any issues found by red team - ensure API key properly configured on Railway",
+      "passes": false
     }
   ],
-  "status": "COMPLETE"
+  "status": "IN_PROGRESS"
 }
