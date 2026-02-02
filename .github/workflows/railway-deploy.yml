@@ -12,8 +12,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+        
       - name: Deploy to Railway
-        uses: bervProject/railway-deploy@main
-        with:
-          railway_token: ${{ secrets.RAILWAY_TOKEN }}
-          service: "minecraft-map-scraper"
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: railway deploy --service=minecraft-map-scraper --detach
+        
+      - name: Set CURSEFORGE_API_KEY
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: railway variables set CURSEFORGE_API_KEY="${{ secrets.CURSEFORGE_API_KEY }}"
