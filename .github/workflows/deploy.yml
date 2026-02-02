@@ -14,18 +14,20 @@ jobs:
 
       - name: Install Railway CLI
         run: npm install -g @railway/cli
-        
-      - name: Set CURSEFORGE_API_KEY
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-        run: |
-          cd $GITHUB_WORKSPACE
-          railway variables set CURSEFORGE_API_KEY="${{ secrets.CURSEFORGE_API_KEY }}"
-        continue-on-error: true
 
-      - name: Deploy
+      - name: Set CURSEFORGE_API_KEY on Railway
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          cd $GITHUB_WORKSPACE
+          # Find the service ID
+          echo "Looking up Railway services..."
+          railway service list || true
+          
+          # Try to set the variable directly
+          railway variables set CURSEFORGE_API_KEY="${{ secrets.CURSEFORGE_API_KEY }}" || echo "Could not set variable - may need manual configuration"
+
+      - name: Deploy to Railway
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
           railway up
