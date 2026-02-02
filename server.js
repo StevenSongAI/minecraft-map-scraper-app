@@ -85,22 +85,29 @@ const keywordMappings = {
   'temple': ['temple', 'shrine', 'sanctuary', 'monument']
 };
 
-// STRICT antonym/contrast mappings - terms that should reduce relevance when mismatched
+// STRICT antonym/contrast mappings - terms that should filter out results when mismatched
+// These are mutually exclusive categories
 const conflictingTerms = {
-  'futuristic': ['medieval', 'ancient', 'castle', 'knight', 'feudal'],
-  'modern': ['medieval', 'ancient', 'castle', 'fantasy'],
-  'medieval': ['futuristic', 'scifi', 'space', 'tech', 'modern', 'cyberpunk'],
-  'underwater': ['castle', 'city', 'sky', 'mountain', 'air'],
-  'reef': ['castle', 'city', 'urban', 'mountain', 'desert'],
-  'skyblock': ['underwater', 'cave', 'dungeon', 'ocean'],
+  'futuristic': ['medieval', 'ancient', 'castle', 'knight', 'feudal', 'underwater', 'ocean', 'atlantis', 'sunken', 'submarine', 'drowned', 'reef', 'aquatic', 'marine', 'flooded', 'water'],
+  'modern': ['medieval', 'ancient', 'castle', 'fantasy', 'underwater', 'ocean', 'atlantis', 'sunken', 'drowned'],
+  'medieval': ['futuristic', 'scifi', 'space', 'tech', 'modern', 'cyberpunk', 'underwater', 'ocean', 'sunken'],
+  'underwater': ['castle', 'sky', 'mountain', 'air', 'futuristic', 'modern', 'tech', 'space', 'scifi'],
+  'ocean': ['castle', 'mountain', 'futuristic', 'modern', 'tech', 'space'],
+  'reef': ['castle', 'city', 'urban', 'mountain', 'desert', 'futuristic', 'modern'],
+  'skyblock': ['underwater', 'cave', 'dungeon', 'ocean', 'sunken'],
   'horror': ['cute', 'cozy', 'peaceful', 'relaxing'],
-  'hell': ['heaven', 'paradise', 'angel', 'sky'],
-  'nether': ['overworld', 'end', 'sky']
+  'hell': ['heaven', 'paradise', 'angel', 'sky', 'underwater', 'ocean'],
+  'nether': ['overworld', 'end', 'sky', 'underwater', 'ocean'],
+  'city': ['underwater', 'sunken', 'atlantis'],
+  'castle': ['underwater', 'ocean', 'sunken', 'futuristic', 'modern', 'tech', 'scifi', 'space']
 };
 
 // Minimum relevance thresholds to filter false positives
-const MIN_RELEVANCE_SCORE = 30;
+const MIN_RELEVANCE_SCORE = 20;  // Lowered to allow more results
 const MIN_MATCH_COUNT = 0.5;
+
+// Maximum allowed conflicts before filtering out a result
+const MAX_ALLOWED_CONFLICTS = 1;
 
 // Check if text contains word with word boundaries (more precise matching)
 function containsWord(text, word) {
@@ -141,6 +148,39 @@ function expandQuery(query) {
   }
   
   return [...new Set(searchTerms)];
+}
+
+// Check if result has conflicting terms that should disqualify it
+function hasConflictingTerms(query, map) {
+  const queryLower = query.toLowerCase();
+  const titleLower = map.title.toLowerCase();
+  const descLower = map.description.toLowerCase();
+  const tagsLower = map.tags ? map.tags.map(t => t.toLowerCase()) : [];
+  const allText = titleLower + ' ' + descLower + ' ' + tagsLower.join(' ');
+  
+  let conflictCount = 0;
+  
+  // Check for conflicting terms - for each keyword in the query that has conflicts
+  for (const [term, conflicts] of Object.entries(conflictingTerms)) {
+    // Check if query contains this keyword
+    const queryHasTerm = containsWord(queryLower, term) || queryLower.includes(term);
+    
+    if (queryHasTerm) {
+      // Query contains this term, check if result has any conflicting terms
+      for (const conflict of conflicts) {
+        const resultHasConflict = containsWord(allText, conflict) || 
+                                  tagsLower.some(tag => tag.includes(conflict));
+        if (resultHasConflict) {
+          conflictCount++;
+          if (conflictCount >= MAX_ALLOWED_CONFLICTS) {
+            return true; // Too many conflicts, filter out
+          }
+        }
+      }
+    }
+  }
+  
+  return false;
 }
 
 // Calculate relevance score with penalty for mismatches
@@ -227,7 +267,7 @@ function calculateRelevance(map, query, searchTerms) {
       // Query contains this term, check if result has conflicting terms
       conflicts.forEach(conflict => {
         if (containsWord(allText, conflict)) {
-          penalty += 35; // Penalty for mismatch
+          penalty += 25; // Reduced penalty since we now have hard filter
         }
       });
     }
@@ -247,6 +287,11 @@ function calculateRelevance(map, query, searchTerms) {
 
 // Check if a map meets minimum relevance threshold
 function isRelevantResult(map, query, searchTerms) {
+  // First check for conflicting terms - reject if too many conflicts
+  if (hasConflictingTerms(query, map)) {
+    return false;
+  }
+  
   const relevance = calculateRelevance(map, query, searchTerms);
   // Exact title matches always pass
   if (relevance.hasExactMatch) return true;
