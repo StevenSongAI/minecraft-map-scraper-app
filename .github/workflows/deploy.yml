@@ -2,26 +2,30 @@ name: Deploy to Railway
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
+  workflow_dispatch:
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Install Railway CLI
         run: npm install -g @railway/cli
-      
-      - name: Link and Deploy to Railway
+        
+      - name: Set CURSEFORGE_API_KEY
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          # Link to the project (using project ID from the URL web-production-631b7)
-          railway link --project="web-production-631b7"
-          
-          # Set the environment variable
+          cd $GITHUB_WORKSPACE
           railway variables set CURSEFORGE_API_KEY="${{ secrets.CURSEFORGE_API_KEY }}"
-          
-          # Deploy
+        continue-on-error: true
+
+      - name: Deploy
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          cd $GITHUB_WORKSPACE
           railway up

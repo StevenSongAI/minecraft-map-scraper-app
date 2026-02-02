@@ -711,9 +711,9 @@ app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
-    apiConfigured: !!CURSEFORGE_API_KEY && CURSEFORGE_API_KEY !== 'demo',
+    apiConfigured: !!process.env.CURSEFORGE_API_KEY && process.env.CURSEFORGE_API_KEY !== 'demo',
     demoMode: isDemoMode,
-    apiKeyPreview: CURSEFORGE_API_KEY ? CURSEFORGE_API_KEY.substring(0, 10) + '...' : 'Not set'
+    apiKeyPreview: process.env.CURSEFORGE_API_KEY ? process.env.CURSEFORGE_API_KEY.substring(0, 10) + '...' : 'Not set'
   });
 });
 
