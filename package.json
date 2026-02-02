@@ -1,21 +1,17 @@
 {
   "name": "minecraft-map-scraper",
   "version": "1.0.0",
-  "description": "Minecraft map scraper with chat-style interface for searching CurseForge maps",
-  "main": "scraper/server.js",
+  "description": "Minecraft Map Scraper with CurseForge API integration",
+  "main": "server.js",
   "scripts": {
-    "start": "node scraper/server.js",
-    "dev": "node --watch scraper/server.js",
-    "test": "node scraper/test.js"
+    "start": "node server.js",
+    "dev": "node server.js"
   },
-  "keywords": ["minecraft", "maps", "scraper", "curseforge"],
-  "author": "",
-  "license": "MIT",
   "dependencies": {
     "express": "^4.18.2",
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "jszip": "^3.10.1"
+    "cors": "^2.8.5"
   },
-  "devDependencies": {}
+  "engines": {
+    "node": ">=18.0.0"
+  }
 }

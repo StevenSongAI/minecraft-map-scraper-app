@@ -48,7 +48,7 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            max-width: 900px;
+            max-width: 1000px;
             margin: 0 auto;
             width: 100%;
             padding: 20px;
@@ -61,7 +61,8 @@
             flex-direction: column;
             gap: 15px;
             margin-bottom: 20px;
-            min-height: 300px;
+            min-height: 200px;
+            max-height: 300px;
         }
         
         .message {
@@ -191,8 +192,8 @@
         
         .maps-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 15px;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
         }
         
         .map-card {
@@ -201,6 +202,8 @@
             border-radius: 12px;
             overflow: hidden;
             transition: transform 0.2s, border-color 0.2s;
+            display: flex;
+            flex-direction: column;
         }
         
         .map-card:hover {
@@ -210,18 +213,21 @@
         
         .map-thumbnail {
             width: 100%;
-            height: 160px;
+            height: 180px;
             object-fit: cover;
             background: #0f1115;
         }
         
         .map-info {
             padding: 15px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
         }
         
         .map-title {
             font-weight: 600;
-            font-size: 1rem;
+            font-size: 1.1rem;
             margin-bottom: 5px;
             line-height: 1.3;
             display: -webkit-box;
@@ -232,7 +238,7 @@
         
         .map-author {
             color: #9aa0a6;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             margin-bottom: 8px;
         }
         
@@ -242,15 +248,16 @@
             line-height: 1.4;
             margin-bottom: 12px;
             display: -webkit-box;
-            -webkit-line-clamp: 2;
+            -webkit-line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
+            flex: 1;
         }
         
         .map-stats {
             display: flex;
             gap: 15px;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             color: #9aa0a6;
             margin-bottom: 12px;
         }
@@ -265,9 +272,24 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             color: #666;
             margin-bottom: 12px;
+        }
+        
+        .map-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 12px;
+        }
+        
+        .map-tag {
+            background: #21252d;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            color: #9aa0a6;
         }
         
         .download-btn {
@@ -276,11 +298,13 @@
             background: #3fb950;
             color: #0f1115;
             text-align: center;
-            padding: 10px;
+            padding: 12px;
             border-radius: 6px;
             text-decoration: none;
             font-weight: 600;
             transition: background 0.2s;
+            cursor: pointer;
+            border: none;
         }
         
         .download-btn:hover {
@@ -363,12 +387,17 @@
             0%, 100% { opacity: 1; }
             50% { opacity: 0.5; }
         }
+        
+        .api-source {
+            font-size: 0.75rem;
+            color: #666;
+        }
     </style>
 </head>
 <body>
     <header>
         <h1><span class="icon">🗺️</span> Minecraft Map Scraper</h1>
-        <div class="subtitle">Describe the map you want, get downloadable results</div>
+        <div class="subtitle">Describe the map you want using natural language - find and download Minecraft maps instantly</div>
     </header>
     
     <div class="chat-container">
@@ -376,12 +405,12 @@
             <div class="message assistant">
                 <div class="avatar">🤖</div>
                 <div class="message-content">
-                    Hi! I'm your Minecraft map assistant. Describe what you're looking for and I'll find maps for you.<br><br>
-                    <strong>Examples:</strong><br>
-                    • "Castle with redstone traps"<br>
-                    • "Horror adventure map"<br>
-                    • "Medieval city for roleplay"<br>
-                    • "Parkour with checkpoints"
+                    Hi! I'm your Minecraft map assistant. Describe what you're looking for using natural language.<br><br>
+                    <strong>Try examples like:</strong><br>
+                    • "Futuristic city with high speed railways"<br>
+                    • "Horror adventure map with jumpscares"<br>
+                    • "Medieval castle for roleplay"<br>
+                    • "Modern mansion with redstone automation"
                 </div>
             </div>
         </div>
@@ -394,7 +423,7 @@
         <div class="results-container" id="resultsContainer" style="display: none;">
             <div class="results-header">
                 <div class="results-count" id="resultsCount"></div>
-                <button class="refresh-btn" onclick="refreshData()">🔄 Refresh</button>
+                <span class="api-source" id="apiSource"></span>
             </div>
             <div class="maps-grid" id="mapsGrid"></div>
         </div>
@@ -405,16 +434,14 @@
             <div class="status-dot" id="statusDot"></div>
             <span id="statusText">Ready</span>
         </div>
-        <span id="lastUpdated">Last updated: Never</span>
+        <span id="lastUpdated">Powered by CurseForge API</span>
     </div>
 
     <script>
-        const API_ENDPOINT = 'maps-data.json'; // Local data file
+        // API endpoint - uses relative path for Railway deployment
+        const API_BASE = window.location.hostname === 'localhost' ? '' : '';
         let currentQuery = '';
         let isSearching = false;
-        
-        // Check for data on load
-        loadData();
         
         // Enter key to search
         document.getElementById('searchInput').addEventListener('keypress', function(e) {
@@ -441,7 +468,7 @@
             dot.className = 'status-dot' + (isLoading ? ' loading' : '');
         }
         
-        function startSearch() {
+        async function startSearch() {
             const input = document.getElementById('searchInput');
             const query = input.value.trim();
             
@@ -456,87 +483,70 @@
             // Show loading
             setStatus('Searching...', true);
             document.getElementById('searchBtn').disabled = true;
+            document.getElementById('resultsContainer').style.display = 'none';
             
-            // Simulate search delay (in real implementation, this would call the Python scraper)
-            addMessage('Searching for maps... This may take a minute.');
+            addMessage('Searching for maps using natural language processing...');
             
-            // For now, show placeholder results
-            setTimeout(() => {
-                addMessage(`Found some maps! Here are the results for "${query}":`);
-                showPlaceholderResults(query);
+            try {
+                const response = await fetch(`${API_BASE}/api/search?q=${encodeURIComponent(query)}&limit=20`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    addMessage(`Found ${data.count} maps matching your query!`);
+                    displayResults(data);
+                } else {
+                    addMessage('Sorry, there was an error with your search. Please try again.');
+                }
+            } catch (error) {
+                console.error('Search error:', error);
+                addMessage('Sorry, the search service is temporarily unavailable. Please try again later.');
+            } finally {
                 setStatus('Ready');
                 document.getElementById('searchBtn').disabled = false;
                 isSearching = false;
-            }, 1500);
-        }
-        
-        function showPlaceholderResults(query) {
-            document.getElementById('resultsContainer').style.display = 'block';
-            document.getElementById('resultsCount').textContent = 'Note: Run the Python scraper to get real results';
-            
-            const grid = document.getElementById('mapsGrid');
-            grid.innerHTML = `
-                <div class="empty-state">
-                    <div class="icon">⚙️</div>
-                    <h3>Run the Scraper</h3>
-                    <p>To get real results, run:</p>
-                    <code style="background: #21252d; padding: 10px; border-radius: 6px; display: inline-block; margin-top: 10px;">
-                        python3 scraper.py "${query}"
-                    </code>
-                </div>
-            `;
-        }
-        
-        async function loadData() {
-            try {
-                const response = await fetch(API_ENDPOINT + '?t=' + Date.now());
-                if (response.ok) {
-                    const data = await response.json();
-                    displayResults(data);
-                    setStatus('Ready');
-                }
-            } catch (e) {
-                // No data file yet
-                setStatus('Ready - No search data');
             }
-        }
-        
-        function refreshData() {
-            setStatus('Refreshing...', true);
-            loadData().then(() => {
-                setStatus('Ready');
-            });
         }
         
         function displayResults(data) {
-            if (!data || !data.maps || data.maps.length === 0) {
-                document.getElementById('resultsContainer').style.display = 'none';
+            const container = document.getElementById('resultsContainer');
+            const countEl = document.getElementById('resultsCount');
+            const sourceEl = document.getElementById('apiSource');
+            const grid = document.getElementById('mapsGrid');
+            
+            container.style.display = 'block';
+            countEl.textContent = `${data.count} maps found for "${data.query}"`;
+            sourceEl.textContent = data.maps[0]?.source === 'CurseForge' ? 'via CurseForge API' : '';
+            
+            if (!data.maps || data.maps.length === 0) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">🔍</div>
+                        <h3>No maps found</h3>
+                        <p>Try a different search query</p>
+                    </div>
+                `;
                 return;
             }
             
-            document.getElementById('resultsContainer').style.display = 'block';
-            document.getElementById('resultsCount').textContent = `${data.maps.length} maps found`;
-            document.getElementById('lastUpdated').textContent = 'Last updated: ' + formatTimeAgo(new Date(data.lastUpdated));
-            
-            const grid = document.getElementById('mapsGrid');
             grid.innerHTML = data.maps.map(map => `
                 <div class="map-card">
-                    <img src="${map.thumbnail || 'https://via.placeholder.com/280x160?text=No+Image'}" 
+                    <img src="${map.thumbnail || 'https://via.placeholder.com/300x180?text=No+Image'}" 
                          alt="${escapeHtml(map.title)}" 
                          class="map-thumbnail"
-                         onerror="this.src='https://via.placeholder.com/280x160?text=No+Image'">
+                         onerror="this.src='https://via.placeholder.com/300x180?text=No+Image'">
                     <div class="map-info">
                         <div class="map-title">${escapeHtml(map.title)}</div>
                         <div class="map-author">by ${escapeHtml(map.author)}</div>
                         <div class="map-description">${escapeHtml(map.description)}</div>
                         <div class="map-stats">
                             <span class="map-stat">⬇️ ${formatNumber(map.downloads)}</span>
-                            <span class="map-stat">💎 ${formatNumber(map.likes)}</span>
+                            <span class="map-stat">👍 ${formatNumber(map.likes)}</span>
                         </div>
                         <div class="map-meta">
-                            <span>${escapeHtml(map.category)}</span>
-                            <span>${escapeHtml(map.version)}</span>
+                            <span>${escapeHtml(map.category || 'Map')}</span>
+                            <span>${escapeHtml(map.version || 'Unknown')}</span>
                         </div>
+                        ${map.tags ? `<div class="map-tags">${map.tags.slice(0, 3).map(tag => `<span class="map-tag">${escapeHtml(tag)}</span>`).join('')}</div>` : ''}
                         <a href="${map.url}" target="_blank" class="download-btn">Download Map</a>
                     </div>
                 </div>
@@ -557,21 +567,20 @@
             return num.toString();
         }
         
-        function formatTimeAgo(date) {
-            const now = new Date();
-            const diffMs = now - date;
-            const diffMins = Math.floor(diffMs / 60000);
-            const diffHours = Math.floor(diffMins / 60);
-            const diffDays = Math.floor(diffHours / 24);
-            
-            if (diffMins < 1) return 'just now';
-            if (diffMins < 60) return `${diffMins}m ago`;
-            if (diffHours < 24) return `${diffHours}h ago`;
-            return `${diffDays}d ago`;
+        // Health check on load
+        async function checkHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/api/health`);
+                const data = await response.json();
+                if (data.status === 'ok') {
+                    setStatus('Connected');
+                }
+            } catch (e) {
+                setStatus('API Unavailable');
+            }
         }
         
-        // Auto-refresh every 30 seconds
-        setInterval(loadData, 30000);
+        checkHealth();
     </script>
 </body>
 </html>
