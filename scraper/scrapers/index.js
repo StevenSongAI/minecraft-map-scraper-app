@@ -7,7 +7,7 @@ const { BaseScraper, CircuitBreaker, CacheManager } = require('./base');
 
 // Load HTTP-only scrapers (no Playwright required)
 const PlanetMinecraftScraper = require('./planetminecraft');
-const MinecraftMapsScraper = require('./minecraftmaps');
+const ModrinthScraper = require('./modrinth');
 const NineMinecraftScraper = require('./nineminecraft');
 
 const MapAggregator = require('./aggregator');
@@ -19,7 +19,7 @@ module.exports = {
   CircuitBreaker,
   CacheManager,
   PlanetMinecraftScraper,
-  MinecraftMapsScraper,
+  ModrinthScraper,
   NineMinecraftScraper,
   MapAggregator
 };
