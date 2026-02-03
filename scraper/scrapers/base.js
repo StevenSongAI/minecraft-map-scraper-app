@@ -350,6 +350,7 @@ class BaseScraper {
       dateCreated: rawData.dateCreated || new Date().toISOString(),
       dateModified: rawData.dateModified || new Date().toISOString(),
       source: this.sourceName.toLowerCase().replace(/\s+/g, ''),
+      sourceName: this.sourceName, // FIXED: Add sourceName for display (e.g., "9Minecraft", "Planet Minecraft")
       isFeatured: rawData.isFeatured || false,
       popularityScore: rawData.popularityScore || Math.log10((rawData.downloads || 0) + 1),
       primaryLanguage: 'en',

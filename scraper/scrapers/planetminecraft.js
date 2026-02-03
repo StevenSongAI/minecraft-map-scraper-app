@@ -23,13 +23,21 @@ class PlanetMinecraftScraper extends BaseScraper {
     return this.searchWithCache(query, options, async (q, opts) => {
       return this.circuitBreaker.execute(async () => {
         return this.rateLimitedRequest(async () => {
-          try {
-            const results = await this.fetchSearchResults(query, limit);
-            return results.map(r => this.normalizeToCurseForgeFormat(r));
-          } catch (error) {
-            console.warn(`[Planet Minecraft HTTP] Search error: ${error.message}`);
-            return []; // Return empty on error - don't fail the whole search
+          // FIXED: Throw error instead of returning empty array
+          // This ensures proper error reporting when Planet Minecraft is blocked
+          const results = await this.fetchSearchResults(query, limit);
+          
+          // Check if we got blocked by Cloudflare
+          if (results.length === 0) {
+            // This might be a legitimate "no results" or a block
+            // Let's check by doing a health check
+            const health = await this.checkHealth();
+            if (!health.accessible) {
+              throw new Error('Planet Minecraft blocked by Cloudflare - cannot search');
+            }
           }
+          
+          return results.map(r => this.normalizeToCurseForgeFormat(r));
         });
       });
     });
@@ -173,7 +181,8 @@ class PlanetMinecraftScraper extends BaseScraper {
           category: 'World',
           dateCreated: new Date().toISOString(),
           dateModified: new Date().toISOString(),
-          source: 'planetminecraft'
+          source: 'planetminecraft',
+          sourceName: 'Planet Minecraft' // FIXED: Add sourceName for display
         });
       });
       

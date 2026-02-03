@@ -144,15 +144,16 @@ class NineMinecraftScraper extends BaseScraper {
           title: cleanTitle,
           slug: slug,
           description: description,
-          author: author,
+          author: author || 'Unknown Author', // FIXED: Provide default if extraction fails
           url: fullUrl,
           thumbnail: thumbnail,
           downloads: 0, // 9Minecraft doesn't show download counts
-          downloadUrl: fullUrl,
+          downloadUrl: fullUrl, // Note: This will be the page URL; actual download requires page scraping
           category: this.detectCategory(cleanTitle, description),
           dateCreated: new Date().toISOString(),
           dateModified: new Date().toISOString(),
-          source: 'nineminecraft'
+          source: 'nineminecraft',
+          sourceName: '9Minecraft' // FIXED: Add sourceName for display
         });
       });
       
@@ -189,6 +190,63 @@ class NineMinecraftScraper extends BaseScraper {
     if (text.includes('skyblock')) return 'Skyblock';
     
     return 'World';
+  }
+
+  /**
+   * Extract actual download URL from a 9Minecraft map detail page
+   * FIXED: Extract real download links from the page
+   */
+  async extractDownloadUrl(mapUrl, options = {}) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.requestTimeout);
+    
+    try {
+      const response = await fetch(mapUrl, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': this.getRandomUserAgent(),
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        }
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const html = await response.text();
+      const $ = cheerio.load(html);
+      
+      // 9Minecraft has download links in various formats
+      // Try multiple selectors to find the download URL
+      const downloadSelectors = [
+        'a[href*="download"]',
+        'a.download-btn',
+        'a.btn-download',
+        '.download-link a',
+        'a[href*=".zip"]',
+        'a[href*="mediafire"]',
+        'a[href*="dropbox"]',
+        'a[href*="mega.nz"]'
+      ];
+      
+      for (const selector of downloadSelectors) {
+        const link = $(selector).attr('href');
+        if (link && (link.includes('download') || link.includes('.zip') || link.includes('mediafire') || link.includes('dropbox'))) {
+          const fullLink = link.startsWith('http') ? link : `${this.baseUrl}${link}`;
+          console.log(`[9Minecraft] Found download link: ${fullLink}`);
+          return fullLink;
+        }
+      }
+      
+      console.warn(`[9Minecraft] No download link found on page: ${mapUrl}`);
+      return null;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      console.warn(`[9Minecraft] Extract download URL error: ${error.message}`);
+      return null;
+    }
   }
 
   async checkHealth() {

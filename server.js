@@ -520,8 +520,9 @@ function isRelevantResult(map, query, searchTerms) {
   const tagsLower = map.tags ? map.tags.map(t => t.toLowerCase()) : [];
   const allText = titleLower + ' ' + descLower + ' ' + tagsLower.join(' ');
   
-  // FIXED: RELAXED multi-word query check - allow synonyms and related terms
-  // For queries with 2+ significant words, check if MOST words appear (not ALL)
+  // FIXED: FURTHER RELAXED multi-word query check - CurseForge API already filters relevance
+  // For queries with 2+ significant words, check if ANY key words appear
+  // Don't filter out CurseForge API results - they're already relevant!
   const queryWords = query.toLowerCase().trim().split(/\s+/).filter(w => w.length > 2);
   if (queryWords.length >= 2) {
     // Count how many query words appear (including synonyms)
@@ -539,10 +540,10 @@ function isRelevantResult(map, query, searchTerms) {
       return false;
     });
     
-    // Require at least 60% of words to match (was 100% before - too strict!)
-    const matchRatio = matchedWords.length / queryWords.length;
-    if (matchRatio < 0.6) {
-      console.log(`[Filter] Rejected "${map.title}" - only ${matchedWords.length}/${queryWords.length} query words matched (${Math.round(matchRatio * 100)}%)`);
+    // RELAXED: Only require at least ONE word to match (was 60% - too strict!)
+    // CurseForge API already does relevance filtering - we shouldn't reject their results
+    if (matchedWords.length === 0) {
+      console.log(`[Filter] Rejected "${map.title}" - NO query words matched`);
       return false;
     }
   }
@@ -576,10 +577,12 @@ function isRelevantResult(map, query, searchTerms) {
         return synonyms.some(syn => containsWord(allText, syn));
       });
       
-      // Require at least 50% of concept terms (or their synonyms) to match
+      // RELAXED: Don't filter out CurseForge API results based on compound concepts
+      // The API already provides relevant results - we're being too aggressive
+      // Only reject if NO related terms match at all
       const matchRatio = termsOrSynonymsPresent.filter(Boolean).length / concept.terms.length;
-      if (matchRatio < 0.5) {
-        console.log(`[Filter] Rejected "${map.title}" - compound concept match ratio ${Math.round(matchRatio * 100)}%`);
+      if (matchRatio === 0) {
+        console.log(`[Filter] Rejected "${map.title}" - no compound concept terms matched`);
         return false;
       }
     }
@@ -940,8 +943,8 @@ app.get('/api/download', async (req, res) => {
         downloadUrl = `https://www.curseforge.com/api/v1/mods/${mapId}/files/${latestFile.id}/download`;
       }
       
-      // Redirect to download URL
-      res.redirect(downloadUrl);
+      // Redirect to download URL (302)
+      return res.redirect(302, downloadUrl);
       
     } catch (error) {
       console.error('[Download] Error:', error.message);
@@ -1039,19 +1042,8 @@ app.get('/api/download/:modId', async (req, res) => {
       downloadMethod = 'api';
     }
     
-    res.json({
-      success: true,
-      modId: modId,
-      modName: mod.name,
-      downloadUrl: downloadUrl,
-      fileName: latestFile.fileName,
-      fileSize: latestFile.fileLength,
-      fileSizeFormatted: formatFileSize(latestFile.fileLength),
-      version: latestFile.gameVersions ? latestFile.gameVersions.join(', ') : 'Unknown',
-      downloadMethod: downloadMethod,
-      curseforgeUrl: `https://www.curseforge.com/minecraft/worlds/${mod.slug}`,
-      uploadedAt: latestFile.fileDate
-    });
+    // FIXED: Redirect to download URL instead of returning JSON
+    return res.redirect(302, downloadUrl);
   } catch (error) {
     console.error('Download error:', error);
     res.status(500).json({ 
