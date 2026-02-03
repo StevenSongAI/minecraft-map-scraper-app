@@ -247,7 +247,17 @@ class MapAggregator {
     for (const map of maps) {
       // Create deduplication key from title + author
       const title = (map.name || map.title || '').toLowerCase().trim();
-      const author = (map.author?.name || map.author || 'unknown').toLowerCase().trim();
+      
+      // FIXED (Round 7): Handle different author formats safely
+      let author = 'unknown';
+      if (map.author) {
+        if (typeof map.author === 'object' && map.author.name) {
+          author = String(map.author.name).toLowerCase().trim();
+        } else if (typeof map.author === 'string') {
+          author = map.author.toLowerCase().trim();
+        }
+      }
+      
       const key = `${title}::${author}`;
 
       if (seen.has(key)) {

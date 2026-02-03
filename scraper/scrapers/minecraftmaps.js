@@ -47,9 +47,6 @@ class MinecraftMapsScraper extends BaseScraper {
     // FIXED (Round 8): Use ethical scraper identification instead of browser impersonation
     const userAgent = this.getUserAgent();
     
-    // FIXED (Round 8): Use consistent scraper user agent for all requests
-    const userAgent = this.getUserAgent();
-    
     for (let i = 0; i < searchUrls.length; i++) {
       const searchUrl = searchUrls[i];
       
