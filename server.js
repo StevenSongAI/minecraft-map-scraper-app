@@ -104,6 +104,7 @@ const MIN_MATCH_COUNT = 0.5;
 const MAX_ALLOWED_CONFLICTS = 1;
 
 // Check if text contains word with word boundaries (more precise matching)
+// CRITICAL: This prevents substring matches like "stray" matching "stranded"
 function containsWord(text, word) {
   if (!text || !word) return false;
   const regex = new RegExp(`\\b${word.toLowerCase()}\\b`, 'i');
