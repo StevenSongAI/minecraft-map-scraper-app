@@ -1,30 +1,28 @@
 # Minecraft Map Scraper - DEPLOYED
 
-## Live URL
-**https://minecraft-scraper.loca.lt**
+## Live URL (Railway Production)
+**https://web-production-631b7.up.railway.app**
 
-*Note: This is served via localtunnel. Tunnel password: 24.141.170.72*
+## API Endpoints (All Verified ✓)
+- `GET /api/health` - Health check ✓
+- `GET /api/search?q={query}&limit={n}` - Search maps ✓
+- `GET /api/sources/health` - Data source health ✓
+- `GET /api/download/:modId` - Get download info ✓
+- `GET /api/download-file/:modId/:fileId` - Download file
+- `GET /api/search-unified` - Unified search endpoint
 
-## API Endpoints
-- `GET /api/health` - Health check
-- `POST /api/search` - Search maps
-- `GET /api/maps` - List all maps
-- `GET /api/stats` - Usage statistics
+## Deployment Status
+- ✅ Deployed to Railway production
+- ✅ API responding correctly
+- ✅ CurseForge API integration working
+- ✅ Health checks passing
 
-## Local Server
-Running on http://localhost:3000
+## Last Deployed
+2026-02-03 15:23 UTC
 
 ## GitHub Repository
 https://github.com/StevenSongAI/minecraft-map-scraper-app
 
-## Deployment Status
-- ✅ Server running locally
-- ✅ Exposed via localtunnel
-- ✅ API responding
-- 🔄 Triggered redeploy: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
-- ⏳ Permanent hosting pending (Railway requires token)
-
-## Cache Status
-- 99 maps cached
-- Last updated: 2026-02-01
-- Cache hits: 427
+## Notes
+- Multi-source scrapers not available in production build (optional feature)
+- Core CurseForge API functionality fully operational
