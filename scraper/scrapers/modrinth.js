@@ -36,11 +36,11 @@ class ModrinthScraper extends BaseScraper {
   }
 
   async fetchSearchResults(query, limit) {
-    // FIXED: Modrinth API with proper facets encoding - DON'T use URLSearchParams for facets!
-    // Modrinth expects facets as a raw JSON array string in the URL
-    const encodedQuery = encodeURIComponent(query);
-    const facets = encodeURIComponent('[["categories:map"]]');
-    const searchUrl = `${this.baseUrl}/search?query=${encodedQuery}&limit=${Math.min(limit, 20)}&offset=0&facets=${facets}`;
+    // FIXED: Modrinth doesn't have a "map" category - search with "map" keyword instead
+    // Add "map" OR "world" to query to filter for maps/worlds
+    const enhancedQuery = `${query} map OR world`;
+    const encodedQuery = encodeURIComponent(enhancedQuery);
+    const searchUrl = `${this.baseUrl}/search?query=${encodedQuery}&limit=${Math.min(limit, 20)}&offset=0`;
     
     console.log(`[Modrinth] Fetching: ${searchUrl}`);
     

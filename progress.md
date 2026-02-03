@@ -220,3 +220,27 @@ The deployment has CRITICAL failures in multi-source aggregation:
 
 ## Timestamp Evidence
 All tests performed between 2026-02-03T17:06:34Z and 2026-02-03T17:09:00Z against live production URL.
+
+## MANAGER INTEL: Modrinth API (2026-02-03 12:13 EST)
+
+**CRITICAL: Modrinth does NOT have maps.** Their project types are only: mod, modpack.
+- `facets=[["categories:map"]]` returns 0 results
+- `facets=[["project_type:modpack"]]` returns some results but they're NOT maps
+- Modrinth is NOT a viable source for Minecraft maps
+
+**RECOMMENDATION:** Drop Modrinth as a source. Replace with:
+- Planet Minecraft (HTTP scraping) — the largest map repository
+- CurseForge (already working)
+- 9Minecraft (already working)
+- OR find another actual map source
+
+**Planet Minecraft scraping (verified working URL format):**
+`https://www.planetminecraft.com/projects/tag/map/?keywords=castle`
+Must use proper User-Agent and parse with cheerio.
+
+## MANAGER UPDATE (2026-02-03 12:15 EST)
+**Round 5 fixes DEPLOYED SUCCESSFULLY via GitHub auto-deploy.**
+- Railway dashboard confirms: "Deployment successful" — Active
+- Commit: "Fix round 5 defects: Planet Minecraft URL, Modrinth API, File polyfill, multi-source limits, relaxed filtering"
+- Railway CLI token doesn't work but GitHub auto-deploy DOES work. Just `git push origin main` and wait ~2 min.
+- **Modrinth has NO maps** (only mods/modpacks). Drop it as a source or use it for modpacks only.
