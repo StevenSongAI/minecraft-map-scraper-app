@@ -602,8 +602,9 @@ function isRelevantResult(map, query, searchTerms) {
       }
     } else {
       // Not a compound query, but still multi-word
-      // Require ALL significant words to match (prevents "high school" matching "high speed rail")
-      const allWordsMatch = queryWords.every(word => {
+      // RELAXED: Require at least 60% of words to match (prevents worst false positives)
+      // This allows "underwater base" to match results with just "underwater" if that's all that's available
+      const matchedWords = queryWords.filter(word => {
         if (containsWord(allText, word)) return true;
         // Check synonyms
         for (const [key, synonyms] of Object.entries(keywordMappings)) {
@@ -614,8 +615,9 @@ function isRelevantResult(map, query, searchTerms) {
         return false;
       });
       
-      if (!allWordsMatch) {
-        console.log(`[Filter] Rejected "${map.title}" - not all query words matched for "${query}"`);
+      const matchRatio = matchedWords.length / queryWords.length;
+      if (matchRatio < 0.6) {
+        console.log(`[Filter] Rejected "${map.title}" - only ${matchedWords.length}/${queryWords.length} query words matched (${Math.round(matchRatio*100)}%) for "${query}"`);
         return false;
       }
     }

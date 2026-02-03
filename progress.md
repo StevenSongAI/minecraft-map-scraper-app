@@ -1,86 +1,68 @@
-# IMPLEMENTATION PROGRESS - Red Team Defect Fixes
+# RED TEAM FINDINGS - Round 9
 
-## Status: COMPLETED
+## Defects Found (6 total: 5 CRITICAL + 1 MEDIUM)
 
-## Defects Fixed
+### CRITICAL DEFECTS
 
-### 1. PlanetMinecraft False Positive Reporting (CRITICAL) ✅ FIXED
-**Problem:** Reports success: true with 25 results, but returns 0 actual PlanetMinecraft results
+1. **Planet Minecraft Blocked by Cloudflare (403)**
+   - Circuit breaker open, scraper effectively disabled
+   - **Solution approaches:**
+     - Browser automation (Playwright) - bypasses bot detection
+     - Better user-agent headers + request timing
+     - Alternative: remove Planet Minecraft, use different source
 
-**Fix Applied:**
-- Modified `planetminecraft.js` to return empty array when blocked instead of throwing
-- Modified `aggregator.js` to report `success: false` when `results.length === 0`
-- Success now means: accessible AND results.length > 0
+2. **9Minecraft Not Functioning**
+   - Health check shows accessible: true, but zero results in searches
+   - memoryEntries: 0 (nothing cached)
+   - **Possible causes:**
+     - Scraper not being invoked by aggregator
+     - URL parsing broken
+     - Results filtered out during normalization
 
-### 2. 9Minecraft External Page Links (CRITICAL) ✅ FIXED
-**Problem:** Returns downloadType: "page" pointing to external HTML instead of ZIP files
+3. **Search Result Count Failures**
+   - "futuristic city with railways": 4 results (need 5+)
+   - "underwater city": 1 result (need 5+)
+   - **Solution:** Expand keyword matching, include more sources
 
-**Fix Applied:**
-- Rewrote `nineminecraft.js` to use async/await properly (was using async inside .each())
-- Now only returns results where `extractDirectDownloadUrl()` succeeds
-- Results without direct downloads are skipped entirely
+4. **Modrinth Downloads Broken**
+   - downloadType: "page" (not "direct")
+   - downloadUrl points to version page, not ZIP file
+   - **Fix:** Parse Modrinth API to extract direct download URL
 
-### 3. Search Accuracy - Railway Queries (HIGH) ✅ FIXED
-**Problem:** "futuristic city with railways" returns results with "city" but NOT "railway"
+5. **Multi-source Requirement Failed**
+   - Only CurseForge working, other sources blocked/broken
+   - Need 2+ working sources for production readiness
 
-**Fix Applied:**
-- Added new compound concepts: `futuristic_city_railway`, `city_railway`
-- Added expanded railway keywords: 'transit', 'tram', 'monorail', 'maglev'
-- Multi-word queries now require ALL significant words to match
+### MEDIUM DEFECTS
 
-### 4. False Positive - "High Speed Rail" (HIGH) ✅ FIXED
-**Problem:** Returns "high school", "speed bridge", "speed run" - NOT railway related
+6. **Modrinth Thumbnails Missing**
+   - All Modrinth results: thumbnail: ""
+   - **Fix:** Extract icon_url or featured_gallery from Modrinth API response
 
-**Fix Applied:**
-- Added compound concept: `high_speed_rail`
-- Multi-word queries now require ALL words to match (not just ANY)
-- "high speed rail" now requires all three concepts to match
-- Prevents "high school" from matching because "speed" and "rail" are missing
+## Manager Intel
 
-### 5. Underwater Query Limited Accuracy (MEDIUM) ✅ FIXED
-**Problem:** "underwater base" returns only 2/30 results with "underwater"
+### Cloudflare Bypass History
+From prior rounds: Planet Minecraft has consistently blocked automated requests. Previous attempts:
+- Basic headers: FAILED
+- Playwright browser automation: FAILED (Chrome install issues on Railway)
+- **Recommended:** Either fix Playwright on Railway OR remove Planet Minecraft from requirements
 
-**Fix Applied:**
-- Separated 'underwater' from generic 'aquatic' keywords
-- Underwater now requires 'under' context: 'undersea', 'submerged', 'sunken'
-- Generic 'water city' no longer matches 'underwater' queries
+### CurseForge API Token
+- Token exists and works: CURSEFORGE_API_KEY configured in Railway
+- CurseForge is the only fully-functional source currently
 
-## Files Modified
+### Railway Deployment
+- Live URL: https://web-production-631b7.up.railway.app
+- Auto-deploy from GitHub push works
+- Railway CLI token issues (expired/invalid)
+- Use GitHub push to deploy
 
-### 1. scraper/scrapers/planetminecraft.js
-- Returns empty array when Cloudflare blocks instead of throwing error
-- Allows aggregator to properly detect failure
+## Next Steps for Builder
 
-### 2. scraper/scrapers/nineminecraft.js
-- Completely rewritten async parsing logic
-- Now fetches each result page to verify direct download exists
-- Only returns results with verified direct download URLs
+Priority fixes:
+1. Fix 9Minecraft scraper (should be easiest - likely code bug)
+2. Fix Modrinth downloads and thumbnails (API parsing)
+3. Address search result count (keyword expansion)
+4. Planet Minecraft: either fix Cloudflare OR remove from requirements
 
-### 3. scraper/scrapers/aggregator.js
-- Changed success reporting: `success = results.length > 0`
-- Records failure when scraper returns empty results
-
-### 4. server.js
-- Added strict multi-word query matching
-- Added new compound concepts for railway queries
-- Separated underwater from aquatic keywords
-- All multi-word queries now require ALL words to match
-
-## Testing
-
-### Local Tests
-- ✅ Syntax validation passed
-- ✅ Module imports work correctly
-
-### Deployment Status
-- Ready for Railway deployment
-
-## Summary
-
-All 5 defects from the Red Team report have been addressed:
-1. PlanetMinecraft no longer reports false success
-2. 9Minecraft only returns results with direct downloads
-3. Railway queries require railway-related keywords
-4. "High speed rail" no longer matches unrelated results
-5. Underwater queries require actual underwater context
-
+**Note:** Multi-source scraping may be infeasible with current Cloudflare blocks. Consider adjusting requirements to focus on 2-3 working sources (CurseForge + Modrinth + 9Minecraft) rather than Planet Minecraft.
