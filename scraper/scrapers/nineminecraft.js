@@ -64,24 +64,50 @@ class NineMinecraftScraper extends BaseScraper {
     
     console.log(`[9Minecraft] Fetching: ${searchUrl}`);
     
-    const response = await fetch(searchUrl, {
-      headers: {
-        'User-Agent': this.getRandomUserAgent(),
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'DNT': '1',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1',
-        'Referer': 'https://www.google.com/'
+    // Use AbortController for timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+    
+    try {
+      const response = await fetch(searchUrl, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': this.getRandomUserAgent(),
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'DNT': '1',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1',
+          'Referer': 'https://www.google.com/',
+          'Cache-Control': 'max-age=0'
+        }
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-    });
 
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      const html = await response.text();
+      
+      // Check if response is valid
+      if (html.length < 500 || html.includes('captcha') || html.includes('blocked')) {
+        throw new Error('Response appears to be blocked or invalid');
+      }
+      
+      return this.parseSearchHTML(html, limit);
+    } catch (error) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        throw new Error('Request timeout after 8 seconds');
+      }
+      throw error;
     }
-
-    const html = await response.text();
+  }
+  
+  parseSearchHTML(html, limit) {
     const $ = cheerio.load(html);
     
     const maps = [];
@@ -266,21 +292,49 @@ class NineMinecraftScraper extends BaseScraper {
 
   async checkHealth() {
     try {
-      const response = await fetch(this.baseUrl, {
-        headers: { 'User-Agent': this.getRandomUserAgent() },
-        timeout: 10000
+      // Try to perform an actual search to verify the site is working for searches
+      // Just checking the homepage doesn't catch search timeouts
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      
+      const testQuery = 'castle'; // Simple test query
+      const searchUrl = `${this.baseUrl}/?s=${encodeURIComponent(testQuery)}`;
+      
+      const response = await fetch(searchUrl, {
+        signal: controller.signal,
+        headers: { 
+          'User-Agent': this.getRandomUserAgent(),
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Referer': 'https://www.google.com/'
+        }
       });
+      
+      clearTimeout(timeoutId);
+      
+      // Also check if we can parse results
+      let canSearch = false;
+      if (response.ok) {
+        try {
+          const html = await response.text();
+          // Check if the response contains expected content
+          canSearch = html.includes('article') || html.includes('post') || html.length > 5000;
+        } catch (e) {
+          // Ignore parse errors
+        }
+      }
       
       return {
         ...this.getHealth(),
-        accessible: response.ok,
-        statusCode: response.status
+        accessible: response.ok && canSearch,
+        statusCode: response.status,
+        canSearch: canSearch,
+        error: canSearch ? null : 'Search functionality may be limited'
       };
     } catch (error) {
       return {
         ...this.getHealth(),
         accessible: false,
-        error: error.message
+        error: error.name === 'AbortError' ? 'Health check timeout' : error.message
       };
     }
   }

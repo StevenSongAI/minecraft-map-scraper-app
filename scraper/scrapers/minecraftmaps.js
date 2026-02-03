@@ -60,27 +60,67 @@ class MinecraftMapsScraper extends BaseScraper {
 
   async scrapeSearch(query, limit) {
     const encodedQuery = encodeURIComponent(query);
-    const searchUrl = `${this.baseUrl}/search?q=${encodedQuery}`;
+    // Try multiple URL patterns as the site structure may vary
+    const searchUrls = [
+      `${this.baseUrl}/?s=${encodedQuery}&post_type=maps`,
+      `${this.baseUrl}/search?q=${encodedQuery}`,
+      `${this.baseUrl}/maps/?s=${encodedQuery}`
+    ];
     
-    console.log(`[MinecraftMaps] Fetching: ${searchUrl}`);
+    let lastError = null;
     
-    const response = await fetch(searchUrl, {
-      headers: {
-        'User-Agent': this.getRandomUserAgent(),
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'DNT': '1',
-        'Connection': 'keep-alive',
-        'Upgrade-Insecure-Requests': '1'
+    for (const searchUrl of searchUrls) {
+      try {
+        console.log(`[MinecraftMaps] Fetching: ${searchUrl}`);
+        
+        const response = await fetch(searchUrl, {
+          headers: {
+            'User-Agent': this.getRandomUserAgent(),
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Referer': 'https://www.google.com/',
+            'DNT': '1',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'cross-site',
+            'Cache-Control': 'max-age=0'
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 403 || response.status === 429) {
+            console.warn(`[MinecraftMaps] Access blocked (${response.status}), trying next URL...`);
+            lastError = new Error(`HTTP ${response.status}: ${response.statusText}`);
+            continue; // Try next URL
+          }
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const html = await response.text();
+        
+        // Check if we got a valid response with content
+        if (html.length < 1000 || html.includes('blocked') || html.includes('captcha')) {
+          console.warn(`[MinecraftMaps] Invalid/blocking response, trying next URL...`);
+          lastError = new Error('Response appears to be blocked or invalid');
+          continue;
+        }
+        
+        return this.parseSearchHTML(html, limit);
+      } catch (error) {
+        console.warn(`[MinecraftMaps] Error with ${searchUrl}: ${error.message}`);
+        lastError = error;
+        continue;
       }
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
-
-    const html = await response.text();
+    
+    // All URLs failed
+    throw lastError || new Error('All MinecraftMaps search URLs failed');
+  }
+  
+  parseSearchHTML(html, limit) {
     const $ = cheerio.load(html);
     
     const maps = [];
@@ -90,10 +130,12 @@ class MinecraftMapsScraper extends BaseScraper {
       '.map-item',
       '.map-card',
       '.content-item',
-      '.post',
+      'article.post',
       '.listing-item',
       '.map-listing',
-      '.item'
+      '.item',
+      '[class*="map"]',
+      '.entry'
     ];
     
     let foundElements = false;
@@ -107,21 +149,25 @@ class MinecraftMapsScraper extends BaseScraper {
           const $el = $(element);
           
           // Try multiple selectors for each field
-          const titleEl = $el.find('h2 a, h3 a, .title a, a[href*="/maps/"]').first();
-          const descEl = $el.find('.description, .summary, p').first();
+          const titleEl = $el.find('h2 a, h3 a, h1 a, .title a, a[href*="/maps/"], .entry-title a').first();
+          const descEl = $el.find('.description, .summary, .entry-summary p, p').first();
           const thumbEl = $el.find('img').first();
-          const authorEl = $el.find('.author a, .user a, [href*="/user/"]').first();
-          const downloadsEl = $el.find('.downloads, .stats, .meta').first();
+          const authorEl = $el.find('.author a, .user a, [href*="/user/"], [href*="/author/"]').first();
+          const downloadsEl = $el.find('.downloads, .stats, .meta, .post-meta').first();
           
           if (titleEl.length) {
             const title = titleEl.text().trim();
-            const url = titleEl.attr('href');
+            let url = titleEl.attr('href') || '';
+            
+            // Skip if no valid URL
+            if (!url) return;
+            
             const fullUrl = url.startsWith('http') ? url : `${this.baseUrl}${url}`;
             
-            // Extract slug from URL
-            const slugMatch = url.match(/\/maps\/(\d+)-?([^/]+)/);
+            // Extract slug from URL - handle various patterns
+            const slugMatch = url.match(/\/maps\/(?:\d+-)?([^/]+)/) || url.match(/\/([^/]+)\/?$/);
             const mapId = slugMatch ? slugMatch[1] : null;
-            const slug = slugMatch ? slugMatch[2] : '';
+            const slug = slugMatch ? slugMatch[1] : '';
             
             // Parse downloads
             let downloads = 0;
@@ -142,7 +188,7 @@ class MinecraftMapsScraper extends BaseScraper {
               author: authorEl.text().trim() || 'Unknown',
               authorUrl: authorEl.attr('href') ? (authorEl.attr('href').startsWith('http') ? authorEl.attr('href') : `${this.baseUrl}${authorEl.attr('href')}`) : '',
               url: fullUrl,
-              thumbnail: thumbEl.attr('src') || thumbEl.attr('data-src') || '',
+              thumbnail: thumbEl.attr('src') || thumbEl.attr('data-src') || thumbEl.attr('data-lazy-src') || '',
               downloads: downloads,
               downloadUrl: fullUrl, // Will be resolved when accessing
               category: this.detectCategory(title, descEl.text()),
@@ -155,23 +201,23 @@ class MinecraftMapsScraper extends BaseScraper {
         }
       });
       
-      if (foundElements) break;
+      if (foundElements && maps.length > 0) break;
     }
     
     // If no results with specific selectors, try generic article/list items
     if (maps.length === 0) {
-      $('article, .post, .entry, li').each((index, element) => {
+      $('article, .post, .entry, li, .item').each((index, element) => {
         if (maps.length >= limit) return false;
         
         try {
           const $el = $(element);
-          const linkEl = $el.find('a[href*="/maps/"]').first();
+          const linkEl = $el.find('a[href*="/maps/"]').first() || $el.find('a').first();
           
           if (linkEl.length) {
-            const title = linkEl.text().trim() || $el.find('h2, h3, .title').first().text().trim();
-            const url = linkEl.attr('href');
+            const title = linkEl.text().trim() || $el.find('h2, h3, .title, .entry-title').first().text().trim();
+            const url = linkEl.attr('href') || '';
             
-            if (title && url) {
+            if (title && url && title.length > 2) {
               const fullUrl = url.startsWith('http') ? url : `${this.baseUrl}${url}`;
               const slugMatch = url.match(/\/maps\/(\d+)-?([^/]+)/);
               
@@ -182,7 +228,7 @@ class MinecraftMapsScraper extends BaseScraper {
                 description: $el.find('p').first().text().trim().substring(0, 500),
                 author: 'Unknown',
                 url: fullUrl,
-                thumbnail: $el.find('img').first().attr('src') || '',
+                thumbnail: $el.find('img').first().attr('src') || $el.find('img').first().attr('data-src') || '',
                 downloads: 0,
                 downloadUrl: fullUrl,
                 category: 'World',
@@ -298,21 +344,46 @@ class MinecraftMapsScraper extends BaseScraper {
 
   async checkHealth() {
     try {
-      const response = await fetch(this.baseUrl, {
-        headers: { 'User-Agent': this.getRandomUserAgent() },
-        timeout: 10000
+      // Try to perform an actual search to verify the site is working for searches
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      
+      const searchUrl = `${this.baseUrl}/?s=castle&post_type=maps`;
+      
+      const response = await fetch(searchUrl, {
+        signal: controller.signal,
+        headers: { 
+          'User-Agent': this.getRandomUserAgent(),
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Referer': 'https://www.google.com/'
+        }
       });
+      
+      clearTimeout(timeoutId);
+      
+      // Also check if we can parse results
+      let canSearch = false;
+      if (response.ok) {
+        try {
+          const html = await response.text();
+          canSearch = html.includes('article') || html.includes('post') || html.includes('map') || html.length > 5000;
+        } catch (e) {
+          // Ignore parse errors
+        }
+      }
       
       return {
         ...this.getHealth(),
-        accessible: response.ok,
-        statusCode: response.status
+        accessible: response.ok && canSearch,
+        statusCode: response.status,
+        canSearch: canSearch,
+        error: canSearch ? null : 'Search functionality may be limited'
       };
     } catch (error) {
       return {
         ...this.getHealth(),
         accessible: false,
-        error: error.message
+        error: error.name === 'AbortError' ? 'Health check timeout' : error.message
       };
     }
   }

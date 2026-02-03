@@ -684,6 +684,7 @@ app.get('/api/categories', (req, res) => {
  * GET /api/download
  * Download endpoint - fetches map files from CurseForge
  * Supports: /api/download?id=X or /api/download?url=...
+ * NOTE: This route MUST be registered BEFORE /api/download/:id to avoid route conflicts
  */
 app.get('/api/download', async (req, res) => {
   try {

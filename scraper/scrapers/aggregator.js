@@ -43,8 +43,8 @@ try {
 class MapAggregator {
   constructor(options = {}) {
     this.scrapers = [];
-    this.timeout = options.timeout || 6000; // 6 seconds per source max
-    this.maxResultsPerSource = options.maxResultsPerSource || 10;
+    this.timeout = options.timeout || 4000; // 4 seconds per source max (reduced for faster response)
+    this.maxResultsPerSource = options.maxResultsPerSource || 8; // Reduced to improve speed
     
     // Initialize scrapers
     this.initScrapers();

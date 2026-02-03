@@ -1,47 +1,28 @@
-SUCCESS
+DEFECTS_FOUND
 
-Red Team Defects Fixed:
+Red Team Testing Complete - 2026-02-03T16:35:00Z
+Live URL: https://web-production-631b7.up.railway.app
 
-1. **Missing Health Endpoint** (/health 404)
-   - Added `/health` endpoint to both root server.js and scraper/server.js
-   - Returns simple JSON: {"status": "healthy", "timestamp": "..."}
+5 CRITICAL DEFECTS IDENTIFIED:
 
-2. **Search Accuracy FAILURE** (80% false positive on "underwater city")
-   - Added compound concept detection in server.js
-   - Queries like "underwater city" now require BOTH terms to be present
-   - Heavy penalty (80 points) for partial matches
-   - Bonus (200 points) for synonym matches in title (e.g., "atlantis", "sunken city")
-   - Updated curseforge.js with same compound concept logic
+1. Multi-source scrapers COMPLETELY BROKEN (3/4 sources failing)
+   - Planet Minecraft: Playwright Chromium not installed
+   - MinecraftMaps: Timeout/403
+   - 9Minecraft: Timeout
 
-3. **Download Broken** (/api/download?id=X 404)
-   - Added `/api/download?id=X` endpoint accepting query parameters
-   - Proper ID validation with clear error messages
-   - Structured error responses for invalid IDs
-   - Falls back to fetching download URL from CurseForge API
+2. Search accuracy FAILS for compound queries
+   - "Underwater city" returns 90% false positives (regular cities)
+   - Violates <5% false positive requirement
 
-4. **No Multi-Source Scraping** (100% CurseForge)
-   - Created planetminecraft_simple.js - HTTP-based scraper (no Playwright)
-   - Updated aggregator.js to gracefully handle missing Playwright
-   - Scraper index now handles missing dependencies
-   - Planet Minecraft scraper falls back to simple version automatically
+3. Download endpoint (query param) returns 404
+   - /api/download?id=X broken
+   - /api/download/:modId works (inconsistent API)
 
-5. **Likes Data Missing** (all likes: 0)
-   - Added `likes: apiMod.thumbsUpCount || 0` to transformMapData in curseforge.js
-   - CurseForge API returns thumbsUpCount field with like counts
+4. Unified search response time marginal (6.3s)
+   - Only passes because 3 sources are broken
+   - Would exceed 10s with all sources
 
-6. **Poor Error Handling** (raw API errors on invalid IDs)
-   - Added structured error responses with error codes
-   - INVALID_ID, MAP_NOT_FOUND, API_ERROR, DOWNLOAD_ERROR codes
-   - Validation checks before API calls
-   - Helpful usage hints in error messages
-   - Consistent error response format across all endpoints
+5. Health check misrepresents scraper status
+   - Shows 9Minecraft as "accessible" but it times out in search
 
-Files Modified:
-- server.js (root): Added /health, /api/download, compound concepts, better error handling
-- scraper/server.js: Added /health, improved /api/download error handling
-- scraper/curseforge.js: Added likes extraction, compound concept search
-- scraper/scrapers/aggregator.js: Graceful fallback for missing Playwright
-- scraper/scrapers/index.js: Error handling for missing dependencies
-
-Files Created:
-- scraper/scrapers/planetminecraft_simple.js: HTTP-based scraper without Playwright
+See progress.md for detailed evidence and timestamps.

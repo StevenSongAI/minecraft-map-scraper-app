@@ -41,7 +41,8 @@ const PORT = process.env.PORT || 3000;
 let aggregator = null;
 function getAggregator() {
   if (!aggregator && MapAggregator) {
-    aggregator = new MapAggregator({ timeout: 6000, maxResultsPerSource: 10 });
+    // Reduced timeout for faster response times - 3s per source to stay under 10s total
+    aggregator = new MapAggregator({ timeout: 3000, maxResultsPerSource: 6 });
   }
   if (!MapAggregator) {
     throw new Error('Multi-source scrapers not available: ' + scraperModuleError);
@@ -419,6 +420,43 @@ function isRelevantResult(map, query, searchTerms) {
   }
   
   const relevance = calculateRelevance(map, query, searchTerms);
+  
+  // === COMPOUND CONCEPT STRICT CHECK ===
+  // For compound queries like "underwater city", ALL required terms must be present
+  // or the result is a false positive
+  const compoundMatches = detectCompoundConcepts(query);
+  if (compoundMatches.length > 0) {
+    const titleLower = map.title.toLowerCase();
+    const descLower = map.description.toLowerCase();
+    const tagsLower = map.tags ? map.tags.map(t => t.toLowerCase()) : [];
+    const allText = titleLower + ' ' + descLower + ' ' + tagsLower.join(' ');
+    
+    for (const concept of compoundMatches) {
+      // Check if title contains compound synonyms (highest priority - allows pass)
+      let hasSynonymMatch = false;
+      for (const synonym of concept.synonyms) {
+        if (allText.includes(synonym)) {
+          hasSynonymMatch = true;
+          break;
+        }
+      }
+      
+      if (hasSynonymMatch) {
+        return true; // Has exact compound match, allow through
+      }
+      
+      // Check if ALL required terms are present in the content
+      const allTermsPresent = concept.terms.every(term => allText.includes(term));
+      
+      if (!allTermsPresent) {
+        // This is a false positive - partial match on compound query
+        // e.g., "underwater city" query but result only has "city"
+        console.log(`[Filter] Rejected "${map.title}" - missing compound concept terms: ${concept.terms.join(', ')}`);
+        return false;
+      }
+    }
+  }
+  
   // Exact title matches always pass
   if (relevance.hasExactMatch) return true;
   // Must have at least one word boundary match (not just substring)
@@ -597,104 +635,11 @@ async function transformModToMap(mod) {
   };
 }
 
-// Get download URL for a specific map
-app.get('/api/download/:modId', async (req, res) => {
-  const modId = parseInt(req.params.modId);
-  
-  if (!modId) {
-    return res.status(400).json({ error: 'Invalid mod ID' });
-  }
-  
-  try {
-    const headers = {
-      'Accept': 'application/json',
-      'x-api-key': CURSEFORGE_API_KEY
-    };
-    
-    // Get mod details
-    const modResponse = await fetch(`${CURSEFORGE_BASE_URL}/mods/${modId}`, {
-      headers
-    });
-    
-    if (!modResponse.ok) {
-      throw new Error(`API error: ${modResponse.status}`);
-    }
-    
-    const modData = await modResponse.json();
-    const mod = modData.data;
-    
-    // Get files for this mod
-    const filesResponse = await fetch(`${CURSEFORGE_BASE_URL}/mods/${modId}/files`, {
-      headers
-    });
-    
-    if (!filesResponse.ok) {
-      throw new Error(`Files API error: ${filesResponse.status}`);
-    }
-    
-    const filesData = await filesResponse.json();
-    
-    if (!filesData.data || filesData.data.length === 0) {
-      return res.status(404).json({ error: 'No files found for this map' });
-    }
-    
-    // Get the latest file with download URL
-    const latestFile = filesData.data[0];
-    
-    // Try to get direct download URL
-    let downloadUrl = latestFile.downloadUrl;
-    let downloadMethod = 'direct';
-    
-    if (!downloadUrl) {
-      // Use CurseForge API download endpoint
-      downloadUrl = `https://www.curseforge.com/api/v1/mods/${modId}/files/${latestFile.id}/download`;
-      downloadMethod = 'api';
-    }
-    
-    res.json({
-      success: true,
-      modId: modId,
-      modName: mod.name,
-      downloadUrl: downloadUrl,
-      fileName: latestFile.fileName,
-      fileSize: latestFile.fileLength,
-      fileSizeFormatted: formatFileSize(latestFile.fileLength),
-      version: latestFile.gameVersions ? latestFile.gameVersions.join(', ') : 'Unknown',
-      downloadMethod: downloadMethod,
-      curseforgeUrl: `https://www.curseforge.com/minecraft/worlds/${mod.slug}`,
-      uploadedAt: latestFile.fileDate
-    });
-  } catch (error) {
-    console.error('Download error:', error);
-    res.status(500).json({ 
-      error: 'Failed to get download URL',
-      message: error.message 
-    });
-  }
-});
-
-// Proxy download endpoint for CurseForge files
-app.get('/api/download-file/:modId/:fileId', async (req, res) => {
-  const modId = parseInt(req.params.modId);
-  const fileId = parseInt(req.params.fileId);
-  
-  if (!modId || !fileId) {
-    return res.status(400).json({ error: 'Invalid mod or file ID' });
-  }
-  
-  try {
-    // Redirect to CurseForge download
-    const downloadUrl = `https://www.curseforge.com/api/v1/mods/${modId}/files/${fileId}/download`;
-    res.redirect(downloadUrl);
-  } catch (error) {
-    console.error('Download proxy error:', error);
-    res.status(500).json({ error: 'Download failed' });
-  }
-});
-
 /**
  * GET /api/download
- * Download endpoint - supports ?id=X query parameter
+ * Download endpoint - supports ?id=X query parameter (QUERY PARAM VERSION)
+ * IMPORTANT: This route MUST be defined BEFORE /api/download/:modId to avoid conflicts
+ * Express routes are matched in order, and /api/download/:modId would match /api/download?id=X
  */
 app.get('/api/download', async (req, res) => {
   try {
@@ -808,6 +753,97 @@ app.get('/api/download', async (req, res) => {
       error: 'INTERNAL_ERROR',
       message: 'An unexpected error occurred',
       details: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/download/:modId
+ * Download endpoint - path parameter version
+ * Gets download URL for a specific map by ID
+ */
+app.get('/api/download/:modId', async (req, res) => {
+  const modId = parseInt(req.params.modId);
+  
+  if (!modId || isNaN(modId)) {
+    return res.status(400).json({ 
+      error: 'INVALID_ID',
+      message: 'Invalid mod ID. ID must be a positive number.'
+    });
+  }
+  
+  try {
+    const headers = {
+      'Accept': 'application/json',
+      'x-api-key': CURSEFORGE_API_KEY
+    };
+    
+    // Get mod details
+    const modResponse = await fetch(`${CURSEFORGE_BASE_URL}/mods/${modId}`, { headers });
+    
+    if (!modResponse.ok) {
+      if (modResponse.status === 404) {
+        return res.status(404).json({ 
+          error: 'MAP_NOT_FOUND',
+          message: `Map ${modId} not found`,
+          id: modId
+        });
+      }
+      throw new Error(`API error: ${modResponse.status}`);
+    }
+    
+    const modData = await modResponse.json();
+    const mod = modData.data;
+    
+    // Get files for this mod
+    const filesResponse = await fetch(`${CURSEFORGE_BASE_URL}/mods/${modId}/files`, { headers });
+    
+    if (!filesResponse.ok) {
+      throw new Error(`Files API error: ${filesResponse.status}`);
+    }
+    
+    const filesData = await filesResponse.json();
+    
+    if (!filesData.data || filesData.data.length === 0) {
+      return res.status(404).json({ 
+        error: 'NO_FILES_FOUND',
+        message: 'No files found for this map',
+        id: modId
+      });
+    }
+    
+    // Get the latest file with download URL
+    const latestFile = filesData.data[0];
+    
+    // Try to get direct download URL
+    let downloadUrl = latestFile.downloadUrl;
+    let downloadMethod = 'direct';
+    
+    if (!downloadUrl) {
+      // Use CurseForge API download endpoint
+      downloadUrl = `https://www.curseforge.com/api/v1/mods/${modId}/files/${latestFile.id}/download`;
+      downloadMethod = 'api';
+    }
+    
+    res.json({
+      success: true,
+      modId: modId,
+      modName: mod.name,
+      downloadUrl: downloadUrl,
+      fileName: latestFile.fileName,
+      fileSize: latestFile.fileLength,
+      fileSizeFormatted: formatFileSize(latestFile.fileLength),
+      version: latestFile.gameVersions ? latestFile.gameVersions.join(', ') : 'Unknown',
+      downloadMethod: downloadMethod,
+      curseforgeUrl: `https://www.curseforge.com/minecraft/worlds/${mod.slug}`,
+      uploadedAt: latestFile.fileDate
+    });
+  } catch (error) {
+    console.error('Download error:', error);
+    res.status(500).json({ 
+      error: 'DOWNLOAD_ERROR',
+      message: 'Failed to get download URL',
+      details: error.message 
     });
   }
 });

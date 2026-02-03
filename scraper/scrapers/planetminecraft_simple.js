@@ -127,22 +127,45 @@ class SimplePlanetMinecraftScraper extends BaseScraper {
 
   async checkHealth() {
     try {
-      const response = await fetch(this.baseUrl, {
+      // Try to perform an actual search to verify search functionality
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      
+      const searchUrl = `${this.baseUrl}/resources/projects/?text=castle&order=order_popularity`;
+      
+      const response = await fetch(searchUrl, {
+        signal: controller.signal,
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
         }
       });
       
+      clearTimeout(timeoutId);
+      
+      // Check if we can parse results
+      let canSearch = false;
+      if (response.ok) {
+        try {
+          const html = await response.text();
+          const hasResults = html.includes('resource') || html.includes('project') || html.includes('article');
+          canSearch = hasResults && html.length > 3000;
+        } catch (e) {
+          // Ignore parse errors
+        }
+      }
+      
       return {
         ...this.getHealth(),
-        accessible: response.ok,
-        statusCode: response.status
+        accessible: response.ok && canSearch,
+        statusCode: response.status,
+        canSearch: canSearch,
+        error: canSearch ? null : 'Search functionality may be limited'
       };
     } catch (error) {
       return {
         ...this.getHealth(),
         accessible: false,
-        error: error.message
+        error: error.name === 'AbortError' ? 'Health check timeout' : error.message
       };
     }
   }
