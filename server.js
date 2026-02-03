@@ -197,12 +197,20 @@ function calculateRelevance(map, query, searchTerms) {
   }
   
   // Individual query word matches with word boundaries ONLY
+  // Require at least one word boundary match, not just substring
+  let hasWordBoundaryMatch = false;
   queryWords.forEach(word => {
     if (containsWord(titleLower, word)) {
       score += 50;
       matchCount += 0.75;
+      hasWordBoundaryMatch = true;
     }
   });
+  
+  // If no word boundary match for any query word, significantly reduce score
+  if (!hasWordBoundaryMatch && queryWords.length > 0) {
+    score = score * 0.1; // 90% penalty for substring-only matches
+  }
   
   // Expanded term matches (lower weight) - word boundaries ONLY
   searchTerms.forEach(term => {
@@ -264,7 +272,7 @@ function calculateRelevance(map, query, searchTerms) {
     score += Math.log10((map.likes || 0) + 1) * 2;
   }
   
-  return { score, matchCount, penalty, hasExactMatch };
+  return { score, matchCount, penalty, hasExactMatch, hasWordBoundaryMatch };
 }
 
 // Check if a map meets minimum relevance threshold
@@ -277,6 +285,8 @@ function isRelevantResult(map, query, searchTerms) {
   const relevance = calculateRelevance(map, query, searchTerms);
   // Exact title matches always pass
   if (relevance.hasExactMatch) return true;
+  // Must have at least one word boundary match (not just substring)
+  if (!relevance.hasWordBoundaryMatch) return false;
   // Otherwise must meet minimum thresholds
   return relevance.score >= MIN_RELEVANCE_SCORE && relevance.matchCount >= MIN_MATCH_COUNT;
 }
@@ -304,11 +314,14 @@ app.get('/api/search', async (req, res) => {
         relevanceScore: relevance.score,
         matchCount: relevance.matchCount,
         penalty: relevance.penalty,
-        hasExactMatch: relevance.hasExactMatch
+        hasExactMatch: relevance.hasExactMatch,
+        hasWordBoundaryMatch: relevance.hasWordBoundaryMatch
       };
     }).filter(map => {
       // Filter out low-relevance results (false positives)
       if (map.hasExactMatch) return true;
+      // Must have word boundary match (not just substring)
+      if (!map.hasWordBoundaryMatch) return false;
       return map.relevanceScore >= MIN_RELEVANCE_SCORE && map.matchCount >= MIN_MATCH_COUNT;
     }).sort((a, b) => b.relevanceScore - a.relevanceScore);
     
