@@ -455,16 +455,27 @@ function isRelevantResult(map, query, searchTerms) {
   
   const relevance = calculateRelevance(map, query, searchTerms);
   
+  const titleLower = map.title.toLowerCase();
+  const descLower = map.description.toLowerCase();
+  const tagsLower = map.tags ? map.tags.map(t => t.toLowerCase()) : [];
+  const allText = titleLower + ' ' + descLower + ' ' + tagsLower.join(' ');
+  
+  // === STRICT MULTI-WORD QUERY CHECK ===
+  // For queries with 2+ words, ALL words must appear in title/description/tags
+  const queryWords = query.toLowerCase().trim().split(/\s+/).filter(w => w.length > 2);
+  if (queryWords.length >= 2) {
+    const missingWords = queryWords.filter(word => !containsWord(allText, word));
+    if (missingWords.length > 0) {
+      console.log(`[Filter] Rejected "${map.title}" - missing query words: ${missingWords.join(', ')}`);
+      return false;
+    }
+  }
+  
   // === STRICT COMPOUND CONCEPT CHECK ===
   // For compound queries like "underwater city", ALL required terms must be present
   // or the result is a false positive
   const compoundMatches = detectCompoundConcepts(query);
   if (compoundMatches.length > 0) {
-    const titleLower = map.title.toLowerCase();
-    const descLower = map.description.toLowerCase();
-    const tagsLower = map.tags ? map.tags.map(t => t.toLowerCase()) : [];
-    const allText = titleLower + ' ' + descLower + ' ' + tagsLower.join(' ');
-    
     for (const concept of compoundMatches) {
       // Check if title contains compound synonyms (highest priority - allows pass)
       let hasSynonymMatch = false;

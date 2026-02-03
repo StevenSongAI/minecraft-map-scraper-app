@@ -10,7 +10,7 @@
  */
 
 const PlanetMinecraftScraper = require('./planetminecraft');
-const MinecraftMapsScraper = require('./minecraftmaps');
+const ModrinthScraper = require('./modrinth');
 const NineMinecraftScraper = require('./nineminecraft');
 
 class MapAggregator {
@@ -37,17 +37,17 @@ class MapAggregator {
       console.warn('[Aggregator] Failed to initialize Planet Minecraft scraper:', error.message);
     }
 
-    // MinecraftMaps.com
+    // Modrinth API (replaces MinecraftMaps which was blocked by Cloudflare)
     try {
       this.scrapers.push({
-        name: 'minecraftmaps',
-        instance: new MinecraftMapsScraper({ requestTimeout: this.timeout }),
+        name: 'modrinth',
+        instance: new ModrinthScraper({ requestTimeout: this.timeout }),
         enabled: true,
         priority: 2
       });
-      console.log('[Aggregator] MinecraftMaps scraper initialized');
+      console.log('[Aggregator] Modrinth scraper initialized');
     } catch (error) {
-      console.warn('[Aggregator] Failed to initialize MinecraftMaps scraper:', error.message);
+      console.warn('[Aggregator] Failed to initialize Modrinth scraper:', error.message);
     }
 
     // 9Minecraft

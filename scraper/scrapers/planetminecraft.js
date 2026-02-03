@@ -37,7 +37,8 @@ class PlanetMinecraftScraper extends BaseScraper {
 
   async fetchSearchResults(query, limit) {
     const encodedQuery = encodeURIComponent(query);
-    const searchUrl = `${this.baseUrl}/resources/projects/?text=${encodedQuery}&order=order_popularity`;
+    // Use correct URL format per spec: /projects/?keywords=QUERY
+    const searchUrl = `${this.baseUrl}/projects/?keywords=${encodedQuery}&order=order_popularity`;
     
     console.log(`[Planet Minecraft HTTP] Fetching: ${searchUrl}`);
     
@@ -180,7 +181,7 @@ class PlanetMinecraftScraper extends BaseScraper {
     
     try {
       // Test actual search functionality
-      const searchUrl = `${this.baseUrl}/resources/projects/?text=castle&order=order_popularity`;
+      const searchUrl = `${this.baseUrl}/projects/?keywords=castle&order=order_popularity`;
       
       const response = await fetch(searchUrl, {
         signal: controller.signal,
