@@ -2,6 +2,10 @@ FROM node:18-alpine
 
 WORKDIR /app
 
+# Force rebuild on every deploy by using a timestamp
+ARG BUILD_TIMESTAMP=unknown
+ENV BUILD_TIMESTAMP=${BUILD_TIMESTAMP}
+
 COPY package*.json ./
 RUN npm ci --only=production
 
