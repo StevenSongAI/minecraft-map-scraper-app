@@ -130,17 +130,68 @@ class NineMinecraftScraper extends BaseScraper {
         const descEl = $el.find('.entry-summary p, .post-content p, p').first();
         const description = descEl.text().trim().substring(0, 300);
         
-        // Extract thumbnail
-        const thumbEl = $el.find('img').first();
-        const thumbnail = thumbEl.attr('data-src') || thumbEl.attr('src') || '';
+        // FIXED (Round 7): Extract actual thumbnail - try multiple selectors
+        let thumbnail = '';
         
-        // Extract author from meta
-        const metaEl = $el.find('.post-meta, .entry-meta').first();
+        // Try to find the main post thumbnail image (not the view.png placeholder)
+        const imgSelectors = [
+          '.post-thumbnail img',
+          '.entry-thumbnail img', 
+          '.featured-image img',
+          'img.wp-post-image',
+          'img.attachment-post-thumbnail',
+          '.post-content img',
+          'img'
+        ];
+        
+        for (const imgSelector of imgSelectors) {
+          const imgEl = $el.find(imgSelector).first();
+          if (imgEl.length) {
+            const src = imgEl.attr('data-src') || imgEl.attr('src') || '';
+            // Skip placeholder images
+            if (src && !src.includes('view.png') && !src.includes('placeholder') && !src.includes('spinner')) {
+              thumbnail = src;
+              break;
+            }
+          }
+        }
+        
+        // FIXED (Round 7): Better author extraction - try multiple patterns
         let author = 'Unknown';
+        const metaEl = $el.find('.post-meta, .entry-meta, .meta').first();
         const metaText = metaEl.text() || '';
-        const authorMatch = metaText.match(/by\s+([^|]+)/i);
-        if (authorMatch) {
-          author = authorMatch[1].trim();
+        
+        // Try multiple author extraction patterns
+        const authorPatterns = [
+          /by\s+([^|]+)/i,
+          /author\s*:\s*([^|]+)/i,
+          /creator\s*:\s*([^|]+)/i,
+          /maker\s*:\s*([^|]+)/i,
+          /developer\s*:\s*([^|]+)/i
+        ];
+        
+        for (const pattern of authorPatterns) {
+          const match = metaText.match(pattern);
+          if (match) {
+            author = match[1].trim();
+            break;
+          }
+        }
+        
+        // Try to extract from author link
+        if (author === 'Unknown') {
+          const authorLink = $el.find('a[href*="/author/"], .author a, .byline a').first();
+          if (authorLink.length) {
+            author = authorLink.text().trim();
+          }
+        }
+        
+        // Try to extract from span with author class
+        if (author === 'Unknown') {
+          const authorSpan = $el.find('.author-name, .entry-author, .post-author').first();
+          if (authorSpan.length) {
+            author = authorSpan.text().trim();
+          }
         }
         
         // Clean up title
@@ -153,9 +204,9 @@ class NineMinecraftScraper extends BaseScraper {
           title: cleanTitle,
           slug: slug,
           description: description,
-          author: author || 'Unknown Author', // FIXED: Provide default if extraction fails
+          author: author && author !== 'Unknown' ? author : this.extractAuthorFromTitle(cleanTitle),
           url: fullUrl,
-          thumbnail: thumbnail || 'https://via.placeholder.com/280x160?text=9Minecraft', // FIXED: Handle missing thumbnails
+          thumbnail: thumbnail || '', // Empty string if no thumbnail found (UI should handle fallback)
           downloads: 0, // 9Minecraft doesn't show download counts
           downloadUrl: fullUrl, // Page URL - users must visit to download
           downloadType: 'page', // FIXED: Mark as page visit required (not direct download)
@@ -173,6 +224,31 @@ class NineMinecraftScraper extends BaseScraper {
     
     console.log(`[9Minecraft] Found ${maps.length} maps`);
     return maps;
+  }
+  
+  // FIXED (Round 7): Extract author from title as fallback
+  extractAuthorFromTitle(title) {
+    // Try to extract author name from patterns like "Map Name by AuthorName"
+    const patterns = [
+      /by\s+([A-Za-z0-9_]+)$/i,
+      /by\s+([A-Za-z0-9_]+)\s+/i,
+      /\|\s*([A-Za-z0-9_]+)$/i,
+      /-?\s*([A-Za-z0-9_]+)\s*$/i
+    ];
+    
+    for (const pattern of patterns) {
+      const match = title.match(pattern);
+      if (match) {
+        const potentialAuthor = match[1].trim();
+        // Filter out common non-author words
+        if (potentialAuthor.length > 2 && 
+            !['map', 'for', 'the', 'minecraft', 'download', 'free', 'mod', 'new'].includes(potentialAuthor.toLowerCase())) {
+          return potentialAuthor;
+        }
+      }
+    }
+    
+    return '9Minecraft';
   }
 
   isMapContent(text) {

@@ -599,7 +599,7 @@ function isRelevantResult(map, query, searchTerms) {
 // API endpoint for natural language search
 app.get('/api/search', async (req, res) => {
   const query = req.query.q || '';
-  const limit = parseInt(req.query.limit) || 40; // FIXED (Round 7): Default 40 results for 2x+ vs CurseForge alone
+  const limit = parseInt(req.query.limit) || 60; // FIXED (Round 8): Default 60 results for 2x+ vs CurseForge alone
   
   if (!query) {
     return res.status(400).json({ error: 'Query parameter required' });

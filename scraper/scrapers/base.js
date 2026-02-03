@@ -293,7 +293,7 @@ class BaseScraper {
     
     // FIXED: Use ethical scraper identification instead of impersonating browsers
     // This complies with web scraping best practices
-    this.userAgent = 'MinecraftMapScraper/2.0 (+https://github.com/StevenSongAI/minecraft-map-scraper-app)';
+    this.userAgent = 'MinecraftMapScraper/2.0';
     
     // Robots.txt cache
     this.robotsTxtCache = new Map();

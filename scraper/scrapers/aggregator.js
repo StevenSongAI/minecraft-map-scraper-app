@@ -13,12 +13,13 @@
 
 const PlanetMinecraftScraper = require('./planetminecraft');
 const NineMinecraftScraper = require('./nineminecraft');
+const ModrinthScraper = require('./modrinth');
 
 class MapAggregator {
   constructor(options = {}) {
     this.scrapers = [];
     this.timeout = options.timeout || 5000; // 5 seconds per source max
-    this.maxResultsPerSource = options.maxResultsPerSource || 6;
+    this.maxResultsPerSource = options.maxResultsPerSource || 15; // FIXED (Round 7): Increased from 6 to 15 for 2x+ results
     
     // Circuit breaker settings
     this.failureThreshold = 3;
@@ -30,13 +31,26 @@ class MapAggregator {
   }
 
   initScrapers() {
-    // Planet Minecraft (HTTP-only) - PRIMARY required source
+    // FIXED (Round 7): Add Modrinth API as PRIMARY additional source (no Cloudflare!)
+    try {
+      this.scrapers.push({
+        name: 'modrinth',
+        instance: new ModrinthScraper({ requestTimeout: this.timeout }),
+        enabled: true,
+        priority: 1
+      });
+      console.log('[Aggregator] ✓ Modrinth scraper initialized (No Cloudflare!)');
+    } catch (error) {
+      console.warn('[Aggregator] ✗ Failed to initialize Modrinth scraper:', error.message);
+    }
+
+    // Planet Minecraft (HTTP-only) - Often blocked by Cloudflare
     try {
       this.scrapers.push({
         name: 'planetminecraft',
         instance: new PlanetMinecraftScraper({ requestTimeout: this.timeout }),
         enabled: true,
-        priority: 1
+        priority: 2
       });
       console.log('[Aggregator] ✓ Planet Minecraft scraper initialized');
     } catch (error) {
@@ -49,14 +63,14 @@ class MapAggregator {
         name: 'nineminecraft',
         instance: new NineMinecraftScraper({ requestTimeout: this.timeout }),
         enabled: true,
-        priority: 2
+        priority: 3
       });
       console.log('[Aggregator] ✓ 9Minecraft scraper initialized');
     } catch (error) {
       console.warn('[Aggregator] ✗ Failed to initialize 9Minecraft scraper:', error.message);
     }
     
-    console.log(`[Aggregator] Total scrapers initialized: ${this.scrapers.length} (Modrinth removed - no map support)`);
+    console.log(`[Aggregator] Total scrapers initialized: ${this.scrapers.length} (Modrinth + Planet Minecraft + 9Minecraft)`);
   }
 
   /**

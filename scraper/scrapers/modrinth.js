@@ -36,11 +36,11 @@ class ModrinthScraper extends BaseScraper {
   }
 
   async fetchSearchResults(query, limit) {
-    // FIXED: Modrinth doesn't have a "map" category - search with "map" keyword instead
-    // Add "map" OR "world" to query to filter for maps/worlds
-    const enhancedQuery = `${query} map OR world`;
-    const encodedQuery = encodeURIComponent(enhancedQuery);
-    const searchUrl = `${this.baseUrl}/search?query=${encodedQuery}&limit=${Math.min(limit, 20)}&offset=0`;
+    // FIXED (Round 7): Use facets to filter for mods that have world/map content
+    // Modrinth API supports filtering by categories and project types
+    const encodedQuery = encodeURIComponent(query);
+    // Search for projects with 'adventure' category which often includes maps
+    const searchUrl = `${this.baseUrl}/search?query=${encodedQuery}&limit=${Math.min(limit, 20)}&offset=0&facets=[["categories:adventure"],["project_type:mod"]]`;
     
     console.log(`[Modrinth] Fetching: ${searchUrl}`);
     
@@ -51,7 +51,7 @@ class ModrinthScraper extends BaseScraper {
       const response = await fetch(searchUrl, {
         signal: controller.signal,
         headers: {
-          'User-Agent': 'MinecraftMapScraper/1.0.0 (contact@minecraftmapscraper.com)',
+          'User-Agent': 'MinecraftMapScraper/2.0 (+https://github.com/StevenSongAI/minecraft-map-scraper-app)',
           'Accept': 'application/json',
           'Accept-Encoding': 'gzip, deflate'
         }
@@ -66,8 +66,15 @@ class ModrinthScraper extends BaseScraper {
       const data = await response.json();
       const results = data.hits || [];
       
-      console.log(`[Modrinth] Found ${results.length} results`);
-      return results.map(hit => this.transformHitToMap(hit));
+      // Filter results to only include those that look like maps/worlds
+      const mapKeywords = ['map', 'world', 'adventure', 'dungeon', 'quest', 'exploration', 'structure'];
+      const filteredResults = results.filter(hit => {
+        const text = `${hit.title || ''} ${hit.description || ''}`.toLowerCase();
+        return mapKeywords.some(kw => text.includes(kw));
+      });
+      
+      console.log(`[Modrinth] Found ${results.length} results, ${filteredResults.length} map-related`);
+      return filteredResults.map(hit => this.transformHitToMap(hit));
       
     } catch (error) {
       clearTimeout(timeoutId);
@@ -76,27 +83,67 @@ class ModrinthScraper extends BaseScraper {
   }
 
   transformHitToMap(hit) {
+    // FIXED (Round 7): Better normalization to match CurseForge format
+    const projectId = hit.project_id || hit.slug;
+    
     return {
-      id: hit.project_id || hit.slug,
+      id: projectId,
       title: hit.title,
       slug: hit.slug,
+      summary: hit.description || '',
       description: hit.description || '',
-      author: hit.author || 'Unknown',
-      authorUrl: hit.author ? `https://modrinth.com/user/${hit.author}` : '',
-      url: `https://modrinth.com/project/${hit.slug}`,
+      author: {
+        name: hit.author || 'Unknown',
+        url: hit.author ? `https://modrinth.com/user/${hit.author}` : ''
+      },
       thumbnail: hit.icon_url || '',
-      downloads: hit.downloads || 0,
+      screenshots: [],
       downloadUrl: `https://modrinth.com/project/${hit.slug}/versions`,
-      category: 'World',
+      downloadType: 'page', // Modrinth requires visiting the page to download
+      downloadNote: 'Visit Modrinth page to download',
+      fileInfo: null,
+      downloadCount: hit.downloads || 0,
+      downloads: hit.downloads || 0,
       gameVersions: hit.versions || [],
+      primaryGameVersion: hit.versions?.[0] || null,
+      category: this.detectCategory(hit.title, hit.description),
       dateCreated: hit.date_created || new Date().toISOString(),
       dateModified: hit.date_modified || new Date().toISOString(),
       source: 'modrinth',
+      sourceName: 'Modrinth',
+      isFeatured: hit.featured || false,
+      popularityScore: Math.log10((hit.downloads || 0) + 1),
+      primaryLanguage: 'en',
+      curseforge: {
+        modId: null,
+        fileId: null
+      },
       likes: hit.follows || 0,
       license: hit.license || '',
       clientSide: hit.client_side,
-      serverSide: hit.server_side
+      serverSide: hit.server_side,
+      url: `https://modrinth.com/project/${hit.slug}`
     };
+  }
+  
+  detectCategory(title, description) {
+    const text = ((title || '') + ' ' + (description || '')).toLowerCase();
+    
+    if (text.includes('parkour')) return 'Parkour';
+    if (text.includes('puzzle')) return 'Puzzle';
+    if (text.includes('adventure')) return 'Adventure';
+    if (text.includes('survival')) return 'Survival';
+    if (text.includes('horror')) return 'Horror';
+    if (text.includes('pvp')) return 'PvP';
+    if (text.includes('minigame') || text.includes('mini game')) return 'Minigame';
+    if (text.includes('city')) return 'City';
+    if (text.includes('castle')) return 'Castle';
+    if (text.includes('house') || text.includes('mansion')) return 'House';
+    if (text.includes('skyblock')) return 'Skyblock';
+    if (text.includes('dungeon')) return 'Dungeon';
+    if (text.includes('quest')) return 'Quest';
+    
+    return 'World';
   }
 
   async checkHealth() {
@@ -110,7 +157,7 @@ class ModrinthScraper extends BaseScraper {
       const response = await fetch(searchUrl, {
         signal: controller.signal,
         headers: {
-          'User-Agent': 'MinecraftMapScraper/1.0',
+          'User-Agent': this.getUserAgent(),
           'Accept': 'application/json'
         }
       });

@@ -1,7 +1,7 @@
 /**
  * Scrapers Module
  * Exports all scrapers and the aggregator - HTTP-only versions
- * MANAGER INTEL: Modrinth does NOT have maps (only mods/modpacks) - REMOVED
+ * FIXED (Round 7): Re-added Modrinth API - reliable JSON API with no Cloudflare
  */
 
 const { BaseScraper, CircuitBreaker, CacheManager } = require('./base');
@@ -9,10 +9,11 @@ const { BaseScraper, CircuitBreaker, CacheManager } = require('./base');
 // Load HTTP-only scrapers (no Playwright required)
 const PlanetMinecraftScraper = require('./planetminecraft');
 const NineMinecraftScraper = require('./nineminecraft');
+const ModrinthScraper = require('./modrinth');
 
 const MapAggregator = require('./aggregator');
 
-console.log('[Scrapers] HTTP-only scrapers loaded successfully (Planet Minecraft + 9Minecraft)');
+console.log('[Scrapers] HTTP-only scrapers loaded successfully (Modrinth + Planet Minecraft + 9Minecraft)');
 
 module.exports = {
   BaseScraper,
@@ -20,5 +21,6 @@ module.exports = {
   CacheManager,
   PlanetMinecraftScraper,
   NineMinecraftScraper,
+  ModrinthScraper,
   MapAggregator
 };
