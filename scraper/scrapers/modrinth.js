@@ -36,15 +36,11 @@ class ModrinthScraper extends BaseScraper {
   }
 
   async fetchSearchResults(query, limit) {
-    // Modrinth API: search for projects with category 'map'
-    const params = new URLSearchParams({
-      query: query,
-      limit: Math.min(limit, 20).toString(),
-      offset: '0',
-      facets: '[["categories:map"]]'
-    });
-
-    const searchUrl = `${this.baseUrl}/search?${params.toString()}`;
+    // FIXED: Modrinth API with proper facets encoding - DON'T use URLSearchParams for facets!
+    // Modrinth expects facets as a raw JSON array string in the URL
+    const encodedQuery = encodeURIComponent(query);
+    const facets = encodeURIComponent('[["categories:map"]]');
+    const searchUrl = `${this.baseUrl}/search?query=${encodedQuery}&limit=${Math.min(limit, 20)}&offset=0&facets=${facets}`;
     
     console.log(`[Modrinth] Fetching: ${searchUrl}`);
     
@@ -55,8 +51,9 @@ class ModrinthScraper extends BaseScraper {
       const response = await fetch(searchUrl, {
         signal: controller.signal,
         headers: {
-          'User-Agent': 'MinecraftMapScraper/1.0 (steven.ai@example.com)',
-          'Accept': 'application/json'
+          'User-Agent': 'MinecraftMapScraper/1.0.0 (contact@minecraftmapscraper.com)',
+          'Accept': 'application/json',
+          'Accept-Encoding': 'gzip, deflate'
         }
       });
       

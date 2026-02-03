@@ -6,37 +6,68 @@ const cors = require('cors');
 // Deployment timestamp for verification
 const DEPLOY_TIMESTAMP = '2026-02-03-ROUND4';
 
-// Polyfill File API for Node.js 18 compatibility
-if (typeof File === 'undefined') {
+// FIXED: Enhanced File API polyfill for Node.js 18+ compatibility
+// Must be defined BEFORE any module imports that might use File
+if (typeof global.File === 'undefined') {
   global.File = class File {
     constructor(bits, name, options = {}) {
-      this.bits = bits;
-      this.name = name;
+      this.bits = Array.isArray(bits) ? bits : [bits];
+      this.name = name || '';
       this.type = options.type || '';
       this.lastModified = options.lastModified || Date.now();
+      this.size = this.bits.reduce((acc, b) => acc + (b.length || b.byteLength || 0), 0);
     }
+    
     async text() {
-      return Buffer.concat(this.bits.map(b => Buffer.from(b))).toString('utf8');
+      const buffers = this.bits.map(b => Buffer.from(b));
+      return Buffer.concat(buffers).toString('utf8');
     }
+    
     async arrayBuffer() {
-      const buf = Buffer.concat(this.bits.map(b => Buffer.from(b)));
+      const buffers = this.bits.map(b => Buffer.from(b));
+      const buf = Buffer.concat(buffers);
       return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
     }
+    
+    stream() {
+      throw new Error('File.stream() not implemented in polyfill');
+    }
+    
+    slice(start, end, contentType) {
+      throw new Error('File.slice() not implemented in polyfill');
+    }
   };
+  
+  console.log('[Server] File API polyfill installed');
+}
+
+// Also ensure fetch is available (Node 18+ should have it)
+if (typeof global.fetch === 'undefined') {
+  console.warn('[Server] WARNING: fetch not available in global scope');
 }
 
 // Import multi-source scrapers
 let MapAggregator = null;
 let scraperModuleError = null;
+let scrapersLoaded = false;
+
 try {
   // Load scrapers module
+  console.log('[Server] Loading multi-source scrapers...');
+  console.log('[Server] File polyfill available:', typeof File !== 'undefined');
+  console.log('[Server] fetch available:', typeof fetch !== 'undefined');
+  
   const scrapers = require('./scraper/scrapers');
   MapAggregator = scrapers.MapAggregator;
-  console.log('[Server] Multi-source scrapers loaded successfully');
+  scrapersLoaded = true;
+  
+  console.log('[Server] ✓ Multi-source scrapers loaded successfully');
+  console.log('[Server] ✓ Available scrapers:', Object.keys(scrapers));
 } catch (error) {
-  console.error('[Server] Failed to load multi-source scrapers:');
+  console.error('[Server] ✗ Failed to load multi-source scrapers:');
   console.error('  Error:', error.message);
   console.error('  Stack:', error.stack);
+  console.error('  Node version:', process.version);
   scraperModuleError = error.message;
   // Don't exit - fallback to CurseForge only
 }
@@ -49,8 +80,8 @@ let aggregator = null;
 function getAggregator() {
   if (!aggregator && MapAggregator) {
     try {
-      // 5s timeout per source, 6 max results per source
-      aggregator = new MapAggregator({ timeout: 5000, maxResultsPerSource: 6 });
+      // FIXED: Increased to 20 results per source for "2x+ more results" requirement
+      aggregator = new MapAggregator({ timeout: 5000, maxResultsPerSource: 20 });
       console.log('[Server] MapAggregator initialized successfully');
     } catch (error) {
       console.error('[Server] Failed to initialize MapAggregator:', error.message);
@@ -242,9 +273,9 @@ const compoundConcepts = [
   }
 ];
 
-// Minimum relevance thresholds to filter false positives
-const MIN_RELEVANCE_SCORE = 20;  // Lowered to allow more results
-const MIN_MATCH_COUNT = 0.5;
+// FIXED: Minimum relevance thresholds - further lowered to allow more valid results
+const MIN_RELEVANCE_SCORE = 10;  // Reduced from 20 to allow more results through
+const MIN_MATCH_COUNT = 0.3;     // Reduced from 0.5 to allow partial matches
 
 // Maximum allowed conflicts before filtering out a result
 const MAX_ALLOWED_CONFLICTS = 1;
@@ -489,20 +520,35 @@ function isRelevantResult(map, query, searchTerms) {
   const tagsLower = map.tags ? map.tags.map(t => t.toLowerCase()) : [];
   const allText = titleLower + ' ' + descLower + ' ' + tagsLower.join(' ');
   
-  // === STRICT MULTI-WORD QUERY CHECK ===
-  // For queries with 2+ words, ALL words must appear in title/description/tags
+  // FIXED: RELAXED multi-word query check - allow synonyms and related terms
+  // For queries with 2+ significant words, check if MOST words appear (not ALL)
   const queryWords = query.toLowerCase().trim().split(/\s+/).filter(w => w.length > 2);
   if (queryWords.length >= 2) {
-    const missingWords = queryWords.filter(word => !containsWord(allText, word));
-    if (missingWords.length > 0) {
-      console.log(`[Filter] Rejected "${map.title}" - missing query words: ${missingWords.join(', ')}`);
+    // Count how many query words appear (including synonyms)
+    const matchedWords = queryWords.filter(word => {
+      // Direct match
+      if (containsWord(allText, word)) return true;
+      
+      // Check if any synonym of this word matches
+      for (const [key, synonyms] of Object.entries(keywordMappings)) {
+        if (key === word || synonyms.includes(word)) {
+          // Check if any synonym appears in text
+          return synonyms.some(syn => containsWord(allText, syn));
+        }
+      }
+      return false;
+    });
+    
+    // Require at least 60% of words to match (was 100% before - too strict!)
+    const matchRatio = matchedWords.length / queryWords.length;
+    if (matchRatio < 0.6) {
+      console.log(`[Filter] Rejected "${map.title}" - only ${matchedWords.length}/${queryWords.length} query words matched (${Math.round(matchRatio * 100)}%)`);
       return false;
     }
   }
   
-  // === STRICT COMPOUND CONCEPT CHECK ===
-  // For compound queries like "underwater city", ALL required terms must be present
-  // or the result is a false positive
+  // FIXED: RELAXED compound concept check - allow synonym matches
+  // For compound queries like "underwater city", check for related concepts
   const compoundMatches = detectCompoundConcepts(query);
   if (compoundMatches.length > 0) {
     for (const concept of compoundMatches) {
@@ -519,14 +565,21 @@ function isRelevantResult(map, query, searchTerms) {
         return true; // Has exact compound match, allow through
       }
       
-      // STRICT CHECK: ALL required terms must be present in the content
-      // Use word boundary matching for each term
-      const allTermsPresent = concept.terms.every(term => containsWord(allText, term));
+      // RELAXED CHECK: Check if RELATED terms are present (via keyword mappings)
+      // e.g., "futuristic" query can match "scifi", "modern", "tech" etc.
+      const termsOrSynonymsPresent = concept.terms.map(term => {
+        // Direct word boundary match
+        if (containsWord(allText, term)) return true;
+        
+        // Check if any synonym/related term matches
+        const synonyms = keywordMappings[term] || [];
+        return synonyms.some(syn => containsWord(allText, syn));
+      });
       
-      if (!allTermsPresent) {
-        // This is a false positive - partial match on compound query
-        // e.g., "underwater city" query but result only has "city"
-        console.log(`[Filter] Rejected "${map.title}" - missing compound concept terms: ${concept.terms.join(', ')}`);
+      // Require at least 50% of concept terms (or their synonyms) to match
+      const matchRatio = termsOrSynonymsPresent.filter(Boolean).length / concept.terms.length;
+      if (matchRatio < 0.5) {
+        console.log(`[Filter] Rejected "${map.title}" - compound concept match ratio ${Math.round(matchRatio * 100)}%`);
         return false;
       }
     }
@@ -560,10 +613,11 @@ app.get('/api/search', async (req, res) => {
     const allResults = [];
     const sourceStats = {};
     
+    // FIXED: Increased search limits to get "2x+ more results" from multi-source
     // 1. Search CurseForge
     try {
       const cfStart = Date.now();
-      let cfResults = await searchCurseForge(searchTerms, limit * 2);
+      let cfResults = await searchCurseForge(searchTerms, limit * 3);  // Increased from 2x to 3x
       const cfTime = Date.now() - cfStart;
       
       // Normalize CurseForge results
@@ -587,7 +641,7 @@ app.get('/api/search', async (req, res) => {
         const aggStart = Date.now();
         const agg = getAggregator();
         const aggResults = await agg.search(query, { 
-          limit: limit,
+          limit: limit * 2,  // FIXED: Increased limit for aggregator to get more results
           includeCurseForge: false // We already got CurseForge results
         });
         const aggTime = Date.now() - aggStart;
@@ -1516,7 +1570,13 @@ app.get('/api/health', async (req, res) => {
       scraperHealth = { error: error.message };
     }
   } else {
-    scraperHealth = { error: 'Multi-source scrapers not loaded', details: scraperModuleError };
+    scraperHealth = { 
+      error: 'Multi-source scrapers not loaded', 
+      details: scraperModuleError,
+      scrapersLoaded: scrapersLoaded,
+      filePolyfillAvailable: typeof File !== 'undefined',
+      fetchAvailable: typeof fetch !== 'undefined'
+    };
   }
   
   res.json({ 
@@ -1526,8 +1586,9 @@ app.get('/api/health', async (req, res) => {
     apiConfigured: !!process.env.CURSEFORGE_API_KEY && process.env.CURSEFORGE_API_KEY !== 'demo',
     demoMode: isDemoMode,
     apiKeyPreview: process.env.CURSEFORGE_API_KEY ? process.env.CURSEFORGE_API_KEY.substring(0, 10) + '...' : 'Not set',
-    version: '2.2.0-redteam-fixed',
+    version: '2.3.0-round5-fixes',
     multiSourceEnabled: isMultiSourceEnabled(),
+    scrapersLoaded: scrapersLoaded,
     scrapers: scraperHealth
   });
 });
@@ -1547,14 +1608,19 @@ app.get('/api/scrapers/status', async (req, res) => {
         scraperHealth = { error: error.message, scrapers: [] };
       }
     } else {
-      scraperHealth = { error: 'Multi-source scrapers not loaded', details: scraperModuleError, scrapers: [] };
+      scraperHealth = { 
+        error: 'Multi-source scrapers not loaded', 
+        details: scraperModuleError, 
+        scrapers: [],
+        scrapersLoaded: scrapersLoaded 
+      };
     }
     
     // Build unified status response
     const status = {
       timestamp: new Date().toISOString(),
       deployTimestamp: DEPLOY_TIMESTAMP,
-      version: '2.2.0-redteam-fixed',
+      version: '2.3.0-round5-fixes',
       sources: {
         curseforge: {
           name: 'CurseForge API',
