@@ -1,0 +1,51 @@
+=== Testing Environment Keywords ===
+{"keyword":"underwater","category":"environment","count":1,"false_positives":0,"total_checked":1}
+{"keyword":"ocean","category":"environment","count":14,"false_positives":0,"total_checked":5}
+{"keyword":"sea","category":"environment","count":6,"false_positives":0,"total_checked":5}
+{"keyword":"atlantis","category":"environment","count":2,"false_positives":0,"total_checked":2}
+{"keyword":"nether","category":"environment","count":13,"false_positives":0,"total_checked":5}
+{"keyword":"hell","category":"environment","count":6,"false_positives":0,"total_checked":5}
+{"keyword":"inferno","category":"environment","count":4,"false_positives":0,"total_checked":4}
+{"keyword":"heaven","category":"environment","count":8,"false_positives":0,"total_checked":5}
+{"keyword":"sky","category":"environment","count":14,"false_positives":0,"total_checked":5}
+{"keyword":"skyblock","category":"environment","count":20,"false_positives":0,"total_checked":5}
+=== Testing Theme Keywords ===
+{"keyword":"medieval","category":"theme","count":20,"false_positives":0,"total_checked":5}
+{"keyword":"fantasy","category":"theme","count":19,"false_positives":0,"total_checked":5}
+{"keyword":"modern","category":"theme","count":20,"false_positives":0,"total_checked":5}
+{"keyword":"futuristic","category":"theme","count":2,"false_positives":0,"total_checked":2}
+{"keyword":"steampunk","category":"theme","count":6,"false_positives":0,"total_checked":5}
+{"keyword":"horror","category":"theme","count":20,"false_positives":0,"total_checked":5}
+{"keyword":"adventure","category":"theme","count":18,"false_positives":0,"total_checked":5}
+{"keyword":"rpg","category":"theme","count":8,"false_positives":0,"total_checked":5}
+=== Testing Structure Keywords ===
+{"keyword":"castle","category":"structure","count":20,"false_positives":0,"total_checked":5}
+{"keyword":"city","category":"structure","count":20,"false_positives":0,"total_checked":5}
+{"keyword":"village","category":"structure","count":14,"false_positives":0,"total_checked":5}
+{"keyword":"dungeon","category":"structure","count":20,"false_positives":0,"total_checked":5}
+{"keyword":"temple","category":"structure","count":20,"false_positives":0,"total_checked":5}
+{"keyword":"fortress","category":"structure","count":13,"false_positives":0,"total_checked":5}
+{"keyword":"mansion","category":"structure","count":20,"false_positives":0,"total_checked":5}
+=== Testing Game Mode Keywords ===
+{"keyword":"survival","category":"gamemode","count":20,"false_positives":0,"total_checked":5}
+{"keyword":"creative","category":"gamemode","count":3,"false_positives":0,"total_checked":3}
+{"keyword":"pvp","category":"gamemode","count":20,"false_positives":0,"total_checked":5}
+{"keyword":"parkour","category":"gamemode","count":20,"false_positives":0,"total_checked":5}
+{"keyword":"puzzle","category":"gamemode","count":11,"false_positives":0,"total_checked":5}
+=== Testing Specific Keywords ===
+{"keyword":"zombie","category":"specific","count":20,"false_positives":0,"total_checked":5}
+{"keyword":"dragon","category":"specific","count":9,"false_positives":0,"total_checked":5}
+{"keyword":"pirate","category":"specific","count":5,"false_positives":0,"total_checked":5}
+{"keyword":"space","category":"specific","count":20,"false_positives":0,"total_checked":5}
+{"keyword":"desert","category":"specific","count":20,"false_positives":0,"total_checked":5}
+{"keyword":"jungle","category":"specific","count":11,"false_positives":0,"total_checked":5}
+{"keyword":"ice","category":"specific","count":15,"false_positives":0,"total_checked":5}
+=== Focus Tests: Word Boundaries ===
+{"keyword":"stray","category":"boundary","count":0,"false_positives":0,"notes":"No results"}
+{"keyword":"cat","category":"boundary","count":4,"false_positives":0,"total_checked":4}
+{"keyword":"ray","category":"boundary","count":1,"false_positives":0,"total_checked":1}
+=== Focus Tests: Semantic Boundaries ===
+{"keyword":"futuristic city","category":"semantic","count":20,"false_positives":0,"total_checked":5}
+{"keyword":"underwater city","category":"semantic","count":20,"false_positives":0,"total_checked":5}
+{"keyword":"medieval castle","category":"semantic","count":20,"false_positives":0,"total_checked":5}
+=== Testing Complete ===

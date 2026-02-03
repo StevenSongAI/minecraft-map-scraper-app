@@ -1,0 +1,1542 @@
+[
+{"keyword":"underwater","category":"environment","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"ocean","category":"environment","count":14,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"sea","category":"environment","count":6,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"atlantis","category":"environment","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"submarine","category":"environment","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"aquatic","category":"environment","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"marine","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"depths","category":"environment","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"nether","category":"environment","count":13,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"hell","category":"environment","count":6,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"inferno","category":"environment","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"lava","category":"environment","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"magma","category":"environment","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"fire","category":"environment","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"flame","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"burning","category":"environment","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"heaven","category":"environment","count":8,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"sky","category":"environment","count":14,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"cloud","category":"environment","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"celestial","category":"environment","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"paradise","category":"environment","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"angel","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"divine","category":"environment","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"aerial","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"void","category":"environment","count":15,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"end","category":"environment","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"abyss","category":"environment","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"darkness","category":"environment","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"shadow","category":"environment","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"twilight","category":"environment","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"ether","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"astral","category":"environment","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"forest","category":"environment","count":18,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"woods","category":"environment","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"taiga","category":"environment","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"birch","category":"environment","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"oak","category":"environment","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"dark.oak","category":"environment","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"acacia","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"jungle","category":"environment","count":11,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"mountain","category":"environment","count":14,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"hill","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"peak","category":"environment","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"cliff","category":"environment","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"canyon","category":"environment","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"valley","category":"environment","count":6,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"plateau","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"mesa","category":"environment","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"swamp","category":"environment","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"marsh","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"bog","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"wetland","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"mangrove","category":"environment","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"bayou","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"fen","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"moor","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"plains","category":"environment","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"prairie","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"savanna","category":"environment","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"grassland","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"meadow","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"steppe","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"field","category":"environment","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"farmland","category":"environment","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"beach","category":"environment","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"coast","category":"environment","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"shore","category":"environment","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"island","category":"environment","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"islet","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"archipelago","category":"environment","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"peninsula","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"cove","category":"environment","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"cave","category":"environment","count":9,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"cavern","category":"environment","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"grotto","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"underground","category":"environment","count":13,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"subterranean","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"mine","category":"environment","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"shaft","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"tunnel","category":"environment","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"river","category":"environment","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"stream","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"creek","category":"environment","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"brook","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"waterfall","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"cascade","category":"environment","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"lake","category":"environment","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"pond","category":"environment","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"volcano","category":"environment","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"caldera","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"crater","category":"environment","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"geyser","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"hot.spring","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"thermal","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"magma.chamber","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"eruption","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"tundra","category":"environment","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"snow","category":"environment","count":6,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"ice","category":"environment","count":15,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"glacier","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"frozen","category":"environment","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"arctic","category":"environment","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"antarctic","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"permafrost","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"desert","category":"environment","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"sand","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"dune","category":"environment","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"oasis","category":"environment","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"cactus","category":"environment","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"sahara","category":"environment","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"wasteland","category":"environment","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"arid","category":"environment","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"jungle","category":"environment","count":11,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"rainforest","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"tropical","category":"environment","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"bamboo","category":"environment","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"vine","category":"environment","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"canopy","category":"environment","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"undergrowth","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"wilderness","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"savanna","category":"environment","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"safari","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"outback","category":"environment","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"bush","category":"environment","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"veldt","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"grass","category":"environment","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"savannah","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"prairie","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"mushroom","category":"environment","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"fungi","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"mycelium","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"spore","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"shroom","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"toadstool","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"fungal","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"bioluminescent","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"coral","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"reef","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"kelp","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"seaweed","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"tide","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"tidal","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"lagoon","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"atoll","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"crystal","category":"environment","count":9,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"gem","category":"environment","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"mineral","category":"environment","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"ore","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"quartz","category":"environment","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"amethyst","category":"environment","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"diamond","category":"environment","count":12,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"emerald","category":"environment","count":8,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"obsidian","category":"environment","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"bedrock","category":"environment","count":18,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"stone","category":"environment","count":8,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"rock","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"granite","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"diorite","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"andesite","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"basalt","category":"environment","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"medieval","category":"theme","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"knight","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"castle","category":"theme","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"kingdom","category":"theme","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"royal","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"crown","category":"theme","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"feudal","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"middle.ages","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"fantasy","category":"theme","count":19,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"magic","category":"theme","count":3,"false_positives":1,"total_checked":3,"fp_rate":33.33,"fp_details":"[\] "}
+{"keyword":"magical","category":"theme","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"enchant","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"spell","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"wizard","category":"theme","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"witch","category":"theme","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"sorcery","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"modern","category":"theme","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"contemporary","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"urban","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"city","category":"theme","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"skyscraper","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"apartment","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"suburb","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"downtown","category":"theme","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"futuristic","category":"theme","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"sci-fi","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"scifi","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"cyberpunk","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"space","category":"theme","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"tech","category":"theme","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"technology","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"robot","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"steampunk","category":"theme","count":6,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"victorian","category":"theme","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"industrial","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"gear","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"steam","category":"theme","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"clockwork","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"brass","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"copper","category":"theme","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"horror","category":"theme","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"scary","category":"theme","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"haunted","category":"theme","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"spooky","category":"theme","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"terror","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"creep","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"halloween","category":"theme","count":10,"false_positives":1,"total_checked":5,"fp_rate":20.00,"fp_details":"[\] "}
+{"keyword":"dark","category":"theme","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"adventure","category":"theme","count":18,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"quest","category":"theme","count":14,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"explore","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"journey","category":"theme","count":14,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"expedition","category":"theme","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"campaign","category":"theme","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"odyssey","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"pilgrimage","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"rpg","category":"theme","count":8,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"roleplay","category":"theme","count":6,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"role.play","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"class","category":"theme","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"level","category":"theme","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"character","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"stats","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"progression","category":"theme","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"survival","category":"theme","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"hardcore","category":"theme","count":15,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"resources","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"gather","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"craft","category":"theme","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"build","category":"theme","count":9,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"hunger","category":"theme","count":11,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"thirst","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"creative","category":"theme","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"building","category":"theme","count":10,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"construct","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"design","category":"theme","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"architecture","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"art","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"aesthetic","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"pretty","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"minigame","category":"theme","count":11,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"minigames","category":"theme","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"game","category":"theme","count":11,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"arcade","category":"theme","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"party","category":"theme","count":9,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"fun","category":"theme","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"casual","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"quick","category":"theme","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"pvp","category":"theme","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"battle","category":"theme","count":16,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"arena","category":"theme","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"combat","category":"theme","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"fight","category":"theme","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"war","category":"theme","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"duel","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"competitive","category":"theme","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"parkour","category":"theme","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"jump","category":"theme","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"obstacle","category":"theme","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"course","category":"theme","count":10,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"speed","category":"theme","count":10,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"run","category":"theme","count":12,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"challenge","category":"theme","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"skill","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"puzzle","category":"theme","count":11,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"logic","category":"theme","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"brain","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"mind","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"solve","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"riddle","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"mystery","category":"theme","count":14,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"enigma","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"maze","category":"theme","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"labyrinth","category":"theme","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"hedge","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"puzzle.maze","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"lost","category":"theme","count":12,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"confusion","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"twist","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"turn","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"escape","category":"theme","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"prison","category":"theme","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"breakout","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"jail","category":"theme","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"trap","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"locked","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"room","category":"theme","count":18,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"chamber","category":"theme","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"story","category":"theme","count":8,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"narrative","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"plot","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"tale","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"lore","category":"theme","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"history","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"background","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"setting","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"challenge","category":"theme","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"hard","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"difficult","category":"theme","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"extreme","category":"theme","count":17,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"insane","category":"theme","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"impossible","category":"theme","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"hardest","category":"theme","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"expert","category":"theme","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"coop","category":"theme","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"co-op","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"cooperative","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"team","category":"theme","count":6,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"multiplayer","category":"theme","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"group","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"squad","category":"theme","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"party","category":"theme","count":9,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"singleplayer","category":"theme","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"solo","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"alone","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"individual","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"private","category":"theme","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"personal","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"single","category":"theme","count":6,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"one.player","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"educational","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"learning","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"school","category":"theme","count":15,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"teach","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"tutorial","category":"theme","count":17,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"lesson","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"guide","category":"theme","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"instruction","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"redstone","category":"theme","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"circuit","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"mechanism","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"automation","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"contraption","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"engine","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"machine","category":"theme","count":9,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"device","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"command","category":"theme","count":9,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"command.block","category":"theme","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"function","category":"theme","count":11,"false_positives":2,"total_checked":5,"fp_rate":40.00,"fp_details":"[\] [\] "}
+{"keyword":"datapack","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"modded","category":"theme","count":18,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"plugin","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"custom","category":"theme","count":11,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"unique","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"vanilla","category":"theme","count":15,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"pure","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"original","category":"theme","count":6,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"unmodded","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"clean","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"simple","category":"theme","count":15,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"basic","category":"theme","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"standard","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"realistic","category":"theme","count":6,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"realism","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"life","category":"theme","count":17,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"immersive","category":"theme","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"detailed","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"accurate","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"authentic","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"true","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"cartoon","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"anime","category":"theme","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"pixel","category":"theme","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"retro","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"8bit","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"16bit","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"classic","category":"theme","count":8,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"nostalgia","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"military","category":"theme","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"army","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"war","category":"theme","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"battle","category":"theme","count":16,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"soldier","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"weapon","category":"theme","count":10,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"gun","category":"theme","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"tank","category":"theme","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"apocalypse","category":"theme","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"post.apocalyptic","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"wasteland","category":"theme","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"ruins","category":"theme","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"destroyed","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"abandoned","category":"theme","count":8,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"survive","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"dystopia","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"western","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"cowboy","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"saloon","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"desert.west","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"frontier","category":"theme","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"outlaw","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"sheriff","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"gold.rush","category":"theme","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"house","category":"structure","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"home","category":"structure","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"residence","category":"structure","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"dwelling","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"cabin","category":"structure","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"cottage","category":"structure","count":9,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"hut","category":"structure","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"shelter","category":"structure","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"mansion","category":"structure","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"estate","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"villa","category":"structure","count":13,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"manor","category":"structure","count":8,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"palace","category":"structure","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"chateau","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"mcmansion","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"luxury","category":"structure","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"castle","category":"structure","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"fortress","category":"structure","count":13,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"citadel","category":"structure","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"stronghold","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"keep","category":"structure","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"fort","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"tower","category":"structure","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"bastion","category":"structure","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"city","category":"structure","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"town","category":"structure","count":17,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"metropolis","category":"structure","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"megacity","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"capital","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"urban","category":"structure","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"civilization","category":"structure","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"settlement","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"village","category":"structure","count":14,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"hamlet","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"community","category":"structure","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"colony","category":"structure","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"outpost","category":"structure","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"camp","category":"structure","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"encampment","category":"structure","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"base","category":"structure","count":19,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"dungeon","category":"structure","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"prison","category":"structure","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"jail","category":"structure","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"cell","category":"structure","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"oubliette","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"pit","category":"structure","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"cage","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"lockup","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"temple","category":"structure","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"shrine","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"sanctuary","category":"structure","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"church","category":"structure","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"cathedral","category":"structure","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"chapel","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"mosque","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"altar","category":"structure","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"tower","category":"structure","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"spire","category":"structure","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"skyscraper","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"highrise","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"observatory","category":"structure","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"beacon","category":"structure","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"lighthouse","category":"structure","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"lookout","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"bridge","category":"structure","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"crossing","category":"structure","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"viaduct","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"aqueduct","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"overpass","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"suspension","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"arch","category":"structure","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"span","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"wall","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"fence","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"barrier","category":"structure","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"rampart","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"palisade","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"bastion","category":"structure","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"defense","category":"structure","count":10,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"fortification","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"gate","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"portal","category":"structure","count":13,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"door","category":"structure","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"entrance","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"archway","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"gateway","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"threshold","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"access","category":"structure","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"farm","category":"structure","count":15,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"ranch","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"plantation","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"orchard","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"vineyard","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"garden","category":"structure","count":6,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"greenhouse","category":"structure","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"field","category":"structure","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"mine","category":"structure","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"quarry","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"pit","category":"structure","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"excavation","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"tunnel","category":"structure","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"shaft","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"dig","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"ore","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"harbor","category":"structure","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"port","category":"structure","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"dock","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"pier","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"marina","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"wharf","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"quay","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"jetty","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"shop","category":"structure","count":6,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"store","category":"structure","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"market","category":"structure","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"bazaar","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"mall","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"trading","category":"structure","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"merchant","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"commerce","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"inn","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"tavern","category":"structure","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"pub","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"hotel","category":"structure","count":10,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"lodge","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"hostel","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"restaurant","category":"structure","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"cafe","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"library","category":"structure","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"archive","category":"structure","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"repository","category":"structure","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"collection","category":"structure","count":9,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"museum","category":"structure","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"gallery","category":"structure","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"exhibit","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"display","category":"structure","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"laboratory","category":"structure","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"lab","category":"structure","count":13,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"workshop","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"forge","category":"structure","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"smithy","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"factory","category":"structure","count":13,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"mill","category":"structure","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"plant","category":"structure","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"arena","category":"structure","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"stadium","category":"structure","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"colosseum","category":"structure","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"circus","category":"structure","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"amphitheater","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"stage","category":"structure","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"theater","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"venue","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"pyramid","category":"structure","count":9,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"ziggurat","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"tomb","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"crypt","category":"structure","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"mausoleum","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"grave","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"cemetery","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"burial","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"mansion","category":"structure","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"estate","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"villa","category":"structure","count":13,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"manor","category":"structure","count":8,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"chateau","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"hacienda","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"plantation","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"compound","category":"structure","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"bunker","category":"structure","count":10,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"bomb.shelter","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"safehouse","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"hideout","category":"structure","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"lair","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"den","category":"structure","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"secret","category":"structure","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"underground","category":"structure","count":13,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"treehouse","category":"structure","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"skyhouse","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"floating","category":"structure","count":15,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"airship","category":"structure","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"dirigible","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"balloon","category":"structure","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"elevated","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"aerial","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"statue","category":"structure","count":8,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"monument","category":"structure","count":9,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"memorial","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"sculpture","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"fountain","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"obelisk","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"pillar","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"column","category":"structure","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"survival","category":"gamemode","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"survive","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"hardcore","category":"gamemode","count":15,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"hard.mode","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"ultra.hardcore","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"uhc","category":"gamemode","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"resources","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"gather","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"creative","category":"gamemode","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"creative.mode","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"build","category":"gamemode","count":9,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"building","category":"gamemode","count":10,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"construct","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"design","category":"gamemode","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"architect","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"creator","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"adventure","category":"gamemode","count":18,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"adventure.mode","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"story","category":"gamemode","count":8,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"quest","category":"gamemode","count":14,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"explore","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"discover","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"journey","category":"gamemode","count":14,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"campaign","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"spectator","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"spectator.mode","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"observe","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"watch","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"view","category":"gamemode","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"camera","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"fly","category":"gamemode","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"ghost","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"pvp","category":"gamemode","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"player.vs.player","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"battle","category":"gamemode","count":16,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"arena","category":"gamemode","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"combat","category":"gamemode","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"fight","category":"gamemode","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"war","category":"gamemode","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"duel","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"pve","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"player.vs.environment","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"mob","category":"gamemode","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"monster","category":"gamemode","count":10,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"creature","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"enemy","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"hostile","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"attack","category":"gamemode","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"parkour","category":"gamemode","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"jump","category":"gamemode","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"obstacle","category":"gamemode","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"course","category":"gamemode","count":10,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"speed.run","category":"gamemode","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"timed","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"challenge","category":"gamemode","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"skill","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"puzzle","category":"gamemode","count":11,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"logic","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"brain","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"mind","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"solve","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"riddle","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"mystery","category":"gamemode","count":14,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"think","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"maze","category":"gamemode","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"labyrinth","category":"gamemode","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"lost","category":"gamemode","count":12,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"confusion","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"twist","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"turn","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"dead.end","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"escape","category":"gamemode","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"escape.room","category":"gamemode","count":12,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"locked","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"key","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"code","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"combination","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"secret","category":"gamemode","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"hidden","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"reveal","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"horror","category":"gamemode","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"scary","category":"gamemode","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"haunted","category":"gamemode","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"spooky","category":"gamemode","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"terror","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"fear","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"dark","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"night","category":"gamemode","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"minigame","category":"gamemode","count":11,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"minigames","category":"gamemode","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"game","category":"gamemode","count":11,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"arcade","category":"gamemode","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"party","category":"gamemode","count":9,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"fun","category":"gamemode","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"casual","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"quick","category":"gamemode","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"ctf","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"capture.flag","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"flag","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"team","category":"gamemode","count":6,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"base","category":"gamemode","count":19,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"steal","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"defend","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"competition","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"bedwars","category":"gamemode","count":15,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"bed.wars","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"destroy","category":"gamemode","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"bed","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"protect","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"attack","category":"gamemode","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"defend","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"rush","category":"gamemode","count":11,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"skywars","category":"gamemode","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"sky.wars","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"floating","category":"gamemode","count":15,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"island","category":"gamemode","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"void","category":"gamemode","count":15,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"chest","category":"gamemode","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"loot","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"combat","category":"gamemode","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"hunger.games","category":"gamemode","count":10,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"survival.games","category":"gamemode","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"battle.royale","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"last.man","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"elimination","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"arena","category":"gamemode","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"fight","category":"gamemode","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"winner","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"tnt.run","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"spleef","category":"gamemode","count":16,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"drop","category":"gamemode","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"fall","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"platform","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"disappear","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"dig","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"last","category":"gamemode","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"droper","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"dropper","category":"gamemode","count":8,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"falling","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"parachute","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"land","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"water","category":"gamemode","count":18,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"target","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"aim","category":"gamemode","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"race","category":"gamemode","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"racing","category":"gamemode","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"speed","category":"gamemode","count":10,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"fast","category":"gamemode","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"sprint","category":"gamemode","count":11,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"dash","category":"gamemode","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"hurry","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"competition","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"hide","category":"gamemode","count":17,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"seek","category":"gamemode","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"hide.and.seek","category":"gamemode","count":12,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"hidden","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"find","category":"gamemode","count":12,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"search","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"spot","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"camouflage","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"tag","category":"gamemode","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"it","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"chase","category":"gamemode","count":9,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"run","category":"gamemode","count":12,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"catch","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"freeze","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"relay","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"team","category":"gamemode","count":6,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"kit","category":"gamemode","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"kit.pvp","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"loadout","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"class","category":"gamemode","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"weapon","category":"gamemode","count":10,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"armor","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"item","category":"gamemode","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"gear","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"practice","category":"gamemode","count":10,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"training","category":"gamemode","count":10,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"warmup","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"drill","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"exercise","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"learn","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"improve","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"skill","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":" UHC ","category":"gamemode","count":3,"false_positives":2,"total_checked":3,"fp_rate":66.66,"fp_details":"[[UHC] Launch and play Map] [UHC Training] "}
+{"keyword":"ultra.hardcore","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"no.regen","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"border","category":"gamemode","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"shrink","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"time.limit","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"intense","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"competitive","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"box","category":"gamemode","count":12,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"one.block","category":"gamemode","count":9,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"skyblock","category":"gamemode","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"island","category":"gamemode","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"void","category":"gamemode","count":15,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"expand","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"progress","category":"gamemode","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"grind","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"prison","category":"gamemode","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"jail","category":"gamemode","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"rank","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"prestige","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"mine","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"sell","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"shop","category":"gamemode","count":6,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"economy","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"factions","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"faction","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"claim","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"raid","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"war","category":"gamemode","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"ally","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"enemy","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"territory","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"towny","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"town","category":"gamemode","count":17,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"mayor","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"resident","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"plot","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"nation","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"government","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"politics","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"survival.games","category":"gamemode","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"sg","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"chest","category":"gamemode","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"loot","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"scavenge","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"fight","category":"gamemode","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"arena","category":"gamemode","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"pvp","category":"gamemode","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"build.battle","category":"gamemode","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"build.wars","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"contest","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"vote","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"theme","category":"gamemode","count":8,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"time","category":"gamemode","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"creative","category":"gamemode","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"judge","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"murder","category":"gamemode","count":12,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"mystery","category":"gamemode","count":14,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"detective","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"killer","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"innocent","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"weapon","category":"gamemode","count":10,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"clue","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"suspense","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"zombie","category":"gamemode","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"apocalypse","category":"gamemode","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"infection","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"outbreak","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"survive","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"wave","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"defend","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"horde","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"tower.defense","category":"gamemode","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"defense","category":"gamemode","count":10,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"tower","category":"gamemode","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"path","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"wave","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"upgrade","category":"gamemode","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"strategy","category":"gamemode","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"protect","category":"gamemode","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"zombie","category":"specific","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"undead","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"walker","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"corpse","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"rotting","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"infected","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"husk","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"drowned","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"skeleton","category":"specific","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"skull","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"bone","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"archer","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"arrow","category":"specific","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"ranged","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"dead","category":"specific","count":8,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"reanimated","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"creeper","category":"specific","count":10,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"explode","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"ssss","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"green","category":"specific","count":6,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"charged","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"powered","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"silent","category":"specific","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"sneaky","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"spider","category":"specific","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"cave.spider","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"web","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"poison","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"venom","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"arachnid","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"crawl","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"night","category":"specific","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"enderman","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"ender","category":"specific","count":6,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"teleport","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"tall","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"black","category":"specific","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"purple","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"eyes","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"scream","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"dragon","category":"specific","count":9,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"ender.dragon","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"boss","category":"specific","count":16,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"fly","category":"specific","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"fire","category":"specific","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"egg","category":"specific","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"portal","category":"specific","count":13,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"end","category":"specific","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"wither","category":"specific","count":11,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"wither.boss","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"skull","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"black","category":"specific","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"soul","category":"specific","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"sand","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"explosion","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"star","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"witch","category":"specific","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"potion","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"brew","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"splash","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"magic","category":"specific","count":3,"false_positives":1,"total_checked":3,"fp_rate":33.33,"fp_details":"[\] "}
+{"keyword":"hut","category":"specific","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"swamp","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"cauldron","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"slime","category":"specific","count":6,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"gelatinous","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"cube","category":"specific","count":15,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"split","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"jump","category":"specific","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"bounce","category":"specific","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"green","category":"specific","count":6,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"underground","category":"specific","count":13,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"ghast","category":"specific","count":6,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"nether","category":"specific","count":13,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"fly","category":"specific","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"cry","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"fireball","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"tears","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"white","category":"specific","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"float","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"blaze","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"rod","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"fire","category":"specific","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"nether.fortress","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"fly","category":"specific","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"yellow","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"smoke","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"attack","category":"specific","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"piglin","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"pig","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"gold","category":"specific","count":6,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"nether","category":"specific","count":13,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"barter","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"sword","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"crossbow","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"zombified","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"hoglin","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"boar","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"meat","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"leather","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"breed","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"nether","category":"specific","count":13,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"forest","category":"specific","count":18,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"big","category":"specific","count":9,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"strider","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"lava","category":"specific","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"walk","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"warped","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"fungus","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"ride","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"shiver","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"cold","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"phantom","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"wing","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"fly","category":"specific","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"night","category":"specific","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"insomnia","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"attack","category":"specific","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"dive","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"undead","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"pillager","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"villager","category":"specific","count":14,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"raid","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"crossbow","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"outpost","category":"specific","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"evil","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"attack","category":"specific","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"illager","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"ravager","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"beast","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"raid","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"charge","category":"specific","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"destroy","category":"specific","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"big","category":"specific","count":9,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"strong","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"roar","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"vex","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"summon","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"fly","category":"specific","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"sword","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"evoker","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"small","category":"specific","count":16,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"blue","category":"specific","count":14,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"spirit","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"guardian","category":"specific","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"elder","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"temple","category":"specific","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"ocean","category":"specific","count":14,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"laser","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"spikes","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"eye","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"fish","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"drowned","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"water","category":"specific","count":18,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"zombie","category":"specific","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"trident","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"ocean","category":"specific","count":14,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"river","category":"specific","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"convert","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"underwater","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"silverfish","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"stone","category":"specific","count":8,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"bug","category":"specific","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"small","category":"specific","count":16,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"infest","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"weak","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"swarm","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"hidden","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"endermite","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"ender","category":"specific","count":6,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"pearl","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"small","category":"specific","count":16,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"purple","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"portal","category":"specific","count":13,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"rare","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"tiny","category":"specific","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"magma.cube","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"lava","category":"specific","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"jump","category":"specific","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"split","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"fire","category":"specific","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"nether","category":"specific","count":13,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"orange","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"hot","category":"specific","count":8,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"slime","category":"specific","count":6,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"green","category":"specific","count":6,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"cube","category":"specific","count":15,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"jump","category":"specific","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"split","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"swamp","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"underground","category":"specific","count":13,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"plop","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"bat","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"fly","category":"specific","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"cave","category":"specific","count":9,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"night","category":"specific","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"sound","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"small","category":"specific","count":16,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"flying","category":"specific","count":6,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"dark","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"cow","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"milk","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"beef","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"leather","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"farm","category":"specific","count":15,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"passive","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"moo","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"animal","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"pig","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"pork","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"saddle","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"ride","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"farm","category":"specific","count":15,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"oink","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"animal","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"passive","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"sheep","category":"specific","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"wool","category":"specific","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"mutton","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"dye","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"farm","category":"specific","count":15,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"baa","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"animal","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"shave","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"chicken","category":"specific","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"egg","category":"specific","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"feather","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"raw","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"farm","category":"specific","count":15,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"cluck","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"animal","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"small","category":"specific","count":16,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"rabbit","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"bunny","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"hide","category":"specific","count":17,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"foot","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"jump","category":"specific","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"carrot","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"small","category":"specific","count":16,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"cute","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"horse","category":"specific","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"ride","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"saddle","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"armor","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"wheat","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"animal","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"fast","category":"specific","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"jump","category":"specific","count":20,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"donkey","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"mule","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"chest","category":"specific","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"ride","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"saddle","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"wheat","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"animal","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"carry","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"wolf","category":"specific","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"dog","category":"specific","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"pet","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"tame","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"bone","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"collar","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"attack","category":"specific","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"loyal","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"ocelot","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"cat","category":"specific","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"pet","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"tame","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"fish","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"creeper","category":"specific","count":10,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"jungle","category":"specific","count":11,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"fast","category":"specific","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"parrot","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"bird","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"fly","category":"specific","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"shoulder","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"cookie","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"jungle","category":"specific","count":11,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"colorful","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"dance","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"llama","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"spit","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"carpet","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"chest","category":"specific","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"wheat","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"mountain","category":"specific","count":14,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"trader","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"animal","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"polar.bear","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"ice","category":"specific","count":15,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"snow","category":"specific","count":6,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"fish","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"bear","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"baby","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"protect","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"white","category":"specific","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"panda","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"bamboo","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"play","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"lazy","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"worried","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"aggressive","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"weak","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"cute","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"fox","category":"specific","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"sweet","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"berry","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"chicken","category":"specific","count":4,"false_positives":0,"total_checked":4,"fp_rate":0,"fp_details":""}
+{"keyword":"sleep","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"taiga","category":"specific","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"trust","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"cute","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"bee","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"hive","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"honey","category":"specific","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"flower","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"pollinate","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"sting","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"swarm","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"fly","category":"specific","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"turtle","category":"specific","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"beach","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"egg","category":"specific","count":5,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"scute","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"water","category":"specific","count":18,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"seagrass","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"baby","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"old","category":"specific","count":10,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"dolphin","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"ocean","category":"specific","count":14,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"fish","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"treasure","category":"specific","count":15,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"swim","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"play","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"follow","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"intelligent","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"squid","category":"specific","count":8,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"ink","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"water","category":"specific","count":18,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"ocean","category":"specific","count":14,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"dark","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"passive","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"tentacle","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"sea","category":"specific","count":6,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"cod","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"salmon","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"fish","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"water","category":"specific","count":18,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"ocean","category":"specific","count":14,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"river","category":"specific","count":7,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"bucket","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"food","category":"specific","count":3,"false_positives":0,"total_checked":3,"fp_rate":0,"fp_details":""}
+{"keyword":"pufferfish","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"poison","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"inflate","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"spike","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"tropical","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"water","category":"specific","count":18,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"ocean","category":"specific","count":14,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"danger","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"tropical.fish","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"clownfish","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"colorful","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"coral","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"reef","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"water","category":"specific","count":18,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"ocean","category":"specific","count":14,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"pretty","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"axolotl","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"lucia","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"wild","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"gold","category":"specific","count":6,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"cyan","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"blue","category":"specific","count":14,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"bucket","category":"specific","count":1,"false_positives":0,"total_checked":1,"fp_rate":0,"fp_details":""}
+{"keyword":"cute","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"glow.squid","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"glow","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"ink","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"dark","category":"specific","count":2,"false_positives":0,"total_checked":2,"fp_rate":0,"fp_details":""}
+{"keyword":"water","category":"specific","count":18,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"luminescent","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"underground","category":"specific","count":13,"false_positives":0,"total_checked":5,"fp_rate":0,"fp_details":""}
+{"keyword":"pretty","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"goat","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"horn","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"ram","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"mountain","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"milk","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"jump","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"wheat","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"headbutt","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"trader.llama","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"llama","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"wandering","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"trader","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"leash","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"desert","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"chest","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"spit","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"wandering.trader","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"emerald","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"trade","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"llama","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"spawn","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"random","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"desert","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"sell","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"iron.golem","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"village","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"protect","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"poppy","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"iron","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"farm","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"attack","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"defend","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"snow.golem","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"snow","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"pumpkin","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"shoot","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"cold","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"build","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"defend","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"friendly","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"villager","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"trade","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"emerald","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"profession","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"house","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"breed","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"farm","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"job","category":"specific","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"stray","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"stranded","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"strand","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"ray","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"rays","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"xray","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"x-ray","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"array","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"cat","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"cats","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"category","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"scatter","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"concat","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"copycat","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"cathedral","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"caterpillar","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"net","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"nether","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"internet","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"cabinet","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"planet","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"magnet","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"network","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"netted","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"end","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"ender","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"ending","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"friend","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"weekend","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"trend","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"blend","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"commend","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"the","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"theme","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"theater","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"theft","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"thermal","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"theory","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"ether","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"wither","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"war","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"warrior","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"warden","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"warning","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"warp","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"toward","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"award","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"hardware","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"man","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"mansion","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"manual","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"manage","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"command","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"demand","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"human","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"roman","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"her","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"hero","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"herobrine","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"herd","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"here","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"there","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"where","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"everywhere","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"sky","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"skyblock","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"skyscraper","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"risky","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"whiskey","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"husky","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"skyline","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"skyward","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"mine","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"minecraft","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"miner","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"mineral","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"undermine","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"landmine","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"mining","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"minimize","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"craft","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"aircraft","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"crafty","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"spacecraft","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"handcraft","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"craftsman","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"crafting","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"witchcraft","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"block","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"blocky","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"roadblock","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"building.block","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"blockbuster","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"blockade","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"sunblock","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"blockchain","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"red","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"redstone","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"redwood","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"infrared","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"reduced","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"credits","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"sacred","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"hundred","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"stone","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"stonework","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"cornerstone","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"keystone","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"limestone","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"sandstone","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"cobblestone","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"gravestone","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"wood","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"woodland","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"woodwork","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"wooden","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"driftwood","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"firewood","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"sandalwood","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"cottonwood","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"water","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"waterfall","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"waterfront","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"underwater","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"waterway","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"watermelon","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"waterproof","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"watermark","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"fire","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"firework","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"fireplace","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"firefighter","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"campfire","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"wildfire","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"fireball","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"firewood","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"ice","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"iceberg","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"iceland","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"icicle","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"service","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"justice","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"practice","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"sacrifice","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"snow","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"snowman","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"snowball","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"snowfall","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"snowy","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"snowflake","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"snowmobile","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"snowboard","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"sand","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"sandstone","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"sandwich","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"sandcastle","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"quicksand","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"sandstorm","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"sandy","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"sandbar","category":"boundary","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"futuristic city","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"medieval castle","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"underwater city","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"sky temple","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"nether fortress","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"ice palace","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"desert temple","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"jungle temple","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"ocean monument","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"end city","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"space station","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"modern house","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"horror mansion","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"fantasy castle","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"steampunk city","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"pirate ship","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"zombie apocalypse","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"dragon lair","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"survival island","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"creative world","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"parkour map","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"puzzle room","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"adventure map","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"rpg quest","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"pvp arena","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"ancient ruins","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"haunted house","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"floating island","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"crystal cave","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"lava dungeon","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"winter village","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"summer beach","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"autumn forest","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"spring meadow","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"night city","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"dark forest","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"bright castle","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"small hut","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"giant tower","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"deep ocean","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"high mountain","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"low valley","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"wide plains","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"narrow canyon","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"big city","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"old castle","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"new world","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"secret base","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"hidden treasure","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"lost city","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"magic forest","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"cursed temple","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"blessed church","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"dark dungeon","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"light palace","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"red castle","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"blue ocean","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"green forest","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"white snow","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"black cave","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"golden temple","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"silver mine","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"iron fortress","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"diamond city","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"emerald village","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"fire dragon","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"ice dragon","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"water temple","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"earth dungeon","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"air temple","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"zombie castle","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"skeleton dungeon","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"creeper mine","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"spider cave","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"enderman city","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"villager town","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"pillager outpost","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"witch hut","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"ruined portal","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"bastion remnant","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"stronghold","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"mineshaft","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"buried treasure","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"shipwreck","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"ocean ruin","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"woodland mansion","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"desert pyramid","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"jungle pyramid","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"igloo","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"pillager tower","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"bee nest","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"fossil","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"amethyst geode","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"lush cave","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"dripstone cave","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"deep dark","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"ancient city","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"mangrove swamp","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"cherry grove","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+{"keyword":"meadow village","category":"semantic","count":0,"false_positives":0,"total_checked":0,"fp_rate":0,"notes":"No results"}
+]
