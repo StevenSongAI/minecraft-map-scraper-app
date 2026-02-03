@@ -20,20 +20,24 @@ class PlanetMinecraftScraper extends BaseScraper {
   async search(query, options = {}) {
     const { limit = 8 } = options;
     
+    // CRITICAL FIX: Check health BEFORE attempting search
+    // This prevents false positive reporting when site is blocked
+    const health = await this.checkHealth();
+    if (!health.accessible) {
+      console.warn(`[Planet Minecraft] Site inaccessible: ${health.error}`);
+      throw new Error(`Planet Minecraft blocked: ${health.error}`);
+    }
+    
     return this.searchWithCache(query, options, async (q, opts) => {
       return this.circuitBreaker.execute(async () => {
         return this.rateLimitedRequest(async () => {
-          // FIXED: Throw error instead of returning empty array
-          // This ensures proper error reporting when Planet Minecraft is blocked
           const results = await this.fetchSearchResults(query, limit);
           
-          // Check if we got blocked by Cloudflare
+          // If we got 0 results, verify we're not blocked
           if (results.length === 0) {
-            // This might be a legitimate "no results" or a block
-            // Let's check by doing a health check
-            const health = await this.checkHealth();
-            if (!health.accessible) {
-              throw new Error('Planet Minecraft blocked by Cloudflare - cannot search');
+            const recheck = await this.checkHealth();
+            if (!recheck.accessible) {
+              throw new Error(`Planet Minecraft blocked during search: ${recheck.error}`);
             }
           }
           

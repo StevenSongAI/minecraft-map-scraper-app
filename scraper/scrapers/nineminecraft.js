@@ -197,8 +197,19 @@ class NineMinecraftScraper extends BaseScraper {
         // Clean up title
         const cleanTitle = title.replace(/Map\s+for\s+Minecraft/i, '').trim();
         
-        // FIXED (Round 7): Mark 9Minecraft downloads as page visits, not direct downloads
-        // The downloadUrl is the map detail page where users need to click download
+        // CRITICAL FIX: 9Minecraft doesn't provide direct downloads - skip these results
+        // The site requires visiting external pages and navigating through ads
+        // This violates the requirement: "Download buttons must return valid ZIP files"
+        // Instead of returning unusable results, we skip them entirely
+        
+        // Only add if we can extract a direct download URL
+        const directDownloadUrl = await this.extractDirectDownloadUrl(fullUrl);
+        
+        if (!directDownloadUrl) {
+          console.log(`[9Minecraft] Skipping "${cleanTitle}" - no direct download available`);
+          return; // Skip this result
+        }
+        
         maps.push({
           id: `9mc-${Date.now()}-${index}`,
           title: cleanTitle,
@@ -206,16 +217,16 @@ class NineMinecraftScraper extends BaseScraper {
           description: description,
           author: author && author !== 'Unknown' ? author : this.extractAuthorFromTitle(cleanTitle),
           url: fullUrl,
-          thumbnail: thumbnail || '', // Empty string if no thumbnail found (UI should handle fallback)
-          downloads: 0, // 9Minecraft doesn't show download counts
-          downloadUrl: fullUrl, // Page URL - users must visit to download
-          downloadType: 'page', // FIXED: Mark as page visit required (not direct download)
-          downloadNote: 'Visit page to download', // FIXED: Clear note for users
+          thumbnail: thumbnail || '',
+          downloads: 0,
+          downloadUrl: directDownloadUrl, // CRITICAL FIX: Only use direct download URLs
+          downloadType: 'direct',
+          downloadNote: null,
           category: this.detectCategory(cleanTitle, description),
           dateCreated: new Date().toISOString(),
           dateModified: new Date().toISOString(),
           source: 'nineminecraft',
-          sourceName: '9Minecraft' // FIXED: Add sourceName for display
+          sourceName: '9Minecraft'
         });
       });
       
@@ -280,8 +291,87 @@ class NineMinecraftScraper extends BaseScraper {
   }
 
   /**
-   * Extract actual download URL from a 9Minecraft map detail page
-   * FIXED: Extract real download links from the page
+   * Extract DIRECT download URL from a 9Minecraft map detail page
+   * CRITICAL FIX: Must return actual ZIP file URLs, not page links
+   */
+  async extractDirectDownloadUrl(mapUrl, options = {}) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.requestTimeout);
+    
+    try {
+      const response = await fetch(mapUrl, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': this.getUserAgent(),
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        }
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const html = await response.text();
+      const $ = cheerio.load(html);
+      
+      // Look for direct file download links (ZIP, MCWORLD, RAR)
+      const fileSelectors = [
+        'a[href$=".zip"]',
+        'a[href$=".mcworld"]',
+        'a[href$=".rar"]',
+        'a[href$=".7z"]',
+        'a[href*=".zip?"]',
+        'a[href*="download"][href$=".zip"]'
+      ];
+      
+      for (const selector of fileSelectors) {
+        const link = $(selector).attr('href');
+        if (link) {
+          // Ensure it's a full URL
+          const fullLink = link.startsWith('http') ? link : 
+                          link.startsWith('//') ? `https:${link}` :
+                          `${this.baseUrl}${link}`;
+          
+          // Verify it looks like a file download
+          if (fullLink.match(/\.(zip|mcworld|rar|7z)(\?.*)?$/i)) {
+            console.log(`[9Minecraft] Found direct download: ${fullLink.substring(0, 80)}...`);
+            return fullLink;
+          }
+        }
+      }
+      
+      // Check for common file hosting links that typically host map files
+      const hostingSelectors = [
+        'a[href*="mediafire.com"]',
+        'a[href*="dropbox.com"]',
+        'a[href*="mega.nz"]',
+        'a[href*="curseforge.com"]'
+      ];
+      
+      for (const selector of hostingSelectors) {
+        const link = $(selector).attr('href');
+        if (link) {
+          const fullLink = link.startsWith('http') ? link : 
+                          link.startsWith('//') ? `https:${link}` :
+                          `${this.baseUrl}${link}`;
+          console.log(`[9Minecraft] Found hosting link: ${fullLink.substring(0, 80)}...`);
+          return fullLink;
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      clearTimeout(timeoutId);
+      console.warn(`[9Minecraft] Extract download URL error: ${error.message}`);
+      return null;
+    }
+  }
+
+  /**
+   * Legacy method - kept for compatibility
+   * @deprecated Use extractDirectDownloadUrl instead
    */
   async extractDownloadUrl(mapUrl, options = {}) {
     const controller = new AbortController();

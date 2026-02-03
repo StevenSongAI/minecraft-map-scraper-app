@@ -225,8 +225,9 @@ class MapAggregator {
   }
 
   /**
-   * Filter results for multi-word queries - ALL words must appear in title or description
-   * Example: "underwater city" should only return results containing BOTH "underwater" AND "city"
+   * Filter results for multi-word queries - ALL words must appear with word boundaries
+   * CRITICAL FIX: Strict filtering to prevent false positives
+   * Example: "high speed rail" should NOT match "high school speed bridge"
    */
   filterMultiWordMatches(maps, queryWords) {
     return maps.filter(map => {
@@ -234,8 +235,17 @@ class MapAggregator {
       const description = (map.summary || map.description || '').toLowerCase();
       const searchText = `${title} ${description}`;
       
-      // Check if ALL query words appear in the title or description
-      const allWordsPresent = queryWords.every(word => searchText.includes(word));
+      // CRITICAL FIX: Require word boundary matches for short words
+      // This prevents "rail" from matching "high school" or "speed bridge"
+      const allWordsPresent = queryWords.every(word => {
+        if (word.length <= 4) {
+          // Short words need strict word boundary matching
+          const regex = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+          return regex.test(searchText);
+        }
+        // Longer words can use substring matching
+        return searchText.includes(word);
+      });
       
       return allWordsPresent;
     });

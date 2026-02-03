@@ -5,39 +5,41 @@ const WORLDS_CLASS_ID = 17; // Maps/Worlds category
 /**
  * Enhanced semantic keyword mappings for accurate search
  * Maps user query concepts to all related semantic equivalents
+ * CRITICAL FIX: Added more comprehensive mappings and stricter matching
  */
 const SEMANTIC_KEYWORD_MAP = {
   // Underwater themes
-  'underwater': ['underwater', 'ocean', 'sea', 'atlantis', 'submarine', 'aquatic', 'marine', 'deep sea', 'undersea', 'sunken'],
-  'ocean': ['ocean', 'sea', 'underwater', 'aquatic', 'marine', 'nautical', 'submarine', 'atlantis'],
+  'underwater': ['underwater', 'ocean', 'sea', 'atlantis', 'submarine', 'aquatic', 'marine', 'deep sea', 'undersea', 'sunken', 'dive', 'diving', 'coral', 'reef'],
+  'ocean': ['ocean', 'sea', 'underwater', 'aquatic', 'marine', 'nautical', 'submarine', 'atlantis', 'coral', 'reef'],
   'sea': ['sea', 'ocean', 'underwater', 'aquatic', 'marine', 'nautical'],
   'atlantis': ['atlantis', 'underwater', 'sunken', 'lost city', 'ocean'],
   
   // Hell/Nether themes
-  'hell': ['hell', 'nether', 'inferno', 'demon', 'demonic', 'underworld', 'hades', 'lava', 'fire', 'flame', 'brimstone'],
-  'nether': ['nether', 'hell', 'inferno', 'demon', 'demonic', 'underworld', 'lava', 'fire', 'flame'],
+  'hell': ['hell', 'nether', 'inferno', 'demon', 'demonic', 'underworld', 'hades', 'lava', 'fire', 'flame', 'brimstone', 'satan', 'soul sand', 'basalt', 'blackstone'],
+  'nether': ['nether', 'hell', 'inferno', 'demon', 'demonic', 'underworld', 'lava', 'fire', 'flame', 'soul sand', 'basalt', 'blackstone'],
   'inferno': ['inferno', 'hell', 'nether', 'fire', 'flame', 'lava', 'demon'],
   'demon': ['demon', 'demonic', 'hell', 'nether', 'underworld', 'satan'],
   
   // Fantasy/Medieval themes
-  'castle': ['castle', 'fortress', 'citadel', 'stronghold', 'palace', 'keep', 'tower', 'bastion', 'chateau'],
+  'castle': ['castle', 'fortress', 'citadel', 'stronghold', 'palace', 'keep', 'tower', 'bastion', 'chateau', 'château'],
   'medieval': ['medieval', 'fantasy', 'ancient', 'historical', 'middle ages', 'knights', 'kingdom', 'feudal'],
   'fantasy': ['fantasy', 'magic', 'wizard', 'sorcery', 'enchanted', 'mystical', 'medieval'],
   'dragon': ['dragon', 'wyvern', 'drake', 'wyrm', 'fantasy'],
   
   // Modern/Futuristic themes
   'modern': ['modern', 'contemporary', 'urban', 'city', 'skyscraper', 'downtown'],
-  'futuristic': ['futuristic', 'future', 'scifi', 'sci-fi', 'space', 'advanced', 'tech', 'cyberpunk', 'neon'],
+  'futuristic': ['futuristic', 'future', 'scifi', 'sci-fi', 'science fiction', 'space', 'advanced', 'tech', 'cyberpunk', 'neon', 'high tech'],
   'cyberpunk': ['cyberpunk', 'neon', 'futuristic', 'dystopian', 'tech', 'hacker'],
-  'space': ['space', 'sci-fi', 'scifi', 'starship', 'planet', 'cosmic', 'galaxy', 'asteroid'],
+  'space': ['space', 'sci-fi', 'scifi', 'starship', 'spaceship', 'planet', 'cosmic', 'galaxy', 'asteroid', 'space station', 'orbital'],
   
   // City/Urban themes
-  'city': ['city', 'town', 'village', 'metropolis', 'urban', 'settlement', 'kingdom', 'municipal'],
+  'city': ['city', 'town', 'village', 'metropolis', 'urban', 'settlement', 'kingdom', 'municipal', 'municipality'],
   'town': ['town', 'city', 'village', 'settlement', 'hamlet', 'community'],
   
-  // Transportation themes
-  'railway': ['railway', 'rail', 'train', 'subway', 'metro', 'transport', 'track', 'locomotive', 'station'],
-  'train': ['train', 'railway', 'rail', 'locomotive', 'subway', 'metro', 'tram'],
+  // Transportation themes - CRITICAL FIX: Enhanced railway mappings
+  'railway': ['railway', 'rail', 'train', 'trains', 'subway', 'metro', 'underground', 'transport', 'track', 'tracks', 'locomotive', 'station', 'railroad', 'monorail', 'hyperloop', 'maglev', 'tram', 'transit'],
+  'rail': ['rail', 'railway', 'train', 'trains', 'track', 'tracks', 'railroad', 'monorail', 'subway', 'metro'],
+  'train': ['train', 'trains', 'railway', 'rail', 'locomotive', 'subway', 'metro', 'tram', 'transit', 'station'],
   'highway': ['highway', 'road', 'path', 'bridge', 'tunnel', 'transportation', 'freeway', 'motorway'],
   
   // Building types
@@ -79,8 +81,9 @@ const SEMANTIC_KEYWORD_MAP = {
 
 /**
  * Score thresholds for result filtering
+ * CRITICAL FIX: Increased threshold to reduce false positives
  */
-const RELEVANCE_THRESHOLD = 15; // Minimum score to be included in results
+const RELEVANCE_THRESHOLD = 25; // Minimum score to be included in results
 
 /**
  * CurseForge API Client for Minecraft Maps
@@ -157,6 +160,7 @@ class CurseForgeClient {
   /**
    * Extract compound concepts from query (e.g., "underwater city")
    * These require BOTH concepts to be present for relevance
+   * CRITICAL FIX: Added more compound patterns for better accuracy
    */
   extractCompoundConcepts(query) {
     const compounds = [];
@@ -203,11 +207,36 @@ class CurseForgeClient {
         name: 'horror_map', 
         required: ['horror'],
         synonyms: ['horror map', 'scary map', 'haunted map', 'spooky map']
+      },
+      // CRITICAL FIX: Add railway/compound transport patterns
+      {
+        name: 'city_railway',
+        required: ['city', 'rail'],
+        synonyms: ['city railway', 'city train', 'metro city', 'subway city', 'urban rail']
+      },
+      {
+        name: 'futuristic_rail',
+        required: ['futur', 'rail'],
+        synonyms: ['futuristic railway', 'future train', 'maglev', 'hyperloop', 'monorail']
+      },
+      {
+        name: 'high_speed_rail',
+        required: ['speed', 'rail'],
+        synonyms: ['high speed rail', 'bullet train', 'fast train', 'express train', 'high speed train']
       }
     ];
     
     for (const pattern of compoundPatterns) {
-      const hasAllRequired = pattern.required.every(term => lowerQuery.includes(term));
+      // CRITICAL FIX: Use word boundary checking for required terms
+      const hasAllRequired = pattern.required.every(term => {
+        // For short terms, require exact word match
+        if (term.length <= 4) {
+          const regex = new RegExp(`\\b${term}\\b`, 'i');
+          return regex.test(lowerQuery);
+        }
+        return lowerQuery.includes(term);
+      });
+      
       if (hasAllRequired) {
         compounds.push({
           name: pattern.name,
@@ -222,13 +251,14 @@ class CurseForgeClient {
 
   /**
    * Calculate relevance score with semantic matching
+   * CRITICAL FIX: Added strict word boundary matching and penalties for false positives
    * @param {Object} map - Map object
    * @param {string} query - Original query
    * @param {Object} searchTerms - Extracted search terms
    * @returns {number} Relevance score
    */
   calculateRelevanceScore(map, query, searchTerms) {
-    const lowerQuery = query.toLowerCase();
+    const lowerQuery = query.toLowerCase().trim();
     const queryWords = lowerQuery.split(/\s+/).filter(w => w.length > 2);
     
     const nameLower = (map.name || '').toLowerCase();
@@ -238,48 +268,73 @@ class CurseForgeClient {
     
     let score = 0;
     let hasAnyMatch = false;
+    let wordBoundaryMatches = 0;
+    let partialMatches = 0;
     
-    // Helper function for word boundary matching
+    // CRITICAL FIX: Strict word boundary matching to avoid false positives
+    // e.g., "rail" should NOT match "high school" or "speed bridge"
     const hasWordMatch = (text, word) => {
-      const regex = new RegExp(`\\b${word}\\b`, 'i');
+      // Escape special regex characters
+      const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`\\b${escaped}\\b`, 'i');
       return regex.test(text);
+    };
+    
+    // Check for partial matches (substring without word boundary)
+    const hasPartialMatch = (text, word) => {
+      return text.includes(word.toLowerCase());
     };
     
     // === COMPOUND CONCEPT MATCHING (Highest Priority) ===
     // For compound queries like "underwater city", BOTH terms must be present
     if (searchTerms.compoundConcepts && searchTerms.compoundConcepts.length > 0) {
       for (const compound of searchTerms.compoundConcepts) {
-        let compoundMatches = 0;
-        
         // Check if title contains compound synonyms
         for (const synonym of compound.synonyms) {
           if (nameLower.includes(synonym)) {
-            score += 250; // Huge bonus for exact compound match in title
+            score += 300; // Huge bonus for exact compound match in title
             hasAnyMatch = true;
-            compoundMatches++;
             break;
           }
         }
         
-        // Check if all required terms appear in the content
+        // Check if all required terms appear with word boundaries
         const allRequiredPresent = compound.required.every(term => 
-          searchableText.includes(term)
+          hasWordMatch(searchableText, term)
         );
         
         if (allRequiredPresent) {
-          score += 100;
+          score += 150;
           hasAnyMatch = true;
-          compoundMatches++;
+          wordBoundaryMatches += compound.required.length;
         } else {
-          // PENALTY: For compound queries, if not all required terms are present
-          // this is likely a false positive (e.g., "underwater city" returning just "city")
+          // CRITICAL FIX: Heavy penalty for partial matches on compound queries
           const someTermsPresent = compound.required.some(term => 
-            searchableText.includes(term)
+            hasWordMatch(searchableText, term)
           );
           if (someTermsPresent && !allRequiredPresent) {
-            score -= 50; // Penalty for partial matches on compound queries
+            score -= 100; // Heavy penalty - this is likely a false positive
           }
         }
+      }
+    }
+    
+    // === STRICT WORD BOUNDARY MATCHING (Prevents "rail" matching "high school") ===
+    
+    // Count strict word boundary matches vs partial matches
+    for (const word of queryWords) {
+      if (hasWordMatch(nameLower, word)) {
+        wordBoundaryMatches++;
+        score += 50; // High bonus for word boundary match in title
+        hasAnyMatch = true;
+      } else if (hasWordMatch(summaryLower, word) || hasWordMatch(descLower, word)) {
+        wordBoundaryMatches++;
+        score += 20; // Good bonus for word boundary match in description
+        hasAnyMatch = true;
+      } else if (hasPartialMatch(searchableText, word)) {
+        // Partial match without word boundary (e.g., "rail" in "high school rail")
+        partialMatches++;
+        score -= 30; // PENALTY for partial matches to reduce false positives
       }
     }
     
@@ -287,78 +342,57 @@ class CurseForgeClient {
     
     // Exact title match
     if (nameLower === lowerQuery) {
-      score += 200;
+      score += 250;
       hasAnyMatch = true;
     }
-    // Title contains full query
+    // Title contains full query as substring
     else if (nameLower.includes(lowerQuery)) {
-      score += 100;
+      score += 150;
       hasAnyMatch = true;
     }
     
-    // Title contains query words (whole word match)
-    for (const word of queryWords) {
-      if (hasWordMatch(nameLower, word)) {
-        score += 30;
-        hasAnyMatch = true;
-      }
-    }
-    
-    // Title contains expanded semantic terms (whole word match)
+    // === EXPANDED SEMANTIC TERMS (Word boundary only) ===
     for (const term of searchTerms.expandedTerms) {
-      if (hasWordMatch(nameLower, term.toLowerCase())) {
-        score += 25;
+      const termLower = term.toLowerCase();
+      if (hasWordMatch(nameLower, termLower)) {
+        score += 35;
         hasAnyMatch = true;
-      }
-    }
-    
-    // === DESCRIPTION MATCHES ===
-    
-    // Full query in description
-    if (summaryLower.includes(lowerQuery) || descLower.includes(lowerQuery)) {
-      score += 40;
-      hasAnyMatch = true;
-    }
-    
-    // Query words in description (whole word match)
-    for (const word of queryWords) {
-      if (hasWordMatch(summaryLower, word) || hasWordMatch(descLower, word)) {
-        score += 10;
+        wordBoundaryMatches++;
+      } else if (hasWordMatch(summaryLower, termLower) || hasWordMatch(descLower, termLower)) {
+        score += 15;
         hasAnyMatch = true;
-      }
-    }
-    
-    // Expanded terms in description (whole word match)
-    for (const term of searchTerms.expandedTerms) {
-      if (hasWordMatch(summaryLower, term.toLowerCase()) || hasWordMatch(descLower, term.toLowerCase())) {
-        score += 8;
-        hasAnyMatch = true;
+        wordBoundaryMatches++;
       }
     }
     
     // === CATEGORY/CONCEPT MATCHES ===
-    
     for (const category of searchTerms.matchedCategories) {
       const categoryTerms = SEMANTIC_KEYWORD_MAP[category] || [category];
       for (const catTerm of categoryTerms) {
         if (hasWordMatch(searchableText, catTerm.toLowerCase())) {
-          score += 15;
+          score += 20;
           hasAnyMatch = true;
           break; // Only count once per category
         }
       }
     }
     
-    // === PENALTY FOR IRRELEVANCE ===
+    // === CRITICAL FIX: Multi-word query validation ===
+    // For queries with 2+ words, require at least half to match with word boundaries
+    if (queryWords.length >= 2) {
+      const minRequiredMatches = Math.max(1, Math.ceil(queryWords.length * 0.5));
+      if (wordBoundaryMatches < minRequiredMatches && partialMatches > 0) {
+        // Heavy penalty if we have partial matches but insufficient word boundary matches
+        score -= 80;
+      }
+    }
     
-    // If no keyword matches at all, heavily penalize
+    // === PENALTY FOR IRRELEVANCE ===
     if (!hasAnyMatch) {
-      score -= 100;
+      score -= 150;
     }
     
     // === POPULARITY BONUS (Secondary factor) ===
-    
-    // Add small bonus for popularity (logarithmic to prevent dominance)
     const popularityBonus = Math.log10((map.downloadCount || 0) + 1) * 2;
     score += popularityBonus;
     
@@ -367,6 +401,7 @@ class CurseForgeClient {
 
   /**
    * Filter and sort results by relevance
+   * CRITICAL FIX: Higher thresholds and stricter filtering for compound queries
    * @param {Array} maps - Array of map objects
    * @param {string} query - Original search query
    * @param {Object} searchTerms - Extracted search terms
@@ -374,10 +409,16 @@ class CurseForgeClient {
    * @returns {Array} Filtered and sorted maps
    */
   filterAndSortByRelevance(maps, query, searchTerms, minScore = RELEVANCE_THRESHOLD) {
-    // Increase threshold for compound queries to reduce false positives
+    // CRITICAL FIX: Significantly increase threshold for compound queries
     let adjustedMinScore = minScore;
+    const queryWords = query.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+    
     if (searchTerms.compoundConcepts && searchTerms.compoundConcepts.length > 0) {
-      adjustedMinScore = Math.max(minScore, 40); // Higher threshold for compound queries
+      adjustedMinScore = Math.max(minScore, 60); // Much higher threshold for compound queries
+    } else if (queryWords.length >= 3) {
+      adjustedMinScore = Math.max(minScore, 50); // Higher for 3+ word queries
+    } else if (queryWords.length >= 2) {
+      adjustedMinScore = Math.max(minScore, 35); // Moderate for 2-word queries
     }
     
     // Calculate scores for all maps
@@ -387,7 +428,29 @@ class CurseForgeClient {
     }));
     
     // Filter out results below threshold
-    const filteredMaps = scoredMaps.filter(map => map._relevanceScore >= adjustedMinScore);
+    let filteredMaps = scoredMaps.filter(map => map._relevanceScore >= adjustedMinScore);
+    
+    // CRITICAL FIX: Additional filtering for multi-word queries
+    // Require at least half the query words to match with word boundaries
+    if (queryWords.length >= 2) {
+      const minWordMatches = Math.max(1, Math.floor(queryWords.length * 0.6));
+      filteredMaps = filteredMaps.filter(map => {
+        const nameLower = (map.name || '').toLowerCase();
+        const summaryLower = (map.summary || '').toLowerCase();
+        const descLower = (map.description || '').toLowerCase();
+        const searchText = `${nameLower} ${summaryLower} ${descLower}`;
+        
+        let wordMatches = 0;
+        for (const word of queryWords) {
+          const regex = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+          if (regex.test(searchText)) {
+            wordMatches++;
+          }
+        }
+        
+        return wordMatches >= minWordMatches;
+      });
+    }
     
     // Sort by relevance score (descending)
     const sortedMaps = filteredMaps.sort((a, b) => b._relevanceScore - a._relevanceScore);
