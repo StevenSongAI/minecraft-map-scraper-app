@@ -21,6 +21,7 @@ https://github.com/StevenSongAI/minecraft-map-scraper-app
 - ✅ Server running locally
 - ✅ Exposed via localtunnel
 - ✅ API responding
+- 🔄 Triggered redeploy: $(date -u +"%Y-%m-%d %H:%M:%S UTC")
 - ⏳ Permanent hosting pending (Railway requires token)
 
 ## Cache Status
