@@ -447,6 +447,7 @@ class BaseScraper {
       },
       thumbnail: rawData.thumbnail || rawData.image || '',
       screenshots: rawData.screenshots || [],
+      url: rawData.url || '',  // FIXED (Round 12): Include detail page URL
       downloadUrl: rawData.downloadUrl || '',
       downloadType: rawData.downloadType || null, // FIXED (Round 7): Preserve download type (e.g., 'page', 'direct')
       downloadNote: rawData.downloadNote || null, // FIXED (Round 7): Preserve download notes
