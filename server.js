@@ -1249,3 +1249,4 @@ app.listen(PORT, () => {
 // Deployment trigger: Mon Feb  2 22:56:43 EST 2026
 // Trigger redeploy Tue Feb  3 00:58:55 EST 2026
 // Multi-source scraper integration deployed: Tue Feb 3 15:05:00 EST 2026
+// Deployment retry: Tue Feb 3 15:15:00 EST 2026
