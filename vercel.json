@@ -8,6 +8,10 @@
   ],
   "routes": [
     {
+      "src": "/api/download",
+      "dest": "/server.js"
+    },
+    {
       "src": "/(.*)",
       "dest": "/server.js"
     }
