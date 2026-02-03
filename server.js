@@ -966,38 +966,111 @@ async function transformModToMap(mod) {
 }
 
 /**
+ * CRITICAL FIX (Round 11): Fetch direct download URL from Modrinth
+ * @param {string} projectId - Modrinth project slug or ID
+ * @returns {Promise<string|null>} Direct download URL or null
+ */
+async function fetchModrinthDownloadUrl(projectId) {
+  try {
+    const baseUrl = 'https://api.modrinth.com/v2';
+    
+    // First get the project to check if it exists
+    const projectResponse = await fetch(`${baseUrl}/project/${projectId}`, {
+      headers: {
+        'User-Agent': 'MinecraftMapScraper/2.0 (+https://github.com/StevenSongAI/minecraft-map-scraper-app)',
+        'Accept': 'application/json'
+      }
+    });
+    
+    if (!projectResponse.ok) {
+      console.warn(`[Modrinth] Project not found: ${projectId}`);
+      return null;
+    }
+    
+    // Get versions for this project
+    const versionsResponse = await fetch(`${baseUrl}/project/${projectId}/version`, {
+      headers: {
+        'User-Agent': 'MinecraftMapScraper/2.0 (+https://github.com/StevenSongAI/minecraft-map-scraper-app)',
+        'Accept': 'application/json'
+      }
+    });
+    
+    if (!versionsResponse.ok) {
+      console.warn(`[Modrinth] Failed to fetch versions for ${projectId}`);
+      return null;
+    }
+    
+    const versions = await versionsResponse.json();
+    if (!versions || versions.length === 0) {
+      console.warn(`[Modrinth] No versions found for ${projectId}`);
+      return null;
+    }
+    
+    // Find first version with files
+    const versionWithFiles = versions.find(v => v.files && v.files.length > 0);
+    if (!versionWithFiles) {
+      console.warn(`[Modrinth] No files found for ${projectId}`);
+      return null;
+    }
+    
+    // Get primary file or first file
+    const primaryFile = versionWithFiles.files.find(f => f.primary) || versionWithFiles.files[0];
+    
+    console.log(`[Modrinth] Found download URL for ${projectId}: ${primaryFile.url}`);
+    return primaryFile.url;
+    
+  } catch (error) {
+    console.warn(`[Modrinth] Error fetching download URL: ${error.message}`);
+    return null;
+  }
+}
+
+/**
  * GET /api/download
  * Download endpoint - supports ?id=X query parameter (QUERY PARAM VERSION)
+ * CRITICAL FIX (Round 11): Now supports both CurseForge numeric IDs and Modrinth string slugs
  * IMPORTANT: This route MUST be defined BEFORE /api/download/:modId to avoid conflicts
- * Express routes are matched in order, and /api/download/:modId would match /api/download?id=X
  */
 app.get('/api/download', async (req, res) => {
   try {
-    const { id, url } = req.query;
+    const { id, url, source } = req.query;
     
     // Validate ID parameter
     if (!id && !url) {
       return res.status(400).json({
         error: 'BAD_REQUEST',
         message: 'Missing required parameter: id or url',
-        usage: '/api/download?id=<map_id> or /api/download?url=<download_url>'
+        usage: '/api/download?id=<map_id> or /api/download?url=<download_url> or /api/download?id=<modrinth_slug>&source=modrinth'
       });
-    }
-    
-    let mapId = null;
-    if (id !== undefined && id !== '') {
-      mapId = parseInt(id);
-      if (isNaN(mapId) || mapId <= 0) {
-        return res.status(400).json({
-          error: 'INVALID_ID',
-          message: 'Invalid map ID. ID must be a positive number.'
-        });
-      }
     }
     
     // If URL is provided directly, redirect to it
     if (url) {
       return res.redirect(url);
+    }
+    
+    // CRITICAL FIX (Round 11): Handle Modrinth slugs (non-numeric IDs)
+    const isModrinthId = source === 'modrinth' || (id && !/^\d+$/.test(id));
+    
+    if (isModrinthId) {
+      console.log(`[Download] Handling Modrinth ID: ${id}`);
+      const downloadUrl = await fetchModrinthDownloadUrl(id);
+      
+      if (!downloadUrl) {
+        // Fallback to Modrinth page
+        return res.redirect(302, `https://modrinth.com/project/${id}/versions`);
+      }
+      
+      return res.redirect(302, downloadUrl);
+    }
+    
+    // CurseForge numeric ID handling
+    const mapId = parseInt(id);
+    if (isNaN(mapId) || mapId <= 0) {
+      return res.status(400).json({
+        error: 'INVALID_ID',
+        message: 'Invalid map ID. ID must be a positive number or a valid Modrinth slug.'
+      });
     }
     
     // Otherwise, fetch download info from CurseForge
@@ -1090,15 +1163,35 @@ app.get('/api/download', async (req, res) => {
 /**
  * GET /api/download/:modId
  * Download endpoint - path parameter version
+ * CRITICAL FIX (Round 11): Now supports both CurseForge numeric IDs and Modrinth string slugs
  * Gets download URL for a specific map by ID
  */
 app.get('/api/download/:modId', async (req, res) => {
-  const modId = parseInt(req.params.modId);
+  const modIdParam = req.params.modId;
+  
+  // CRITICAL FIX (Round 11): Check if this is a Modrinth slug (non-numeric) or CurseForge ID (numeric)
+  const isNumericId = /^\d+$/.test(modIdParam);
+  
+  if (!isNumericId) {
+    // Handle Modrinth slug
+    console.log(`[Download] Handling Modrinth slug: ${modIdParam}`);
+    const downloadUrl = await fetchModrinthDownloadUrl(modIdParam);
+    
+    if (!downloadUrl) {
+      // Fallback to Modrinth page
+      return res.redirect(302, `https://modrinth.com/project/${modIdParam}/versions`);
+    }
+    
+    return res.redirect(302, downloadUrl);
+  }
+  
+  // CurseForge numeric ID
+  const modId = parseInt(modIdParam);
   
   if (!modId || isNaN(modId)) {
     return res.status(400).json({ 
       error: 'INVALID_ID',
-      message: 'Invalid mod ID. ID must be a positive number.'
+      message: 'Invalid mod ID. ID must be a positive number or a valid Modrinth slug.'
     });
   }
   
@@ -1147,12 +1240,10 @@ app.get('/api/download/:modId', async (req, res) => {
     
     // Try to get direct download URL
     let downloadUrl = latestFile.downloadUrl;
-    let downloadMethod = 'direct';
     
     if (!downloadUrl) {
       // Use CurseForge API download endpoint
       downloadUrl = `https://www.curseforge.com/api/v1/mods/${modId}/files/${latestFile.id}/download`;
-      downloadMethod = 'api';
     }
     
     // FIXED: Redirect to download URL instead of returning JSON
