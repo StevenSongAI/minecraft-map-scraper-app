@@ -21,8 +21,9 @@ app.use(express.static('.'));
 const keywordMappings = {
   // Map types - keep synonyms closely related
   'castle': ['castle', 'fortress', 'citadel', 'stronghold', 'keep', 'palace', 'tower'],
-  'city': ['city', 'town', 'metropolis', 'urban', 'municipal'],
-  'village': ['village', 'hamlet', 'settlement'],
+  'city': ['city', 'metropolis', 'urban', 'municipal'],
+  'town': ['town', 'settlement'],
+  'village': ['village', 'hamlet'],
   'kingdom': ['kingdom', 'empire', 'realm'],
   
   // Game modes
@@ -84,14 +85,15 @@ const keywordMappings = {
 };
 
 // STRICT antonym/contrast mappings - terms that should filter out results when mismatched
-// These are mutually exclusive categories
+// These are mutually exclusive categories - ZERO tolerance for conflicts
 const conflictingTerms = {
-  'futuristic': ['medieval', 'ancient', 'castle', 'knight', 'feudal'],
-  'modern': ['medieval', 'ancient', 'castle', 'fantasy'],
+  'futuristic': ['medieval', 'ancient', 'castle', 'knight', 'feudal', 'underwater', 'ocean', 'atlantis', 'sunken', 'submarine', 'aquatic', 'marine', 'drowned'],
+  'modern': ['medieval', 'ancient', 'castle', 'fantasy', 'underwater', 'ocean', 'atlantis', 'sunken'],
+  'city': ['underwater', 'atlantis', 'sunken', 'ocean', 'submarine'],
   'medieval': ['futuristic', 'scifi', 'space', 'tech', 'modern', 'cyberpunk'],
   'horror': ['cute', 'cozy', 'peaceful', 'relaxing'],
-  'hell': ['heaven', 'paradise', 'angel', 'sky'],
-  'nether': ['overworld', 'end', 'sky']
+  'hell': ['heaven', 'paradise', 'angel', 'sky', 'underwater', 'ocean'],
+  'nether': ['overworld', 'end', 'sky', 'underwater', 'ocean']
 };
 
 // Minimum relevance thresholds to filter false positives
