@@ -655,7 +655,7 @@ app.get('/api/search', async (req, res) => {
           const normalizedAggResults = aggResults.results.map(map => ({
             id: map.id,
             title: map.name || map.title,
-            author: typeof map.author === 'object' ? map.author.name : (map.author || 'Unknown'),
+            author: typeof map.author === 'object' ? (map.author?.name || 'Unknown') : (map.author || 'Unknown'),
             description: map.summary || map.description || '',
             url: map.url || '',
             downloadUrl: map.downloadUrl || '',
