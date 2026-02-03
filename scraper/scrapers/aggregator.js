@@ -1,6 +1,8 @@
 /**
  * Multi-Source Map Aggregator
  * Aggregates search results from multiple scrapers with parallel fetching
+ * MANAGER INTEL: Modrinth does NOT have maps (only mods/modpacks) - REMOVED
+ * 
  * Features:
  * - Parallel fetching with per-source timeouts
  * - Deduplication by title+author
@@ -10,7 +12,6 @@
  */
 
 const PlanetMinecraftScraper = require('./planetminecraft');
-const ModrinthScraper = require('./modrinth');
 const NineMinecraftScraper = require('./nineminecraft');
 
 class MapAggregator {
@@ -29,7 +30,7 @@ class MapAggregator {
   }
 
   initScrapers() {
-    // Planet Minecraft (HTTP-only)
+    // Planet Minecraft (HTTP-only) - PRIMARY required source
     try {
       this.scrapers.push({
         name: 'planetminecraft',
@@ -37,22 +38,9 @@ class MapAggregator {
         enabled: true,
         priority: 1
       });
-      console.log('[Aggregator] Planet Minecraft scraper initialized');
+      console.log('[Aggregator] ✓ Planet Minecraft scraper initialized');
     } catch (error) {
-      console.warn('[Aggregator] Failed to initialize Planet Minecraft scraper:', error.message);
-    }
-
-    // Modrinth API (replaces MinecraftMaps which was blocked by Cloudflare)
-    try {
-      this.scrapers.push({
-        name: 'modrinth',
-        instance: new ModrinthScraper({ requestTimeout: this.timeout }),
-        enabled: true,
-        priority: 2
-      });
-      console.log('[Aggregator] Modrinth scraper initialized');
-    } catch (error) {
-      console.warn('[Aggregator] Failed to initialize Modrinth scraper:', error.message);
+      console.warn('[Aggregator] ✗ Failed to initialize Planet Minecraft scraper:', error.message);
     }
 
     // 9Minecraft
@@ -61,14 +49,14 @@ class MapAggregator {
         name: 'nineminecraft',
         instance: new NineMinecraftScraper({ requestTimeout: this.timeout }),
         enabled: true,
-        priority: 3
+        priority: 2
       });
-      console.log('[Aggregator] 9Minecraft scraper initialized');
+      console.log('[Aggregator] ✓ 9Minecraft scraper initialized');
     } catch (error) {
-      console.warn('[Aggregator] Failed to initialize 9Minecraft scraper:', error.message);
+      console.warn('[Aggregator] ✗ Failed to initialize 9Minecraft scraper:', error.message);
     }
     
-    console.log(`[Aggregator] Total scrapers initialized: ${this.scrapers.length}`);
+    console.log(`[Aggregator] Total scrapers initialized: ${this.scrapers.length} (Modrinth removed - no map support)`);
   }
 
   /**

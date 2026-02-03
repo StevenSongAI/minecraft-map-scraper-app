@@ -190,22 +190,35 @@ class PlanetMinecraftScraper extends BaseScraper {
     
     try {
       // Test actual search functionality
-      const searchUrl = `${this.baseUrl}/projects/?keywords=castle&order=order_popularity`;
+      const searchUrl = `${this.baseUrl}/projects/tag/map/?keywords=castle`;
       
       const response = await fetch(searchUrl, {
         signal: controller.signal,
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
         }
       });
       
       clearTimeout(timeoutId);
       
       let canSearch = false;
+      let errorDetail = null;
+      
       if (response.ok) {
         const html = await response.text();
-        // Check if we got valid search results
-        canSearch = html.includes('resource') && html.includes('project') && html.length > 5000;
+        // Check if we got valid search results vs Cloudflare block page
+        const isCloudflareBlock = html.includes('Cloudflare') && html.includes('blocked');
+        canSearch = !isCloudflareBlock && html.includes('resource') && html.includes('project') && html.length > 5000;
+        
+        if (isCloudflareBlock) {
+          errorDetail = 'Blocked by Cloudflare bot protection (requires JavaScript/cookies)';
+        } else if (!canSearch) {
+          errorDetail = 'Invalid response format';
+        }
+      } else if (response.status === 403) {
+        errorDetail = 'HTTP 403 Forbidden - Cloudflare bot protection active';
+      } else {
+        errorDetail = `HTTP ${response.status}`;
       }
       
       return {
@@ -213,14 +226,16 @@ class PlanetMinecraftScraper extends BaseScraper {
         accessible: response.ok && canSearch,
         statusCode: response.status,
         canSearch: canSearch,
-        error: canSearch ? null : 'Search not functional'
+        error: errorDetail,
+        note: 'Planet Minecraft uses Cloudflare bot protection - HTTP-only scraping blocked'
       };
     } catch (error) {
       clearTimeout(timeoutId);
       return {
         ...this.getHealth(),
         accessible: false,
-        error: error.name === 'AbortError' ? 'Health check timeout' : error.message
+        error: error.name === 'AbortError' ? 'Health check timeout' : error.message,
+        note: 'Planet Minecraft uses Cloudflare bot protection - HTTP-only scraping blocked'
       };
     }
   }
