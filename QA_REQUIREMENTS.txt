@@ -1,0 +1,46 @@
+# Multi-Source Scraper QA Requirements
+
+## Test Coverage Required
+
+### 1. Source Testing (All Sources Must Work)
+- **Planet Minecraft**: Must return 5+ results for common queries
+- **MinecraftMaps.com**: Must return results, handle Cloudflare
+- **9Minecraft**: Must return results, extract download links
+- **CurseForge**: Continue working as before
+
+### 2. Unified Search Testing
+- Query: "castle" → Should return results from multiple sources
+- Query: "modern city" → Should return results from multiple sources  
+- Query: "parkour" → Should return results from multiple sources
+- Each result must have `source` field attribution
+
+### 3. Rate Limiting Verification
+- Maximum 1 request per second per source
+- No source should be overwhelmed
+- Parallel fetching should respect limits
+
+### 4. Deduplication Testing
+- Same map on multiple sources should appear once
+- Should merge metadata from all sources
+
+### 5. Circuit Breaker Testing
+- Failed sources should not break entire search
+- Should gracefully degrade
+- Health endpoint should report source status
+
+### 6. Performance Testing
+- Response time < 10 seconds for all sources
+- Timeout handling for slow sources
+
+### 7. Download Link Verification
+- At least 80% of results must have working download URLs
+- Test actual downloads from each source
+
+## Success Criteria
+- All 4 sources return results
+- Unified search combines results seamlessly
+- Response time < 10 seconds
+- 80%+ valid download links
+- Deduplication working
+- Circuit breakers functional
+- Health check reports all sources

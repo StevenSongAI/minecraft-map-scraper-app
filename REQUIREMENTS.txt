@@ -31,8 +31,48 @@
 3. Click download → Verify ZIP downloads successfully
 4. Check file size > 1KB and contains level.dat
 
+## Multi-Source Web Scraping (Commercial Grade)
+
+### Source Coverage
+- MUST aggregate results from multiple sources beyond CurseForge
+- Primary additional sources: Planet Minecraft (largest repository after CurseForge)
+- Secondary sources: MinecraftMaps.com, 9Minecraft (as available)
+- Results from ALL sources must appear seamlessly unified with CurseForge API results
+
+### Web Scraping Standards (Commercial Grade)
+- Rate limiting: Maximum 1 request per second per source to avoid blocking
+- Browser automation must handle Cloudflare protection and anti-bot measures
+- Scraped data must be normalized to match CurseForge API format
+- Each scraped result must include: title, author, description, download URL, thumbnail, source attribution
+- Source field must indicate origin (e.g., "Planet Minecraft", "MinecraftMaps", "CurseForge")
+
+### Data Quality Requirements
+- Scraped results must have working download links (verified HTTP 200)
+- Thumbnails must load from original source (not hotlinked if prohibited)
+- Metadata must be accurate: author names, map descriptions, download counts (if available)
+- Deduplication: Same map appearing on multiple sources must appear once with all sources listed
+
+### Resilience & Error Handling
+- If one source fails (blocked, down), other sources must continue working
+- Failed source must be logged but not break the entire search
+- Automatic retry with exponential backoff for transient failures
+- Circuit breaker pattern: Temporarily disable sources that repeatedly fail
+
+### Performance Requirements
+- Search response time < 10 seconds including ALL sources
+- Parallel fetching from multiple sources (respecting rate limits)
+- Cached results for popular queries (TTL: 1 hour)
+
+### Legal & Ethical Compliance
+- Respect robots.txt and terms of service for each site
+- Identify as automated scraper in User-Agent string
+- No circumvention of paywalls or login requirements
+- Attributions and links back to original sources required
+
 ## Success Criteria
 - All search queries return live API data (not mock)
 - All downloads return valid ZIP files
 - Response time < 10 seconds
 - Demo mode indicator = false
+- Multi-source aggregation returns 2x+ more results than CurseForge alone
+- 95%+ of scraped download links must be valid and working
