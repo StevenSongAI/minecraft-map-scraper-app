@@ -599,7 +599,7 @@ function isRelevantResult(map, query, searchTerms) {
 // API endpoint for natural language search
 app.get('/api/search', async (req, res) => {
   const query = req.query.q || '';
-  const limit = parseInt(req.query.limit) || 60; // FIXED: Increased default from 20 to 60 (Round 7)
+  const limit = parseInt(req.query.limit) || 40; // FIXED (Round 7): Default 40 results for 2x+ vs CurseForge alone
   
   if (!query) {
     return res.status(400).json({ error: 'Query parameter required' });
@@ -659,6 +659,8 @@ app.get('/api/search', async (req, res) => {
             description: map.summary || map.description || '',
             url: map.url || '',
             downloadUrl: map.downloadUrl || '',
+            downloadType: map.downloadType || null, // FIXED (Round 7): Preserve downloadType
+            downloadNote: map.downloadNote || null, // FIXED (Round 7): Preserve downloadNote
             thumbnail: map.thumbnail || map.image || '',
             downloads: map.downloadCount || map.downloads || 0,
             likes: map.likes || 0,
