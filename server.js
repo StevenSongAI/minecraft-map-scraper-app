@@ -141,6 +141,7 @@ const keywordMappings = {
   // Features
   'redstone': ['redstone', 'mechanism', 'automatic', 'circuit'],
   'house': ['house', 'home', 'mansion', 'residence', 'villa', 'cottage'],
+  'base': ['base', 'headquarters', 'outpost', 'compound', 'facility', 'station'],
   'mansion': ['mansion', 'estate', 'manor', 'luxury'],
   'skyblock': ['skyblock', 'void', 'floating island'],
   'sky': ['sky', 'floating', 'cloud', 'aerial', 'air', 'heaven', 'high'],
