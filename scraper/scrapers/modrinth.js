@@ -14,7 +14,7 @@ class ModrinthScraper extends BaseScraper {
       sourceName: 'Modrinth',
       ...options
     });
-    this.requestTimeout = options.requestTimeout || 5000;
+    this.requestTimeout = options.requestTimeout || 10000; // FIXED (Round 10): 10s timeout
   }
 
   async search(query, options = {}) {
@@ -37,15 +37,15 @@ class ModrinthScraper extends BaseScraper {
   }
 
   async fetchSearchResults(query, limit) {
-    // FIXED (Round 9): Search without project type restriction to get all content
+    // FIXED (Round 10): Search without project type restriction to get all content
     // Then filter for map-related keywords
     const encodedQuery = encodeURIComponent(query);
-    const searchUrl = `${this.baseUrl}/search?query=${encodedQuery}&limit=${Math.min(limit, 30)}&offset=0`;
+    const searchUrl = `${this.baseUrl}/search?query=${encodedQuery}&limit=${Math.min(limit * 2, 40)}&offset=0`;
     
     console.log(`[Modrinth] Fetching: ${searchUrl}`);
     
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.requestTimeout);
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
     
     try {
       const response = await fetch(searchUrl, {
@@ -66,24 +66,42 @@ class ModrinthScraper extends BaseScraper {
       const data = await response.json();
       const results = data.hits || [];
       
-      // FIXED (Round 9): More inclusive filtering - accept datapacks and modpacks with world/map content
-      const mapKeywords = ['map', 'world', 'adventure', 'dungeon', 'quest', 'exploration', 'structure', 
-                           'datapack', 'survival', 'city', 'castle', 'house', 'parkour', 'puzzle'];
+      // FIXED (Round 10): Stricter filtering to exclude pure mods
       const filteredResults = results.filter(hit => {
         const text = `${hit.title || ''} ${hit.description || ''}`.toLowerCase();
-        // Accept if has map keywords OR is explicitly a world/datapack project type
-        return mapKeywords.some(kw => text.includes(kw)) || 
-               hit.project_type === 'datapack' ||
-               (hit.categories && hit.categories.some(cat => 
-                 ['worldgen', 'adventure', 'world-generation'].includes(cat)));
+        
+        // Must have at least one strong map indicator
+        const strongMapKeywords = ['map', 'world', 'adventure', 'structure', 'datapack', 'castle', 'city build'];
+        const hasStrongIndicator = strongMapKeywords.some(kw => text.includes(kw));
+        
+        // Exclude obvious non-map content (weapons, armor, tech mods, etc.)
+        // Use regex with word boundaries to catch plurals and variations
+        const exclusionPatterns = [
+          /weapon/, /gun/, /armor/, /sword/, /integration/, /mekanism/, /robot/, 
+          /vehicle/, /car/, /plane/, /magic spell/, /enchantment/, /\btool\b/, /axe/, /pickaxe/,
+          /mod\b/, /plugin/  // Exclude things explicitly marked as mods/plugins
+        ];
+        const hasExclusion = exclusionPatterns.some(pattern => pattern.test(text));
+        
+        // FIXED (Round 10): If it has exclusion keywords, always exclude it
+        // Only accept if: (has strong indicator AND no exclusion) OR is datapack/worldgen
+        if (hasExclusion) {
+          return false; // Always exclude mods with weapon/armor/tech keywords
+        }
+        
+        // Accept if has strong indicator OR is explicitly a datapack/worldgen
+        const isDatapack = hit.project_type === 'datapack';
+        const hasWorldGenCategory = hit.categories && hit.categories.some(cat => 
+          ['worldgen', 'world-generation', 'adventure'].includes(cat));
+        
+        return hasStrongIndicator || isDatapack || hasWorldGenCategory;
       });
       
       console.log(`[Modrinth] Found ${results.length} results, ${filteredResults.length} map-related`);
       
-      // Transform all hits (async)
-      const transformedResults = await Promise.all(
-        filteredResults.map(hit => this.transformHitToMap(hit))
-      );
+      // FIXED (Round 10): Use sync transform to avoid timeout issues
+      // Fetch version info separately only when needed
+      const transformedResults = filteredResults.map(hit => this.transformHitToMapSync(hit));
       return transformedResults;
       
     } catch (error) {
@@ -92,23 +110,14 @@ class ModrinthScraper extends BaseScraper {
     }
   }
 
-  async transformHitToMap(hit) {
-    // FIXED (Round 10): Get direct download URL and proper thumbnail
+  transformHitToMapSync(hit) {
+    // FIXED (Round 10): Get proper thumbnail and use sync transform
     // FIXED (Round 10): Use 'name' field to match CurseForge format
     const projectId = hit.project_id || hit.slug;
     
-    // Get direct download URL from Modrinth API
-    let directDownloadUrl = null;
-    let fileInfo = null;
-    try {
-      const versionInfo = await this.getLatestVersionInfo(hit.project_id);
-      if (versionInfo) {
-        directDownloadUrl = versionInfo.downloadUrl;
-        fileInfo = versionInfo.fileInfo;
-      }
-    } catch (error) {
-      console.warn(`[Modrinth] Failed to get version info for ${hit.slug}: ${error.message}`);
-    }
+    // Store project_id for lazy loading download URL later
+    // For now, use the versions page URL
+    const downloadUrl = `https://modrinth.com/project/${hit.slug}/versions`;
     
     return {
       id: projectId,
@@ -123,10 +132,10 @@ class ModrinthScraper extends BaseScraper {
       },
       thumbnail: hit.icon_url || hit.gallery?.[0]?.url || '',
       screenshots: hit.gallery || [],
-      downloadUrl: directDownloadUrl || `https://modrinth.com/project/${hit.slug}/versions`,
-      downloadType: directDownloadUrl ? 'direct' : 'page',
-      downloadNote: directDownloadUrl ? null : 'Visit Modrinth page to download',
-      fileInfo: fileInfo,
+      downloadUrl: downloadUrl,
+      downloadType: 'page',
+      downloadNote: 'Visit Modrinth page to download',
+      fileInfo: null,
       downloadCount: hit.downloads || 0,
       downloads: hit.downloads || 0,
       gameVersions: hit.versions || [],

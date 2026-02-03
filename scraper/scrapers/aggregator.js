@@ -18,8 +18,8 @@ const ModrinthScraper = require('./modrinth');
 class MapAggregator {
   constructor(options = {}) {
     this.scrapers = [];
-    this.timeout = options.timeout || 5000; // 5 seconds per source max
-    this.maxResultsPerSource = options.maxResultsPerSource || 20; // FIXED (Round 9): Increased to 20 for more results
+    this.timeout = options.timeout || 12000; // FIXED (Round 10): 12 seconds per source max
+    this.maxResultsPerSource = options.maxResultsPerSource || 20;
     
     // Circuit breaker settings
     this.failureThreshold = 3;
@@ -137,7 +137,7 @@ class MapAggregator {
     }
 
     // Execute all searches in parallel with overall timeout
-    const overallTimeout = 8000; // 8s overall timeout
+    const overallTimeout = 15000; // 15s overall timeout - FIXED (Round 10): Increased to allow slow sources
     const timeoutPromise = new Promise((_, reject) => 
       setTimeout(() => reject(new Error('Overall timeout')), overallTimeout)
     );
@@ -237,15 +237,16 @@ class MapAggregator {
   /**
    * Filter results for multi-word queries - MOST words must appear
    * FIXED (Round 10): Relaxed filtering to ensure sufficient results
-   * Require at least 60% of query words to match
+   * Require at least 50% of query words to match (reduced from 60%)
    */
   filterMultiWordMatches(maps, queryWords) {
     if (maps.length <= 5) {
       // Don't filter if we already have few results
+      console.log(`[Aggregator] Not filtering - only ${maps.length} results`);
       return maps;
     }
     
-    return maps.filter(map => {
+    const filtered = maps.filter(map => {
       const title = (map.name || map.title || '').toLowerCase();
       const description = (map.summary || map.description || '').toLowerCase();
       const searchText = `${title} ${description}`;
@@ -253,10 +254,10 @@ class MapAggregator {
       // Count how many query words match
       let matchCount = 0;
       for (const word of queryWords) {
-        if (word.length <= 3) {
+        if (word.length <= 2) {
           // Very short words - skip for matching count but don't require
           matchCount += 0.5;
-        } else if (word.length <= 5) {
+        } else if (word.length <= 4) {
           // Short words need word boundary matching
           const regex = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
           if (regex.test(searchText)) {
@@ -270,10 +271,20 @@ class MapAggregator {
         }
       }
       
-      // Require at least 60% of words to match, or at least 2 words
-      const minRequired = Math.max(2, Math.floor(queryWords.length * 0.6));
-      return matchCount >= minRequired;
+      // FIXED (Round 10): Reduced to 50% to get more results
+      const minRequired = Math.max(1, Math.floor(queryWords.length * 0.5));
+      const matches = matchCount >= minRequired;
+      
+      // Debug logging
+      if (!matches && Math.random() < 0.1) { // Only log 10% to avoid spam
+        console.log(`[Aggregator] Filtered out "${title.substring(0, 40)}..." - matched ${matchCount}/${queryWords.length} words (need ${minRequired})`);
+      }
+      
+      return matches;
     });
+    
+    console.log(`[Aggregator] Multi-word filter: ${maps.length} -> ${filtered.length} results`);
+    return filtered;
   }
 
   deduplicateMaps(maps) {

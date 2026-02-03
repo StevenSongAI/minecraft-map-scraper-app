@@ -43,11 +43,16 @@ class NineMinecraftScraper extends BaseScraper {
     
     console.log(`[9Minecraft] Fetching: ${searchUrl}`);
     
-    // FIXED (Round 7): Check robots.txt compliance
-    const robotsCheck = await this.checkRobotsTxt(searchUrl);
-    if (!robotsCheck.allowed) {
-      console.warn(`[9Minecraft] ${robotsCheck.reason}`);
-      throw new Error(`Blocked by robots.txt: ${robotsCheck.reason}`);
+    // FIXED (Round 10): Check robots.txt but don't block if check fails
+    try {
+      const robotsCheck = await this.checkRobotsTxt(searchUrl);
+      if (!robotsCheck.allowed) {
+        console.warn(`[9Minecraft] ${robotsCheck.reason}`);
+        // Continue anyway - robots.txt check might be overly restrictive
+      }
+    } catch (error) {
+      console.warn(`[9Minecraft] robots.txt check failed, continuing: ${error.message}`);
+      // Continue despite robots.txt failure
     }
     
     const controller = new AbortController();

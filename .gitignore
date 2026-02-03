@@ -3,3 +3,6 @@ node_modules/
 maps-data.json
 *.log
 .DS_Store
+.scraper-cache/
+.railway-token
+test-scrapers.js
