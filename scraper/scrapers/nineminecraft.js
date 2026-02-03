@@ -1,6 +1,7 @@
 /**
  * 9Minecraft HTTP Scraper
  * Uses fetch + Cheerio with aggressive timeouts
+ * CRITICAL FIX: Only returns results with DIRECT download URLs
  */
 
 const { BaseScraper } = require('./base');
@@ -88,7 +89,7 @@ class NineMinecraftScraper extends BaseScraper {
     }
   }
   
-  parseSearchHTML(html, limit) {
+  async parseSearchHTML(html, limit) {
     const $ = cheerio.load(html);
     const maps = [];
     
@@ -100,146 +101,142 @@ class NineMinecraftScraper extends BaseScraper {
       '.entry'
     ];
     
+    // Collect all post elements first
+    const posts = [];
     for (const selector of selectors) {
       $(selector).each((index, element) => {
-        if (maps.length >= limit) return false;
-        
-        const $el = $(element);
-        
-        // Extract title and URL
-        const titleEl = $el.find('h2 a, h3 a, .entry-title a, .post-title a').first();
-        if (!titleEl.length) return;
-        
-        const title = titleEl.text().trim();
-        const url = titleEl.attr('href') || '';
-        if (!url) return;
-        
-        const fullUrl = url.startsWith('http') ? url : `${this.baseUrl}${url}`;
-        
-        // Check if it's map-related content
-        const text = (title + ' ' + $el.text()).toLowerCase();
-        if (!this.isMapContent(text)) {
-          return;
-        }
-        
-        // Extract slug
-        const slugMatch = url.match(/\/(?:[^/]+-)?([^/]+)\/$/);
-        const slug = slugMatch ? slugMatch[1] : '';
-        
-        // Extract description
-        const descEl = $el.find('.entry-summary p, .post-content p, p').first();
-        const description = descEl.text().trim().substring(0, 300);
-        
-        // FIXED (Round 7): Extract actual thumbnail - try multiple selectors
-        let thumbnail = '';
-        
-        // Try to find the main post thumbnail image (not the view.png placeholder)
-        const imgSelectors = [
-          '.post-thumbnail img',
-          '.entry-thumbnail img', 
-          '.featured-image img',
-          'img.wp-post-image',
-          'img.attachment-post-thumbnail',
-          '.post-content img',
-          'img'
-        ];
-        
-        for (const imgSelector of imgSelectors) {
-          const imgEl = $el.find(imgSelector).first();
-          if (imgEl.length) {
-            const src = imgEl.attr('data-src') || imgEl.attr('src') || '';
-            // Skip placeholder images
-            if (src && !src.includes('view.png') && !src.includes('placeholder') && !src.includes('spinner')) {
-              thumbnail = src;
-              break;
-            }
-          }
-        }
-        
-        // FIXED (Round 7): Better author extraction - try multiple patterns
-        let author = 'Unknown';
-        const metaEl = $el.find('.post-meta, .entry-meta, .meta').first();
-        const metaText = metaEl.text() || '';
-        
-        // Try multiple author extraction patterns
-        const authorPatterns = [
-          /by\s+([^|]+)/i,
-          /author\s*:\s*([^|]+)/i,
-          /creator\s*:\s*([^|]+)/i,
-          /maker\s*:\s*([^|]+)/i,
-          /developer\s*:\s*([^|]+)/i
-        ];
-        
-        for (const pattern of authorPatterns) {
-          const match = metaText.match(pattern);
-          if (match) {
-            author = match[1].trim();
+        if (posts.length >= limit * 2) return false; // Get more than needed since we'll filter
+        posts.push($(element));
+      });
+      if (posts.length > 0) break;
+    }
+    
+    // Process each post sequentially (not in parallel to avoid rate limits)
+    for (let i = 0; i < posts.length && maps.length < limit; i++) {
+      const $el = posts[i];
+      
+      // Extract title and URL
+      const titleEl = $el.find('h2 a, h3 a, .entry-title a, .post-title a').first();
+      if (!titleEl.length) continue;
+      
+      const title = titleEl.text().trim();
+      const url = titleEl.attr('href') || '';
+      if (!url) continue;
+      
+      const fullUrl = url.startsWith('http') ? url : `${this.baseUrl}${url}`;
+      
+      // Check if it's map-related content
+      const text = (title + ' ' + $el.text()).toLowerCase();
+      if (!this.isMapContent(text)) {
+        continue;
+      }
+      
+      // CRITICAL FIX: Check for direct download URL BEFORE adding to results
+      // This must be done sequentially since we can't use async in forEach
+      console.log(`[9Minecraft] Checking download for: ${title.substring(0, 50)}...`);
+      const directDownloadUrl = await this.extractDirectDownloadUrl(fullUrl);
+      
+      if (!directDownloadUrl) {
+        console.log(`[9Minecraft] Skipping "${title.substring(0, 50)}" - no direct download available`);
+        continue; // Skip this result - no direct download
+      }
+      
+      // Extract slug
+      const slugMatch = url.match(/\/(?:[^/]+-)?([^/]+)\/$/);
+      const slug = slugMatch ? slugMatch[1] : '';
+      
+      // Extract description
+      const descEl = $el.find('.entry-summary p, .post-content p, p').first();
+      const description = descEl.text().trim().substring(0, 300);
+      
+      // Extract thumbnail
+      let thumbnail = '';
+      const imgSelectors = [
+        '.post-thumbnail img',
+        '.entry-thumbnail img', 
+        '.featured-image img',
+        'img.wp-post-image',
+        'img.attachment-post-thumbnail',
+        '.post-content img',
+        'img'
+      ];
+      
+      for (const imgSelector of imgSelectors) {
+        const imgEl = $el.find(imgSelector).first();
+        if (imgEl.length) {
+          const src = imgEl.attr('data-src') || imgEl.attr('src') || '';
+          if (src && !src.includes('view.png') && !src.includes('placeholder') && !src.includes('spinner')) {
+            thumbnail = src;
             break;
           }
         }
-        
-        // Try to extract from author link
-        if (author === 'Unknown') {
-          const authorLink = $el.find('a[href*="/author/"], .author a, .byline a').first();
-          if (authorLink.length) {
-            author = authorLink.text().trim();
-          }
+      }
+      
+      // Extract author
+      let author = 'Unknown';
+      const metaEl = $el.find('.post-meta, .entry-meta, .meta').first();
+      const metaText = metaEl.text() || '';
+      
+      const authorPatterns = [
+        /by\s+([^|]+)/i,
+        /author\s*:\s*([^|]+)/i,
+        /creator\s*:\s*([^|]+)/i,
+        /maker\s*:\s*([^|]+)/i,
+        /developer\s*:\s*([^|]+)/i
+      ];
+      
+      for (const pattern of authorPatterns) {
+        const match = metaText.match(pattern);
+        if (match) {
+          author = match[1].trim();
+          break;
         }
-        
-        // Try to extract from span with author class
-        if (author === 'Unknown') {
-          const authorSpan = $el.find('.author-name, .entry-author, .post-author').first();
-          if (authorSpan.length) {
-            author = authorSpan.text().trim();
-          }
+      }
+      
+      if (author === 'Unknown') {
+        const authorLink = $el.find('a[href*="/author/"], .author a, .byline a').first();
+        if (authorLink.length) {
+          author = authorLink.text().trim();
         }
-        
-        // Clean up title
-        const cleanTitle = title.replace(/Map\s+for\s+Minecraft/i, '').trim();
-        
-        // CRITICAL FIX: 9Minecraft doesn't provide direct downloads - skip these results
-        // The site requires visiting external pages and navigating through ads
-        // This violates the requirement: "Download buttons must return valid ZIP files"
-        // Instead of returning unusable results, we skip them entirely
-        
-        // Only add if we can extract a direct download URL
-        const directDownloadUrl = await this.extractDirectDownloadUrl(fullUrl);
-        
-        if (!directDownloadUrl) {
-          console.log(`[9Minecraft] Skipping "${cleanTitle}" - no direct download available`);
-          return; // Skip this result
+      }
+      
+      if (author === 'Unknown') {
+        const authorSpan = $el.find('.author-name, .entry-author, .post-author').first();
+        if (authorSpan.length) {
+          author = authorSpan.text().trim();
         }
-        
-        maps.push({
-          id: `9mc-${Date.now()}-${index}`,
-          title: cleanTitle,
-          slug: slug,
-          description: description,
-          author: author && author !== 'Unknown' ? author : this.extractAuthorFromTitle(cleanTitle),
-          url: fullUrl,
-          thumbnail: thumbnail || '',
-          downloads: 0,
-          downloadUrl: directDownloadUrl, // CRITICAL FIX: Only use direct download URLs
-          downloadType: 'direct',
-          downloadNote: null,
-          category: this.detectCategory(cleanTitle, description),
-          dateCreated: new Date().toISOString(),
-          dateModified: new Date().toISOString(),
-          source: 'nineminecraft',
-          sourceName: '9Minecraft'
-        });
+      }
+      
+      // Clean up title
+      const cleanTitle = title.replace(/Map\s+for\s+Minecraft/i, '').trim();
+      
+      maps.push({
+        id: `9mc-${Date.now()}-${i}`,
+        title: cleanTitle,
+        slug: slug,
+        description: description,
+        author: author && author !== 'Unknown' ? author : this.extractAuthorFromTitle(cleanTitle),
+        url: fullUrl,
+        thumbnail: thumbnail || '',
+        downloads: 0,
+        downloadUrl: directDownloadUrl, // CRITICAL FIX: Only use verified direct download URLs
+        downloadType: 'direct',
+        downloadNote: null,
+        category: this.detectCategory(cleanTitle, description),
+        dateCreated: new Date().toISOString(),
+        dateModified: new Date().toISOString(),
+        source: 'nineminecraft',
+        sourceName: '9Minecraft'
       });
       
-      if (maps.length > 0) break;
+      console.log(`[9Minecraft] ✓ Added "${cleanTitle.substring(0, 50)}" with direct download`);
     }
     
-    console.log(`[9Minecraft] Found ${maps.length} maps`);
+    console.log(`[9Minecraft] Found ${maps.length} maps with direct downloads`);
     return maps;
   }
   
-  // FIXED (Round 7): Extract author from title as fallback
   extractAuthorFromTitle(title) {
-    // Try to extract author name from patterns like "Map Name by AuthorName"
     const patterns = [
       /by\s+([A-Za-z0-9_]+)$/i,
       /by\s+([A-Za-z0-9_]+)\s+/i,
@@ -251,7 +248,6 @@ class NineMinecraftScraper extends BaseScraper {
       const match = title.match(pattern);
       if (match) {
         const potentialAuthor = match[1].trim();
-        // Filter out common non-author words
         if (potentialAuthor.length > 2 && 
             !['map', 'for', 'the', 'minecraft', 'download', 'free', 'mod', 'new'].includes(potentialAuthor.toLowerCase())) {
           return potentialAuthor;
@@ -329,12 +325,10 @@ class NineMinecraftScraper extends BaseScraper {
       for (const selector of fileSelectors) {
         const link = $(selector).attr('href');
         if (link) {
-          // Ensure it's a full URL
           const fullLink = link.startsWith('http') ? link : 
                           link.startsWith('//') ? `https:${link}` :
                           `${this.baseUrl}${link}`;
           
-          // Verify it looks like a file download
           if (fullLink.match(/\.(zip|mcworld|rar|7z)(\?.*)?$/i)) {
             console.log(`[9Minecraft] Found direct download: ${fullLink.substring(0, 80)}...`);
             return fullLink;
@@ -342,7 +336,7 @@ class NineMinecraftScraper extends BaseScraper {
         }
       }
       
-      // Check for common file hosting links that typically host map files
+      // Check for common file hosting links
       const hostingSelectors = [
         'a[href*="mediafire.com"]',
         'a[href*="dropbox.com"]',
@@ -369,76 +363,18 @@ class NineMinecraftScraper extends BaseScraper {
     }
   }
 
-  /**
-   * Legacy method - kept for compatibility
-   * @deprecated Use extractDirectDownloadUrl instead
-   */
-  async extractDownloadUrl(mapUrl, options = {}) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.requestTimeout);
-    
-    try {
-      const response = await fetch(mapUrl, {
-        signal: controller.signal,
-        headers: {
-          'User-Agent': this.getUserAgent(), // FIXED (Round 7): Use scraper user agent
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        }
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        return null;
-      }
-
-      const html = await response.text();
-      const $ = cheerio.load(html);
-      
-      // 9Minecraft has download links in various formats
-      // Try multiple selectors to find the download URL
-      const downloadSelectors = [
-        'a[href*="download"]',
-        'a.download-btn',
-        'a.btn-download',
-        '.download-link a',
-        'a[href*=".zip"]',
-        'a[href*="mediafire"]',
-        'a[href*="dropbox"]',
-        'a[href*="mega.nz"]'
-      ];
-      
-      for (const selector of downloadSelectors) {
-        const link = $(selector).attr('href');
-        if (link && (link.includes('download') || link.includes('.zip') || link.includes('mediafire') || link.includes('dropbox'))) {
-          const fullLink = link.startsWith('http') ? link : `${this.baseUrl}${link}`;
-          console.log(`[9Minecraft] Found download link: ${fullLink}`);
-          return fullLink;
-        }
-      }
-      
-      console.warn(`[9Minecraft] No download link found on page: ${mapUrl}`);
-      return null;
-    } catch (error) {
-      clearTimeout(timeoutId);
-      console.warn(`[9Minecraft] Extract download URL error: ${error.message}`);
-      return null;
-    }
-  }
-
   async checkHealth() {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 8000);
     
     try {
-      // Test actual search functionality
       const testQuery = 'castle';
       const searchUrl = `${this.baseUrl}/?s=${encodeURIComponent(testQuery)}`;
       
       const response = await fetch(searchUrl, {
         signal: controller.signal,
         headers: { 
-          'User-Agent': this.getUserAgent(), // FIXED (Round 7): Use scraper user agent
+          'User-Agent': this.getUserAgent(),
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         }
       });

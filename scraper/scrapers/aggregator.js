@@ -162,13 +162,23 @@ class MapAggregator {
 
       if (result.status === 'fulfilled') {
         const maps = result.value || [];
+        // CRITICAL FIX: success = results.length > 0, not just promise fulfillment
+        // This prevents false positive reporting when scraper returns empty array
+        const hasResults = maps.length > 0;
         results.sources[sourceName] = {
           count: maps.length,
-          success: true
+          success: hasResults,  // Only true if we actually got results
+          note: hasResults ? null : 'No results returned (may be blocked or no matches)'
         };
         allMaps.push(...maps);
-        // Reset failures on success
-        this.recordSuccess(sourceName);
+        
+        // Reset failures only if we got actual results
+        if (hasResults) {
+          this.recordSuccess(sourceName);
+        } else {
+          // Record failure if consistently returning empty
+          this.recordFailure(sourceName);
+        }
       } else {
         results.sources[sourceName] = {
           count: 0,

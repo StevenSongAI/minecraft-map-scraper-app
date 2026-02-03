@@ -147,14 +147,19 @@ const keywordMappings = {
   'dungeon': ['dungeon', 'cave', 'underground', 'catacomb'],
   'minigame': ['minigame', 'mini-game', 'arcade', 'party game'],
   
-  // Transportation
-  'railway': ['railway', 'rail', 'train', 'subway', 'metro', 'track', 'locomotive'],
+  // Transportation - EXPANDED for better rail matching
+  'railway': ['railway', 'rail', 'train', 'subway', 'metro', 'track', 'locomotive', 'transit', 'tram', 'monorail', 'maglev'],
+  'rail': ['rail', 'railway', 'train', 'track', 'subway', 'metro', 'tram'],
+  'train': ['train', 'railway', 'rail', 'locomotive', 'subway', 'metro', 'tram', 'transit'],
   'highway': ['highway', 'road', 'path', 'freeway', 'motorway'],
   'bridge': ['bridge', 'tunnel'],
+  'speed': ['speed', 'fast', 'rapid', 'quick', 'express', 'high-speed'],
   
   // Environment
   'island': ['island', 'isles', 'atoll'],
-  'underwater': ['underwater', 'undersea', 'submerged', 'sunken', 'aquatic', 'ocean floor', 'deep sea'],
+  // CRITICAL: Underwater must include UNDER - not just water
+  'underwater': ['underwater', 'undersea', 'submerged', 'sunken', 'submarine', 'below water', 'beneath water', 'under ocean', 'under lake'],
+  'aquatic': ['aquatic', 'ocean floor', 'deep sea', 'seabed', 'ocean bottom'],
   'reef': ['reef', 'coral', 'barrier reef'],
   'mountain': ['mountain', 'peak', 'alpine', 'cliff', 'highlands'],
   'forest': ['forest', 'woods', 'jungle', 'woodland', 'grove'],
@@ -197,7 +202,8 @@ const compoundConcepts = [
     name: 'underwater_city',
     terms: ['underwater', 'city'],
     requiredMatches: 2,
-    synonyms: ['sunken city', 'atlantis', 'submerged city', 'undersea city', 'aquatic city', 'ocean city', 'water city', 'underwater town', 'underwater metropolis', 'underwater kingdom']
+    synonyms: ['sunken city', 'atlantis', 'submerged city', 'undersea city', 'aquatic city', 'ocean city', 'underwater town', 'underwater metropolis', 'underwater kingdom'],
+    exclude: ['water city', 'aqua city'] // Exclude generic water matches without "under" context
   },
   {
     name: 'underwater_base',
@@ -210,6 +216,24 @@ const compoundConcepts = [
     terms: ['underwater', 'house'],
     requiredMatches: 2,
     synonyms: ['underwater home', 'submerged house', 'undersea house', 'aquatic house', 'underwater mansion', 'underwater villa']
+  },
+  {
+    name: 'futuristic_city_railway',
+    terms: ['futuristic', 'city', 'railway'],
+    requiredMatches: 2, // At least 2 of 3 for flexibility
+    synonyms: ['future city rail', 'sci-fi city train', 'futuristic metropolis subway', 'advanced city metro', 'futuristic urban transit']
+  },
+  {
+    name: 'city_railway',
+    terms: ['city', 'railway'],
+    requiredMatches: 2,
+    synonyms: ['city train', 'urban rail', 'metro city', 'subway city', 'city transit', 'railway metropolis', 'train station city']
+  },
+  {
+    name: 'high_speed_rail',
+    terms: ['high', 'speed', 'rail'],
+    requiredMatches: 2,
+    synonyms: ['high speed train', 'bullet train', 'fast rail', 'express railway', 'high-speed metro', 'rapid transit']
   },
   {
     name: 'sky_city',
@@ -520,31 +544,79 @@ function isRelevantResult(map, query, searchTerms) {
   const tagsLower = map.tags ? map.tags.map(t => t.toLowerCase()) : [];
   const allText = titleLower + ' ' + descLower + ' ' + tagsLower.join(' ');
   
-  // FIXED: FURTHER RELAXED multi-word query check - CurseForge API already filters relevance
-  // For queries with 2+ significant words, check if ANY key words appear
-  // Don't filter out CurseForge API results - they're already relevant!
+  // CRITICAL FIX: STRICT multi-word query checking to prevent false positives
+  // For queries with 2+ words, require ALL significant words to match
+  // This fixes "high speed rail" matching "high school" (speed not matched) or "speed bridge" (rail not matched)
   const queryWords = query.toLowerCase().trim().split(/\s+/).filter(w => w.length > 2);
+  
   if (queryWords.length >= 2) {
-    // Count how many query words appear (including synonyms)
-    const matchedWords = queryWords.filter(word => {
-      // Direct match
-      if (containsWord(allText, word)) return true;
-      
-      // Check if any synonym of this word matches
-      for (const [key, synonyms] of Object.entries(keywordMappings)) {
-        if (key === word || synonyms.includes(word)) {
-          // Check if any synonym appears in text
+    // Check compound concepts first - these require ALL terms
+    const compoundMatches = detectCompoundConcepts(query);
+    
+    if (compoundMatches.length > 0) {
+      // This is a compound concept query - require at least ONE compound concept to match
+      let hasCompoundMatch = false;
+      for (const concept of compoundMatches) {
+        // Check for compound synonyms (highest priority)
+        for (const synonym of concept.synonyms) {
+          if (allText.includes(synonym)) {
+            hasCompoundMatch = true;
+            break;
+          }
+        }
+        if (hasCompoundMatch) break;
+        
+        // Check if ALL required terms are present
+        const allTermsPresent = concept.terms.every(term => {
+          if (containsWord(allText, term)) return true;
+          // Check synonyms for this term
+          const synonyms = keywordMappings[term] || [];
           return synonyms.some(syn => containsWord(allText, syn));
+        });
+        
+        if (allTermsPresent) {
+          hasCompoundMatch = true;
+          break;
         }
       }
-      return false;
-    });
-    
-    // RELAXED: Only require at least ONE word to match (was 60% - too strict!)
-    // CurseForge API already does relevance filtering - we shouldn't reject their results
-    if (matchedWords.length === 0) {
-      console.log(`[Filter] Rejected "${map.title}" - NO query words matched`);
-      return false;
+      
+      // For compound queries, reject if no compound match AND not all words match
+      if (!hasCompoundMatch) {
+        // Require ALL query words to match for non-compound results
+        const allWordsMatch = queryWords.every(word => {
+          if (containsWord(allText, word)) return true;
+          // Check synonyms
+          for (const [key, synonyms] of Object.entries(keywordMappings)) {
+            if (key === word || synonyms.includes(word)) {
+              return synonyms.some(syn => containsWord(allText, syn));
+            }
+          }
+          return false;
+        });
+        
+        if (!allWordsMatch) {
+          console.log(`[Filter] Rejected "${map.title}" - compound query "${query}" not fully matched`);
+          return false;
+        }
+      }
+    } else {
+      // Not a compound query, but still multi-word
+      // Require ALL significant words to match (prevents "high school" matching "high speed rail")
+      const allWordsMatch = queryWords.every(word => {
+        if (containsWord(allText, word)) return true;
+        // Check synonyms
+        for (const [key, synonyms] of Object.entries(keywordMappings)) {
+          if (key === word || synonyms.includes(word)) {
+            return synonyms.some(syn => containsWord(allText, syn));
+          }
+        }
+        return false;
+      });
+      
+      if (!allWordsMatch) {
+        console.log(`[Filter] Rejected "${map.title}" - not all query words matched for "${query}"`);
+        return false;
+      }
     }
   }
   

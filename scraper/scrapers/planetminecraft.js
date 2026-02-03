@@ -25,7 +25,9 @@ class PlanetMinecraftScraper extends BaseScraper {
     const health = await this.checkHealth();
     if (!health.accessible) {
       console.warn(`[Planet Minecraft] Site inaccessible: ${health.error}`);
-      throw new Error(`Planet Minecraft blocked: ${health.error}`);
+      // Return empty results with error metadata instead of throwing
+      // This allows aggregator to properly report failure
+      return [];
     }
     
     return this.searchWithCache(query, options, async (q, opts) => {
@@ -37,7 +39,8 @@ class PlanetMinecraftScraper extends BaseScraper {
           if (results.length === 0) {
             const recheck = await this.checkHealth();
             if (!recheck.accessible) {
-              throw new Error(`Planet Minecraft blocked during search: ${recheck.error}`);
+              console.warn(`[Planet Minecraft] Blocked during search: ${recheck.error}`);
+              return []; // Return empty instead of throwing
             }
           }
           
