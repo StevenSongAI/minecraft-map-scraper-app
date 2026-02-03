@@ -5,3 +5,7 @@ builder = "nixpacks"
 startCommand = "node server.js"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
+
+[deploy.env]
+PORT = "3000"
+HOST = "0.0.0.0"
