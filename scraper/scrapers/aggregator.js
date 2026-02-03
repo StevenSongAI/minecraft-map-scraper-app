@@ -78,6 +78,10 @@ class MapAggregator {
     
     console.log(`[Aggregator] Searching for: "${query}"`);
     
+    // Parse query into words for multi-word filtering
+    const queryWords = query.toLowerCase().split(/\s+/).filter(w => w.length > 0);
+    const isMultiWordQuery = queryWords.length >= 2;
+    
     const results = {
       query,
       timestamp: new Date().toISOString(),
@@ -85,7 +89,8 @@ class MapAggregator {
       results: [],
       totalCount: 0,
       responseTime: 0,
-      errors: []
+      errors: [],
+      multiWordFilter: isMultiWordQuery
     };
 
     // Create search promises for all enabled scrapers with individual timeouts
@@ -153,8 +158,13 @@ class MapAggregator {
     // Deduplicate results
     const deduplicated = this.deduplicateMaps(allMaps);
     
+    // Apply multi-word filtering if needed (for queries like "underwater city")
+    const filtered = isMultiWordQuery 
+      ? this.filterMultiWordMatches(deduplicated, queryWords)
+      : deduplicated;
+    
     // Sort by relevance/popularity
-    const sorted = this.sortByRelevance(deduplicated, query);
+    const sorted = this.sortByRelevance(filtered, query);
     
     // Limit results
     results.results = sorted.slice(0, limit);
@@ -182,6 +192,23 @@ class MapAggregator {
           clearTimeout(timeout);
           reject(error);
         });
+    });
+  }
+
+  /**
+   * Filter results for multi-word queries - ALL words must appear in title or description
+   * Example: "underwater city" should only return results containing BOTH "underwater" AND "city"
+   */
+  filterMultiWordMatches(maps, queryWords) {
+    return maps.filter(map => {
+      const title = (map.name || map.title || '').toLowerCase();
+      const description = (map.summary || map.description || '').toLowerCase();
+      const searchText = `${title} ${description}`;
+      
+      // Check if ALL query words appear in the title or description
+      const allWordsPresent = queryWords.every(word => searchText.includes(word));
+      
+      return allWordsPresent;
     });
   }
 
