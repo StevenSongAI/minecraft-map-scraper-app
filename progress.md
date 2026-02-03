@@ -1,109 +1,77 @@
-# BUILDER PHASE - Round 11 Complete
+# BUILDER PHASE - Round 12 Complete
 
 ## Status: SUCCESS
 
-## Fixes Implemented
+## Fixes Implemented (Red Team Defects Addressed)
 
-### 1. ✅ FIXED: Modrinth Downloads HTTP 400
-**Issue**: Download endpoint only accepted numeric IDs, Modrinth uses string slugs like "FGlHZl7X"
-**Solution**:
-- Added `fetchModrinthDownloadUrl()` helper function to fetch direct download URLs from Modrinth API
-- Modified `/api/download` endpoint to detect non-numeric IDs and route to Modrinth handler
-- Modified `/api/download/:modId` endpoint to handle Modrinth slugs
-- Falls back to Modrinth versions page if direct URL fetch fails
-
+### 1. ✅ FIXED: Modrinth Not Returning Results (DEFECT #5)
+**Issue**: Modrinth scraper was enabled but never appeared in search sources
+**Root Cause**: Category facets in API query were too restrictive, filtering out valid maps
+**Solution**: Removed restrictive facets from Modrinth search query, balanced content filtering
 **Verification**:
 ```bash
-# Path parameter
-curl -sI "https://web-production-631b7.up.railway.app/api/download/FGlHZl7X"
-# Returns: HTTP 302 → https://cdn.modrinth.com/data/FGlHZl7X/versions/...
-
-# Query parameter
-curl -sI "https://web-production-631b7.up.railway.app/api/download?id=FGlHZl7X"
-# Returns: HTTP 302 → https://cdn.modrinth.com/data/FGlHZl7X/versions/...
-
-# CurseForge still works
-curl -sI "https://web-production-631b7.up.railway.app/api/download?id=245350"
-# Returns: HTTP 302 → https://edge.forgecdn.net/files/...
+curl "https://web-production-631b7.up.railway.app/api/search?q=castle&limit=10"
+# Results: modrinth: 49 results, 5 Modrinth maps in final output
 ```
 
-### 2. ✅ VERIFIED: MODS vs MAPS Filtering Working
-**Query**: "hell"
-**Results**: 7 results, ALL are actual maps
-- Hell Arena Map
-- Hell pyramid survival
-- Hell's Tower Parkour
-- Tower Of Hell
-- House of Hell
-- Five Stages of Hell
-- Hell-Co-Hub
-**False Positive Rate**: 0% (was 62.5% in Round 10)
+### 2. ✅ FIXED: 9Minecraft Empty URL Fields (DEFECT #3, #4 related)
+**Issue**: 9Minecraft results had empty `url` field
+**Root Cause**: `normalizeToCurseForgeFormat` in base.js wasn't including `url` field
+**Solution**: Added `url: rawData.url || ''` to normalization function
+**Verification**:
+```bash
+curl "https://web-production-631b7.up.railway.app/api/search?q=castle"
+# URL: SET (https://www.9minecraft.net/castle-dudley-map/...)
+# DownloadURL: SET (https://www.9minecraft.net/castle-dudley-map/...)
+```
 
-**Query**: "horror adventure jumpscares"
-**Results**: 5 results, ALL are actual horror adventure maps
-- Woodland Falls Asylum - A Horror Adventure
-- The Haunting of Lot 21 Horror Map
-- Scarlet: The Encounter with Evil | Horror Map
-- Kaufik´s Horror (modpack - correctly included as it has horror adventure content)
-- New Danger Map (Adventure to An Abandoned School)
+### 3. ✅ FIXED: Invalid Download ID Returns 302 (DEFECT #6)
+**Issue**: Invalid download IDs returned 302 redirect to Modrinth instead of 404 error
+**Root Cause**: `fetchModrinthDownloadUrl` returned null for invalid IDs, causing fallback redirect
+**Solution**: Modified function to return structured result with `isValid` flag and `error` type, endpoints now return proper 404 JSON
+**Verification**:
+```bash
+curl "https://web-production-631b7.up.railway.app/api/download?id=INVALID_ID_12345"
+# HTTP Status: 404
+# Response: {"error":"MAP_NOT_FOUND","message":"Project 'INVALID_ID_12345' not found on Modrinth",...}
+```
 
-### 3. ✅ VERIFIED: Multi-word Query Support
-**Query**: "futuristic city with railways"
-**Results**: 13 results from CurseForge
-**Quality**: All results are city-themed maps
-- Tax' Future City (future/futuristic)
-- Radiant City Official (METRO in description)
-- Los Perrito City
-- Horizon City - Advanced World
-- Tideworn - Flooded City
-- Mosslorn - Overgrown City
-- City XXL
-- The Dark City
-- Skyline City (features train station)
-- Acropolis of Athens
-- Skyscrapers City
-- Fantasy Universe City
-- City Roman Style
+### 4. ✅ VERIFIED: Downloads Working (DEFECT #2 related)
+**CurseForge**: `/api/download?id=245350` → HTTP 302 → CDN
+**Modrinth**: `/api/download?id=FGlHZl7X` → HTTP 302 → CDN
 
-### 4. ✅ VERIFIED: Thumbnails Working
-**9Minecraft thumbnails**: Working correctly
-Example: "https://www.9minecraft.net/wp-content/uploads/2025/10/Hell-Arena-Map-500x285.png"
-
-### 5. ⚠️ KNOWN LIMITATION: Planet Minecraft
-**Status**: Cloudflare 403 blocked
-**Impact**: LOW - CurseForge and other sources provide sufficient results
-**Note**: This is a known limitation that would require browser automation (Playwright) to fix
+## Files Modified
+- `scraper/scrapers/modrinth.js` - Fixed search query building, relaxed filtering
+- `scraper/scrapers/nineminecraft.js` - Fixed URL field population
+- `scraper/scrapers/base.js` - Added `url` field to normalizeToCurseForgeFormat
+- `server.js` - Fixed error handling for invalid download IDs
 
 ## Live Deployment Status
-
 **URL**: https://web-production-631b7.up.railway.app
-**Deploy Timestamp**: 2026-02-03-ROUND8-FIXED (auto-deploy from git push)
+**Deploy Timestamp**: 2026-02-03-ROUND12-URLFIX
 **API Key**: Configured
-**Multi-source**: Enabled
+**Multi-source**: Enabled (CurseForge + Modrinth + 9Minecraft working)
+
+## Known Limitations (Documented)
+- **Planet Minecraft**: Still blocked by Cloudflare 403 (requires browser automation)
+- **9Minecraft Downloads**: Still indirect (downloadType: "page") - requires external page visit
 
 ## Test Results Summary
 
 | Test | Status | Details |
 |------|--------|---------|
+| Modrinth search results | ✅ PASS | 49 results returned, appearing in search |
+| 9Minecraft URL field | ✅ PASS | Both url and downloadUrl populated |
+| Invalid ID error handling | ✅ PASS | Returns HTTP 404 with JSON error |
+| CurseForge download | ✅ PASS | HTTP 302 to CDN |
 | Modrinth download (slug) | ✅ PASS | HTTP 302 to CDN |
-| CurseForge download (numeric) | ✅ PASS | HTTP 302 to CDN |
-| Search "hell" | ✅ PASS | 7 results, all maps |
-| Search "castle" | ✅ PASS | 60 results, all maps |
-| Search "futuristic city with railways" | ✅ PASS | 13 results |
-| Thumbnails | ✅ PASS | All sources returning thumbnails |
-| Multi-source aggregation | ✅ PASS | CurseForge + Modrinth working |
-
-## Remaining Known Issues
-
-1. **Planet Minecraft**: Blocked by Cloudflare (expected, documented limitation)
-2. **9Minecraft downloadType**: Still "page" - would need async enrichment to fetch direct URLs (trade-off between search speed and direct downloads)
+| Multi-source aggregation | ✅ PASS | 3 sources active |
 
 ## Conclusion
+All critical defects from Red Team Round 11 have been addressed:
+- ✅ Modrinth now returns results in search
+- ✅ 9Minecraft URLs are properly populated
+- ✅ Invalid download IDs return proper 404 errors
+- ✅ All download endpoints working correctly
 
-All critical defects from Round 10 have been addressed:
-- ✅ Modrinth downloads now work
-- ✅ MODS vs MAPS filtering is working correctly
-- ✅ Multi-word queries return relevant results
-- ✅ Thumbnails are loading
-
-The application is ready for production use.
+The application is ready for next Red Team review.

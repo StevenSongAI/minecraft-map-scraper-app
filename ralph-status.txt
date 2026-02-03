@@ -1,58 +1,120 @@
-DEFECTS_FOUND
+# RED TEAM DEFECT REPORT
+## Project: minecraft-map-scraper
+## Live URL: https://web-production-631b7.up.railway.app
+## Test Date: 2026-02-03
+## Status: DEFECTS_FOUND
 
-RED TEAM ADVERSARIAL TEST RESULTS
-================================
-Live URL: https://web-production-631b7.up.railway.app
-Timestamp: 2026-02-03T19:06:00Z
+---
 
-DEFECT #1: CRITICAL - Planet Minecraft Scraper Completely Broken
-----------------------------------------------------------------
-Requirement: "MUST aggregate results from multiple sources beyond CurseForge" / "Primary additional sources: Planet Minecraft"
-Evidence: Health check shows planetminecraft scraper returns HTTP 403 Forbidden with "Cloudflare bot protection active"
-Impact: ZERO results from Planet Minecraft in ANY search query. Multi-source requirement NOT met.
-Verification: curl /api/scrapers/status shows "accessible: false", "statusCode: 403"
+## DEFECT 1: MODS RETURNED AS MAPS (CRITICAL - Violates Core Purpose)
+**Severity: CRITICAL**
+**Requirement Violated:** "Search must return results that semantically match the user's query intent" + "Results must have actual CurseForge IDs (not mock IDs)" + App purpose is Minecraft MAPS, not mods
 
-DEFECT #2: CRITICAL - 9Minecraft Downloads Return HTML Not ZIP Files
---------------------------------------------------------------------
-Requirement: "Download buttons must return valid ZIP files" / "ZIP files must contain actual Minecraft map data"
-Evidence: 9Minecraft download URLs return HTML document text (verified via `file -` command)
-Impact: Users cannot download actual Minecraft maps from 9Minecraft results
-Verification: curl /api/download?id=9mc-... returns HTML content, not application/zip
+**Evidence:**
+- Query "dungeon" returns "Dungeon Now Loading" - a MOD that "introduces new dungeons, along with tricky, but fair bosses"
+- Query "dungeon" returns "Dungeon's Delight" - a cooking mod addon for Farmer's Delight
+- Query "dungeon" returns "Dungeon Crawl" - a worldgen MOD that "generates large underground dungeon structures"
+- Query "horror" returns "Horror messages" - a MOD that sends horror messages to chat
+- Query "horror" returns "Horror Element Mod" - a mod that "adds gore and horror themed blocks"
+- Query "horror" returns "Horror Island" - a MODPACK, not a map
+- Query "skyblock" returns "Skyblock Builder" - a MOD that lets you create custom skyblock islands
+- Query "skyblock" returns "SkyBlock Advancements" - a datapack, not a map
+- Query "skyblock" returns "Skyblock Enhanced - Modern Edition" - a modpack with "60+ optimized mods"
 
-DEFECT #3: HIGH - ALL 9Minecraft Results Require External Page Visit
----------------------------------------------------------------------
-Requirement: "Download buttons must return valid ZIP files" / "Scraped results must have working download links"
-Evidence: Every 9Minecraft result has "downloadType": "page" with "downloadNote": "Visit 9Minecraft page for download link"
-Impact: Users must leave the app and navigate external sites - violates direct download requirement
-Verification: Query "medieval castle" - all 9mc-* IDs have downloadType: "page", NOT "direct"
+**Root Cause:** Modrinth scraper filters only by keywords (line 73-90 in modrinth.js) and accepts datapacks without proper filtering. The filter allows any project with keywords like "map", "adventure", "dungeon" even when they are clearly mods.
 
-DEFECT #4: HIGH - 9Minecraft Results Have Empty/Missing Thumbnails
-------------------------------------------------------------------
-Requirement: "Thumbnails must load from original source" / "Each result must have working thumbnail images"
-Evidence: "Underwater City – Lumina Nocturnale Map" has empty thumbnail: "thumbnail": ""
-Impact: Broken UI experience, missing visual assets
-Verification: Query "underwater city" - result ID 9mc-1770145579755-1 has empty thumbnail
+**Impact:** Users searching for MAPS to download are shown MODS instead, which fundamentally breaks the application's purpose.
 
-DEFECT #5: MEDIUM - Modrinth Scraper Not Returning Results
-----------------------------------------------------------
-Requirement: Multi-source aggregation / scrapersLoaded: true in health check
-Evidence: Health check shows modrinth scraper "enabled": true, "accessible": true, but NEVER appears in search sources
-Impact: Modrinth results completely absent despite being "enabled"
-Verification: Multiple searches ("mansion", "castle", "horror") only show curseforge + nineminecraft sources
+---
 
-DEFECT #6: MEDIUM - Invalid Download ID Returns 302 Redirect Instead of Error
------------------------------------------------------------------------------
-Requirement: Proper error handling for invalid resources
-Evidence: curl /api/download?id=INVALID returns "Found. Redirecting to https://modrinth.com/project/INVALID/versions" with HTTP 302
-Impact: Poor error handling, unexpected external redirects, confusing user experience
-Expected: HTTP 400/404 with JSON error message
+## DEFECT 2: MODPACKS RETURNED AS MAPS (CRITICAL)
+**Severity: CRITICAL**
+**Requirement Violated:** "Download buttons must return valid ZIP files" + "ZIP files must contain actual Minecraft map data"
 
-SUMMARY
--------
-Total Defects Found: 6 (3 Critical, 2 High, 1 Medium)
-- 2 scrapers broken (Planet Minecraft 403, Modrinth silent)
-- Download functionality broken for 9Minecraft (HTML not ZIP)
-- UI defects (empty thumbnails)
-- Error handling defects (302 redirect instead of proper error)
+**Evidence:**
+- Query "horror" returns "Hell To Earth" - described as "A horror modpack turning Minecraft into a world filled with fear"
+- Query "skyblock" returns "Skyblock Enhanced - Modern Edition" - "The only Hypixel SkyBlock modpack you'll ever need"
+- Query "horror" returns "Horror Reborn" - "The most realistic fabric horror modpack"
+- Query "horror" returns "Horror+" by ZoeyDev - "This new modpack adds lots of the most popular horror mods"
 
-RED TEAM VERDICT: FAIL - Multiple critical requirements not met
+**Impact:** Users clicking download on these will receive modpack files (.mrpack, .zip with mods) instead of Minecraft world files, leading to confusion and broken installations.
+
+---
+
+## DEFECT 3: PLANET MINECRAFT SCRAPER COMPLETELY BROKEN
+**Severity: HIGH**
+**Requirement Violated:** "MUST aggregate results from multiple sources beyond CurseForge" + "Primary additional sources: Planet Minecraft"
+
+**Evidence:**
+From /api/sources/health:
+```json
+"planetminecraft": {
+  "name": "Planet Minecraft",
+  "enabled": true,
+  "accessible": false,
+  "status": "unavailable",
+  "error": "HTTP 403 Forbidden - Cloudflare bot protection active"
+}
+```
+
+From /api/health scraper status:
+```json
+{
+  "name": "planetminecraft",
+  "accessible": false,
+  "statusCode": 403,
+  "canSearch": false,
+  "error": "HTTP 403 Forbidden - Cloudflare bot protection active",
+  "note": "Planet Minecraft uses Cloudflare bot protection - HTTP-only scraping blocked"
+}
+```
+
+**Impact:** Planet Minecraft is the largest repository after CurseForge. Being completely blocked means the "multi-source aggregation" requirement is FAILING - results are NOT 2x+ more than CurseForge alone for many queries.
+
+---
+
+## DEFECT 4: 9MINECRAFT RESULTS NOT DIRECT DOWNLOADS
+**Severity: MEDIUM**
+**Requirement Violated:** "Download buttons must return valid ZIP files" + "Scraped results must have working download links (verified HTTP 200)"
+
+**Evidence:**
+All 9Minecraft results have:
+```json
+"downloadType": "page",
+"downloadNote": "Visit 9Minecraft page for download link"
+```
+
+Examples:
+- "Atlantis Mod" (9mc-1770146365640-0): downloadUrl points to 9minecraft.net page, not direct file
+- "Underwater City – Lumina Nocturnale Map": downloadUrl points to blog page, requires additional navigation
+
+**Impact:** Users cannot directly download from 9Minecraft results - they must manually navigate to the source page. This creates friction and may lead to broken download expectations.
+
+---
+
+## DEFECT 5: INCORRECT CATEGORIES FOR MODS/MODPACKS
+**Severity: MEDIUM**
+**Requirement Violated:** "Each scraped result must include: title, author, description, download URL, thumbnail, source attribution" + "Source field must indicate origin"
+
+**Evidence:**
+- "Dungeon Now Loading" (a MOD that adds dungeons) is categorized as "Dungeon"
+- "Horror Element Mod" (a MOD that adds blocks) is categorized as "Survival"  
+- "Skyblock Builder" (a MOD) is categorized as "Skyblock"
+- These are showing up in the WRONG category because the scraper doesn't differentiate between:
+  - Maps ABOUT dungeons (what user wants)
+  - Mods that ADD dungeons (not what user wants)
+
+The detectCategory() function only checks keywords, not project_type or actual file content.
+
+---
+
+## SUMMARY
+
+**5 DEFECTS FOUND:**
+1. CRITICAL: Mods returned as maps (violates core application purpose)
+2. CRITICAL: Modpacks returned as maps (users download wrong content type)
+3. HIGH: Planet Minecraft scraper completely blocked (fails multi-source requirement)
+4. MEDIUM: 9Minecraft results not direct downloads (poor UX)
+5. MEDIUM: Incorrect categorization of mods/modpacks (confuses users)
+
+**VERDICT: IMPLEMENTATION DEFECTIVE** - The application fails to correctly identify and filter Minecraft maps from mods/modpacks, resulting in fundamentally incorrect search results that do not meet user expectations.

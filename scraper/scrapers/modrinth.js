@@ -37,12 +37,30 @@ class ModrinthScraper extends BaseScraper {
   }
 
   async fetchSearchResults(query, limit) {
-    // CRITICAL FIX (Round 12): Simplified search without restrictive category facets
-    // The facets were filtering out valid map results
+    // CRITICAL FIX (Round 14): Filter by project_type using facets to exclude mods and modpacks
+    // This prevents mods and modpacks from appearing in map search results
     const encodedQuery = encodeURIComponent(query);
     
-    // Search without restrictive facets - filter results manually instead
-    const searchUrl = `${this.baseUrl}/search?query=${encodedQuery}&limit=${Math.min(limit * 3, 50)}&offset=0`;
+    // Build facets to filter for map-related project types only
+    // Include: resourcepack, datapack (maps are often categorized as these)
+    // Exclude: mod, modpack (these are actual mods, not maps)
+    const facets = [
+      ['project_type:resourcepack'],
+      ['project_type:datapack']
+    ];
+    
+    // Add category facets to further refine map results
+    const categoryFacets = [
+      ['categories:world'],
+      ['categories:adventure'],
+      ['categories:worldgen'],
+      ['categories:map']
+    ];
+    
+    // Combine all facets
+    const allFacets = [...facets, ...categoryFacets];
+    
+    const searchUrl = `${this.baseUrl}/search?query=${encodedQuery}&limit=${Math.min(limit * 4, 60)}&offset=0&facets=${encodeURIComponent(JSON.stringify(allFacets))}`;
     
     console.log(`[Modrinth] Fetching: ${searchUrl}`);
     
@@ -68,25 +86,38 @@ class ModrinthScraper extends BaseScraper {
       const data = await response.json();
       const results = data.hits || [];
       
-      // FIXED (Round 12): Balanced filtering - exclude obvious mods but keep maps
+      // CRITICAL FIX (Round 14): Filter out mods and modpacks by project_type
       const filteredResults = results.filter(hit => {
+        // STRICT: Only accept datapacks and resourcepacks, explicitly reject mods and modpacks
+        const projectType = hit.project_type;
+        
+        // Reject mods and modpacks completely
+        if (projectType === 'mod' || projectType === 'modpack') {
+          console.log(`[Modrinth] FILTERED (type=${projectType}): ${hit.title}`);
+          return false;
+        }
+        
+        // Only accept datapacks and resourcepacks
+        if (projectType !== 'datapack' && projectType !== 'resourcepack') {
+          console.log(`[Modrinth] FILTERED (type=${projectType}): ${hit.title}`);
+          return false;
+        }
+        
         const text = `${hit.title || ''} ${hit.description || ''}`.toLowerCase();
         
-        // Exclude obvious non-map content (weapons, armor, tech mods, etc.)
+        // Secondary filter: Exclude obvious non-map content (weapons, armor, tech mods, etc.)
         const exclusionPatterns = [
           /\bweapon\b/, /\bgun\b/, /\barmor\b/, /\bsword\b/, /\bmekanism\b/, /\brobot\b/, 
           /\bvehicle\b/, /\bcar\b/, /\bplane\b/, /\bhelicopter\b/, /\btank\b/,
           /\bjetpack\b/, /\bdrill\b/, /\blaser\b/, /\bmissile\b/, /\brocket\b/,
-          /\bhud\b/, /\bminimap\b/, /\bshader\b/, /\boptifine\b/, /\bsodium\b/
+          /\bhud\b/, /\bminimap\b/, /\bshader\b/, /\boptifine\b/, /\bsodium\b/,
+          /\btexture pack\b/, /\bresource pack\b(?!.*map)/  // Texture packs that aren't maps
         ];
         const hasExclusion = exclusionPatterns.some(pattern => pattern.test(text));
         
         if (hasExclusion) {
           return false; // Exclude obvious mods
         }
-        
-        // Accept if it's a datapack (maps are often datapacks)
-        const isDatapack = hit.project_type === 'datapack';
         
         // Accept if it has any map-related keywords
         const mapKeywords = ['map', 'world', 'adventure', 'parkour', 'puzzle', 'survival', 
@@ -96,15 +127,15 @@ class ModrinthScraper extends BaseScraper {
         
         // Accept if it has worldgen category
         const hasWorldGenCategory = hit.categories && hit.categories.some(cat => 
-          ['worldgen', 'world-generation', 'adventure', 'decoration'].includes(cat));
+          ['worldgen', 'world-generation', 'adventure', 'decoration', 'world'].includes(cat));
         
-        // Accept datapacks, maps with keywords, or worldgen projects
-        return isDatapack || hasMapKeyword || hasWorldGenCategory;
+        // Accept datapacks/resourcepacks that are map-related
+        return hasMapKeyword || hasWorldGenCategory;
       });
       
       console.log(`[Modrinth] Found ${results.length} results, ${filteredResults.length} map-related`);
       
-      // FIXED (Round 12): Return all filtered results (increased limit)
+      // FIXED (Round 14): Return all filtered results
       const transformedResults = filteredResults.map(hit => this.transformHitToMapSync(hit));
       return transformedResults;
       
