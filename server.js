@@ -3,6 +3,9 @@ const express = require('express');
 const path = require('path');
 const cors = require('cors');
 
+// Deployment timestamp for verification
+const DEPLOY_TIMESTAMP = '2026-02-03-1700';
+
 // Polyfill File API for Node.js 18 compatibility (Playwright needs this)
 if (typeof File === 'undefined') {
   global.File = class File {
@@ -1359,6 +1362,7 @@ app.get('/api/health', async (req, res) => {
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
+    deployTimestamp: DEPLOY_TIMESTAMP,
     apiConfigured: !!process.env.CURSEFORGE_API_KEY && process.env.CURSEFORGE_API_KEY !== 'demo',
     demoMode: isDemoMode,
     apiKeyPreview: process.env.CURSEFORGE_API_KEY ? process.env.CURSEFORGE_API_KEY.substring(0, 10) + '...' : 'Not set',
