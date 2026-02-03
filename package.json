@@ -2,6 +2,7 @@
   "name": "minecraft-map-scraper",
   "version": "1.0.0",
   "description": "Minecraft Map Scraper with Natural Language Search and CurseForge API Integration",
+  "deployTimestamp": "2026-02-04-1738-R38",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
