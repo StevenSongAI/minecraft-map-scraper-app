@@ -1063,3 +1063,4 @@ app.listen(PORT, () => {
   console.log(`API Key configured: ${CURSEFORGE_API_KEY ? 'Yes' : 'No'}`);
 });
 // Deployment trigger: Mon Feb  2 22:56:43 EST 2026
+// Trigger redeploy Tue Feb  3 00:58:55 EST 2026
