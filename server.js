@@ -1174,6 +1174,8 @@ app.get('/api/search-unified', async (req, res) => {
 app.listen(PORT, () => {
   console.log(`Minecraft Map Scraper Server running on port ${PORT}`);
   console.log(`API Key configured: ${CURSEFORGE_API_KEY ? 'Yes' : 'No'}`);
+  console.log(`Multi-source scrapers enabled: Yes`);
 });
 // Deployment trigger: Mon Feb  2 22:56:43 EST 2026
 // Trigger redeploy Tue Feb  3 00:58:55 EST 2026
+// Multi-source scraper integration deployed: Tue Feb 3 15:05:00 EST 2026
