@@ -448,6 +448,8 @@ class BaseScraper {
       thumbnail: rawData.thumbnail || rawData.image || '',
       screenshots: rawData.screenshots || [],
       downloadUrl: rawData.downloadUrl || '',
+      downloadType: rawData.downloadType || null, // FIXED (Round 7): Preserve download type (e.g., 'page', 'direct')
+      downloadNote: rawData.downloadNote || null, // FIXED (Round 7): Preserve download notes
       fileInfo: rawData.fileInfo || null,
       downloadCount: rawData.downloads || rawData.downloadCount || 0,
       gameVersions: rawData.gameVersions || [],

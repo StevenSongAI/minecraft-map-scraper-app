@@ -191,10 +191,13 @@ class MinecraftMapsScraper extends BaseScraper {
           thumbnail: thumbnail,
           downloads: downloads,
           downloadUrl: fullUrl,
+          downloadType: 'page', // FIXED (Round 8): Mark as page visit required
+          downloadNote: 'Visit page to download',
           category: this.detectCategory(title, description),
           dateCreated: new Date().toISOString(),
           dateModified: new Date().toISOString(),
-          source: 'minecraftmaps'
+          source: 'minecraftmaps',
+          sourceName: 'MinecraftMaps'
         });
       });
       
