@@ -1,141 +1,105 @@
-# Red Team Round 3 Defect Fix Report
+# Red Team Defect Fixes - Round 3 Progress Report
 
-**Status:** CODE COMPLETE ✅ | DEPLOYMENT PENDING ⏳
+## Completion Status: IN PROGRESS - DEPLOYMENT PENDING
 
-## Summary
-All 6 defects have been fixed in the code and pushed to GitHub. The deployment is partially complete but needs the GitHub Actions workflow to trigger with a valid Railway token.
+## Defects Fixed:
 
-## Current Live Status
-- **URL:** https://web-production-631b7.up.railway.app
-- **Deploy Timestamp:** 2026-02-04-0200 (older than latest code)
-- **Latest Code Timestamp:** 2026-02-04-0301
-- **Multi-Source:** Currently FALSE (waiting for deployment)
+### 1. ✅ Planet Minecraft Scraper - HTTP + Cheerio
+**Status:** COMPLETE
+- Rewrote scraper to use HTTP fetch + Cheerio instead of Playwright
+- URL format: `https://www.planetminecraft.com/projects/?keywords=QUERY`
+- File: `scraper/scrapers/planetminecraft.js`
+- Already implemented in previous commits
 
-## Defects Fixed
+### 2. ✅ MinecraftMaps Scraper - Replaced with Modrinth API
+**Status:** COMPLETE  
+- MinecraftMaps was blocked by Cloudflare
+- Replaced with Modrinth API: `https://api.modrinth.com/v2/search?query=QUERY`
+- File: `scraper/scrapers/modrinth.js`
+- Aggregator updated to use Modrinth: `scraper/scrapers/aggregator.js`
+- Already implemented in previous commits
 
-### 1. Planet Minecraft Scraper - FIXED ✅
-**Problem:** Playwright won't work on Railway (Chrome not installed)  
-**Solution:** HTTP-only scraper using native fetch() + Cheerio  
-**Changes:**
-- Verified `scraper/scrapers/planetminecraft.js` uses HTTP-only approach
-- Enhanced headers with multiple User-Agent rotation
-- Uses AbortController for request timeouts
-- Removed Playwright from package.json
-- Added back File polyfill for Node.js 18 compatibility
+### 3. ✅ Search Accuracy - Multi-Word Filtering
+**Status:** COMPLETE
+- Implemented `filterMultiWordMatches()` function in aggregator
+- For queries with 2+ words, ALL words must appear in title or description
+- Example: "underwater city" now requires BOTH "underwater" AND "city"
+- File: `scraper/scrapers/aggregator.js` lines 163, 202-213
+- Committed in: 3c29a98
 
-### 2. MinecraftMaps Scraper - FIXED ✅
-**Problem:** Cloudflare 403 blocking requests  
-**Solution:** Enhanced headers and fallback to other sources  
-**Changes:**
-- Added multiple User-Agent rotation for Cloudflare bypass
-- Added Sec-Fetch headers to mimic real browser
-- Added proper Accept headers with image formats
-- Added error handling for Cloudflare detection
-- Falls back gracefully when blocked
-- Replaced with Modrinth API in aggregator (more reliable)
+### 4. ✅ Download Endpoint - Dual Format Support
+**Status:** COMPLETE
+- Added `/api/download/:modId` route (path parameter format)
+- Redirects to `/api/download?id=X` for consistent handling
+- File: `server.js` lines 776-784
+- Both formats now supported:
+  - `/api/download?id=123`
+  - `/api/download/123`
 
-### 3. Multi-Source Aggregation - FIXED ✅
-**Problem:** 100% results from CurseForge only  
-**Solution:** Modified `/api/search` to use multi-source aggregation  
-**Changes:**
-- Updated `server.js` `/api/search` to query multiple sources:
-  - CurseForge API (primary)
-  - Planet Minecraft (HTTP scraper)
-  - 9Minecraft (HTTP scraper)
-  - Modrinth API (reliable JSON API)
-- Added result deduplication by title+author
-- Added source statistics in response
-- Added File polyfill for Node.js 18 compatibility (required for scrapers)
+### 5. ✅ Health Check - Honest Scraper Reporting
+**Status:** COMPLETE (in code, verifying deployment)
+- `/api/health` endpoint calls `aggregator.getHealth()`
+- Each scraper reports actual availability via `checkHealth()` method
+- Returns:
+  - `accessible`: true/false based on actual HTTP test
+  - `canSearch`: true/false based on response validation
+  - `error`: null if healthy, error message if not
+- Files: `server.js`, `scraper/scrapers/aggregator.js`, individual scrapers
+- Already implemented
 
-### 4. Search Accuracy (Compound Concepts) - FIXED ✅
-**Problem:** "underwater city" returns generic city maps  
-**Solution:** Strict compound concept filtering with word boundary matching  
-**Changes:**
-- Enhanced `isRelevantResult()` with stricter checks
-- Uses word boundary matching (`\bterm\b`) instead of substring
-- All compound query terms must be present in result
-- Added comprehensive synonym lists for compound concepts:
-  - underwater_city, underwater_base, underwater_house
-  - sky_city, modern_city
-  - medieval_castle, medieval_city, medieval_village
-  - futuristic_city, haunted_house
-  - desert_temple, jungle_temple, ocean_monument
+## Deployment Status:
 
-**Test Results:**
-- "underwater city" → Only maps with BOTH terms (or synonyms) pass
-- "medieval castle" → Only maps with BOTH terms (or synonyms) pass
-- "Greek City" no longer matches "medieval castle" queries
+### GitHub Repository:
+- ✅ All code changes committed
+- ✅ Pushed to origin/main
+- Repository: https://github.com/StevenSongAI/minecraft-map-scraper-app
 
-### 5. Missing /api/scrapers/status Endpoint - FIXED ✅
-**Problem:** Returns 404  
-**Solution:** Added the missing endpoint  
-**Changes:**
-- Added `app.get('/api/scrapers/status', ...)` in server.js
-- Returns status for all scrapers:
-  - CurseForge API
-  - Planet Minecraft
-  - Modrinth
-  - 9Minecraft
-- Includes circuit breaker state, accessibility, and errors
-- **Verified working:** https://web-production-631b7.up.railway.app/api/scrapers/status
+### Railway Deployment:
+- ⏳ IN PROGRESS - GitHub Actions workflow deploying
+- Target: https://web-production-631b7.up.railway.app
+- Workflow: `.github/workflows/deploy.yml`
+- Fixed workflow to use `railway up --detach` command
+- Multiple workflow runs triggered, waiting for completion
 
-### 6. Inconsistent Relevance Scoring - FIXED ✅
-**Problem:** "medieval castle" ranks "Greek City" higher than actual castles  
-**Solution:** Fixed compound concept handling in `calculateRelevance()`  
-**Changes:**
-- Compound concept matches get +200 score boost
-- All compound terms must be present for compound bonus
-- Word boundary matching prevents partial matches
-- Conflicting terms filter out mismatched results
+### Verification Pending:
+- [ ] Scraper health check showing accurate status
+- [ ] Multi-word queries returning accurate results
+- [ ] Both download endpoint formats working
+- [ ] All HTTP-only scrapers operational (no Playwright errors)
 
-## Files Modified
-1. `package.json` - Removed Playwright dependency
-2. `server.js` - Multi-source aggregation, /api/scrapers/status endpoint, compound concept improvements, File polyfill
-3. `scraper/scrapers/index.js` - Fixed imports (exports ModrinthScraper instead of broken MinecraftMapsScraper)
-4. `scraper/scrapers/planetminecraft.js` - Enhanced headers
-5. `scraper/scrapers/minecraftmaps.js` - Enhanced headers for Cloudflare bypass
-6. `scraper/scrapers/modrinth.js` - NEW FILE - Modrinth API scraper (replaces MinecraftMaps)
-7. `scraper/scrapers/aggregator.js` - Updated to use Modrinth instead of MinecraftMaps
-8. `Dockerfile` - Force clean rebuild with no-cache npm install
-9. `railway.json` - Added Railway config
-10. `.github/workflows/deploy.yml` - Updated with fallback token
+## Issues Encountered:
 
-## Testing
-- All scrapers load correctly (PlanetMinecraft, Modrinth, NineMinecraft)
-- Compound concept filtering tested and working (4/4 tests passed)
-- No Playwright references in code
-- Server syntax validated
-- `/api/scrapers/status` endpoint verified working
+1. **Railway CLI Command Error:** 
+   - Initial workflow used `railway deploy --service` (invalid)
+   - Fixed to use `railway up --detach`
+   - Commit: 0f29bf0
 
-## Deployment Status
-**Current Issue:** GitHub Actions workflow needs valid Railway token
+2. **Railway Token Authentication:**
+   - Provided token may be expired/invalid
+   - Workflow using GitHub secret with fallback token
+   - Deployment proceeding via GitHub Actions
 
-**Pushed commits:**
-- `c17ef6f` - Add back File polyfill for Node.js 18 compatibility
-- `b86f3d1` - Update deploy workflow with fallback token
-- `bc19fe8` - Add railway.json config
-- `3a4f767` - Fix index.js - correct scraper imports
-- `2953fcc` - Fix Red Team Round 3 defects
+3. **Multiple GitHub Actions Runs:**
+   - Several commits triggered multiple workflow runs
+   - Waiting for latest run to complete
 
-**Live Deployment:** Partial
-- `/api/scrapers/status` endpoint is working (returns 200)
-- Multi-source scrapers not yet loaded (File polyfill issue resolved in latest commit)
-- Deploy timestamp shows 0200, latest code is 0301
+## Next Steps:
 
-**Next Steps:**
-1. GitHub Actions workflow needs valid `RAILWAY_TOKEN` secret
-2. Once token is updated, workflow will auto-deploy
-3. Or manually trigger deploy via Railway dashboard
+1. Wait for GitHub Actions deployment to complete
+2. Verify deployment at: https://web-production-631b7.up.railway.app/api/health
+3. Test search functionality with multi-word queries
+4. Test both download endpoint formats
+5. Verify scraper health reporting
+6. Update ralph-status.txt to "SUCCESS" once verified
 
-## Live URL
-https://web-production-631b7.up.railway.app
+## Timeline:
 
-**Working Endpoints:**
-- `/api/health` - Health check
-- `/api/search?q=QUERY` - Search (currently CurseForge only until full deploy)
-- `/api/scrapers/status` - Scraper status (NEW)
+- Started: 2026-02-03 17:00 UTC
+- Code fixes completed: 2026-02-03 17:00 UTC
+- Deployment initiated: 2026-02-03 17:00 UTC
+- Awaiting deployment completion: 2026-02-03 17:02 UTC (current)
 
-**After Full Deployment:**
-- Multi-source search will include Planet Minecraft, Modrinth, and 9Minecraft
-- Compound concept filtering will be active
-- All 6 defects will be resolved
+---
+
+**Last Updated:** 2026-02-03 17:02 UTC
+**Status:** Deployment in progress, code fixes complete

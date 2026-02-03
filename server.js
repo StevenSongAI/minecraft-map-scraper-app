@@ -25,16 +25,20 @@ if (typeof File === 'undefined') {
   };
 }
 
-// Import multi-source scrapers (optional - graceful fallback if not available)
+// Import multi-source scrapers
 let MapAggregator = null;
 let scraperModuleError = null;
 try {
+  // Load scrapers module
   const scrapers = require('./scraper/scrapers');
   MapAggregator = scrapers.MapAggregator;
   console.log('[Server] Multi-source scrapers loaded successfully');
 } catch (error) {
-  console.warn('[Server] Multi-source scrapers not available:', error.message);
+  console.error('[Server] Failed to load multi-source scrapers:');
+  console.error('  Error:', error.message);
+  console.error('  Stack:', error.stack);
   scraperModuleError = error.message;
+  // Don't exit - fallback to CurseForge only
 }
 
 const app = express();
@@ -44,11 +48,17 @@ const PORT = process.env.PORT || 3000;
 let aggregator = null;
 function getAggregator() {
   if (!aggregator && MapAggregator) {
-    // 5s timeout per source, 8 max results - keeps total under 10s even with all sources
-    aggregator = new MapAggregator({ timeout: 5000, maxResultsPerSource: 8 });
+    try {
+      // 5s timeout per source, 6 max results per source
+      aggregator = new MapAggregator({ timeout: 5000, maxResultsPerSource: 6 });
+      console.log('[Server] MapAggregator initialized successfully');
+    } catch (error) {
+      console.error('[Server] Failed to initialize MapAggregator:', error.message);
+      throw error;
+    }
   }
   if (!MapAggregator) {
-    throw new Error('Multi-source scrapers not available: ' + scraperModuleError);
+    throw new Error('Multi-source scrapers not available: ' + (scraperModuleError || 'Unknown error'));
   }
   return aggregator;
 }
