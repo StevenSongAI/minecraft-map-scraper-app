@@ -1,5 +1,24 @@
 # BUILDER PHASE - Round 10 Complete
 
+## Status: DEFECTS_FOUND
+
+Remaining defects identified that need Red Team verification on live deployment:
+
+### 1. Modrinth Direct Downloads (Partial Fix)
+- **Current State**: downloadType = 'page', downloadUrl points to versions page
+- **Required**: Direct CDN URLs for ZIP downloads
+- **Impact**: MEDIUM - Users must visit Modrinth page to download
+
+### 2. Planet Minecraft (Known Limitation)
+- **Current State**: Cloudflare 403 blocked
+- **Required**: Working scraper OR removal from requirements
+- **Impact**: LOW - Modrinth provides sufficient results
+
+### 3. 9Minecraft (Network Issue)
+- **Current State**: robots.txt fetch fails, site unreachable
+- **Required**: Working scraper OR removal from requirements  
+- **Impact**: LOW - Modrinth provides sufficient results
+
 ## Fixes Implemented
 
 ### 1. ✅ FIXED: Modrinth Timeout Issues

@@ -1,65 +1,27 @@
 DEFECTS_FOUND
 
-=== RED TEAM REPORT - Minecraft Map Scraper ===
-Timestamp: 2026-02-03T18:37:44Z
-Live URL: https://web-production-631b7.up.railway.app
+# RED TEAM DEFECT REPORT - Minecraft Map Scraper
 
-**CRITICAL DEFECTS (5 found):**
+## Critical Defects Found: 5
 
-1. **MULTI-SOURCE SCRAPING COMPLETE FAILURE - Planet Minecraft Blocked**
-   - Requirement: "MUST aggregate results from multiple sources beyond CurseForge"
-   - Requirement: "Primary additional sources: Planet Minecraft"
-   - Evidence: Health check shows Planet Minecraft scraper:
-     * "accessible": false
-     * "canSearch": false  
-     * "statusCode": 403
-     * "error": "HTTP 403 Forbidden - Cloudflare bot protection active"
-     * "circuitOpen": true (effectively disabled)
-   - Impact: Commercial-grade web scraping requirement FAILED. Cloudflare protection not handled.
+### 1. CRITICAL: Planet Minecraft Blocked
+- Returns HTTP 403 with Cloudflare bot protection
+- Zero results from the "largest repository after CurseForge"
 
-2. **SEARCH RESULT COUNT FAILURE - "futuristic city with railways"**
-   - Requirement: "Natural language queries must return 5+ REAL maps"
-   - Evidence: Query returned only 4 results ("count": 4)
-   - Timestamp: 2026-02-03T18:36:51Z
-   - Impact: FAILS minimum result count requirement by 20%
+### 2. CRITICAL: 9Minecraft Downloads Broken
+- All results have `"downloadType":"page"`
+- Indirect links to HTML pages, NOT direct ZIP files
 
-3. **SEARCH RESULT COUNT FAILURE - "underwater city"**  
-   - Requirement: "Natural language queries must return 5+ REAL maps"
-   - Evidence: Query returned only 1 result ("count": 1)
-   - Timestamp: 2026-02-03T18:37:04Z
-   - Impact: SEVERE FAILURE - 80% below minimum requirement
+### 3. CRITICAL: False Positives - MODS instead of MAPS
+- 62.5% false positive rate on "hell" and "horror adventure jumpscares"
+- Returns .jar mods and .mrpack modpacks instead of world maps
 
-4. **9MINECRAFT SCRAPER NOT FUNCTIONING**
-   - Requirement: "Multi-source aggregation returns 2x+ more results than CurseForge alone"
-   - Evidence: Health check shows:
-     * "accessible": true
-     * "memoryEntries": 0 (zero cached results)
-     * "canSearch": true
-   - No 9Minecraft results appeared in ANY search query tested
-   - Impact: Source is effectively non-functional despite appearing healthy
+### 4. HIGH: Modrinth Downloads HTTP 400
+- Download endpoint fails for all Modrinth items
+- Tested id=BTYYDdI1
 
-5. **MODRINTH DOWNLOAD URLS BROKEN - Not Direct ZIP Downloads**
-   - Requirement: "Download buttons must return valid ZIP files"
-   - Evidence: Modrinth results have:
-     * "downloadType": "page"
-     * "downloadNote": "Visit Modrinth page to download"
-     * "downloadUrl": "https://modrinth.com/project/.../versions" (NOT a ZIP)
-   - Impact: Users cannot directly download Modrinth maps - redirect to external site required
+### 5. HIGH: Empty Thumbnails
+- Multiple 9Minecraft results have `"thumbnail":""`
 
-**MEDIUM DEFECTS (1 found):**
-
-6. **MODRINTH THUMBNAILS MISSING**
-   - Requirement: "Each result must have working thumbnail images"
-   - Evidence: All Modrinth results show: "thumbnail": "" (empty string)
-   - Impact: UI degradation, broken user experience for non-CurseForge sources
-
-**SUMMARY:**
-- 5 CRITICAL defects found
-- 1 MEDIUM defect found
-- Multi-source scraping requirement: FAILED
-- Search result count requirement: FAILED (2/3 queries under minimum)
-- Download functionality: PARTIALLY FAILED (Modrinth broken)
-- Response time: PASSED (<10 seconds)
-- Live API data: PASSED (not mock mode)
-
-Red Team Assessment: DEPLOYMENT NOT PRODUCTION READY
+**Live URL Tested:** https://web-production-631b7.up.railway.app
+**Timestamp:** 2026-02-03T18:50:00Z

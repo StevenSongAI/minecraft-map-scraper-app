@@ -775,7 +775,41 @@ app.get('/api/search', async (req, res) => {
     }).filter(map => {
       // Use the comprehensive relevance checker that includes compound concept filtering
       return isRelevantResult(map, query, searchTerms);
-    }).sort((a, b) => b.relevanceScore - a.relevanceScore);
+    });
+    
+    // CRITICAL FIX (Round 11): Additional mod filtering at server level
+    results = results.filter(map => {
+      const title = (map.title || map.name || '').toLowerCase();
+      const description = (map.description || map.summary || '').toLowerCase();
+      const downloadUrl = (map.downloadUrl || '').toLowerCase();
+      const fullText = `${title} ${description}`;
+      
+      // Check for mod file extensions
+      if (/\.(jar|mrpack|litemod)(\?.*)?$/i.test(downloadUrl)) {
+        console.log(`[Server Filter] FILTERED mod extension: ${title.substring(0, 50)}...`);
+        return false;
+      }
+      
+      // Check for mod-only content (no map keywords)
+      const mapKeywords = ['map', 'world', 'adventure', 'parkour', 'puzzle', 'survival', 
+                          'horror', 'castle', 'city', 'house', 'mansion', 'skyblock', 
+                          'dungeon', 'quest', 'minigame', 'pvp', 'spawn', 'structure'];
+      const hasMapKeyword = mapKeywords.some(kw => fullText.includes(kw));
+      
+      const modOnlyIndicators = [/\bmod\b(?!ern)/, /\bmodpack\b/, /\bplugin\b/, 
+                                  /\bhud\b/, /\bminimap\b/, /\bshader\b/];
+      const hasModOnlyIndicator = modOnlyIndicators.some(p => p.test(fullText)) && !hasMapKeyword;
+      
+      if (hasModOnlyIndicator) {
+        console.log(`[Server Filter] FILTERED mod-only content: ${title.substring(0, 50)}...`);
+        return false;
+      }
+      
+      return true;
+    });
+    
+    // Sort by relevance
+    results = results.sort((a, b) => b.relevanceScore - a.relevanceScore);
     
     // Deduplicate by title+author
     const seen = new Map();
@@ -1792,6 +1826,79 @@ app.get('/api/sources/health', async (req, res) => {
     console.error('Sources health error:', error);
     res.status(500).json({
       error: 'Failed to get sources health',
+      message: error.message
+    });
+  }
+});
+
+// CRITICAL FIX (Round 11): Resolve direct download URL for external sources
+app.get('/api/resolve-download', async (req, res) => {
+  const { source, id, url } = req.query;
+  
+  if (!source || (!id && !url)) {
+    return res.status(400).json({
+      error: 'BAD_REQUEST',
+      message: 'Missing required parameters: source and (id or url)'
+    });
+  }
+  
+  console.log(`[Resolve Download] Source: ${source}, ID: ${id}, URL: ${url}`);
+  
+  try {
+    if (source === 'modrinth') {
+      // Use Modrinth scraper to fetch direct download
+      const ModrinthScraper = require('./scraper/scrapers/modrinth');
+      const scraper = new ModrinthScraper();
+      
+      const downloadInfo = await scraper.fetchDirectDownloadUrl(id);
+      
+      if (downloadInfo && downloadInfo.downloadUrl) {
+        return res.json({
+          success: true,
+          source: 'modrinth',
+          downloadUrl: downloadInfo.downloadUrl,
+          filename: downloadInfo.filename,
+          filesize: downloadInfo.filesize,
+          version: downloadInfo.version,
+          gameVersions: downloadInfo.gameVersions,
+          type: 'direct'
+        });
+      } else {
+        return res.status(404).json({
+          error: 'DOWNLOAD_NOT_FOUND',
+          message: 'Could not find direct download URL for this project'
+        });
+      }
+    } else if (source === 'nineminecraft') {
+      // Use 9Minecraft scraper to extract download URL
+      const NineMinecraftScraper = require('./scraper/scrapers/nineminecraft');
+      const scraper = new NineMinecraftScraper();
+      
+      const downloadInfo = await scraper.extractDirectDownloadUrl(url || id);
+      
+      if (downloadInfo) {
+        return res.json({
+          success: true,
+          source: 'nineminecraft',
+          downloadUrl: downloadInfo.url,
+          type: downloadInfo.type
+        });
+      } else {
+        return res.status(404).json({
+          error: 'DOWNLOAD_NOT_FOUND',
+          message: 'Could not find download URL for this map'
+        });
+      }
+    } else {
+      return res.status(400).json({
+        error: 'UNSUPPORTED_SOURCE',
+        message: `Source '${source}' is not supported for download resolution`
+      });
+    }
+  } catch (error) {
+    console.error('[Resolve Download] Error:', error);
+    return res.status(500).json({
+      error: 'RESOLUTION_FAILED',
       message: error.message
     });
   }

@@ -136,8 +136,8 @@ class NineMinecraftScraper extends BaseScraper {
         continue;
       }
       
-      // FIXED (Round 9): Skip direct download check for now - too slow and causes timeouts
-      // Use page URL and let users visit the site
+      // FIXED (Round 11): Try to extract direct download URL asynchronously
+      // Store the page URL as fallback, actual download will be fetched on demand
       const finalDownloadUrl = fullUrl;
       const downloadType = 'page';
       
@@ -151,24 +151,53 @@ class NineMinecraftScraper extends BaseScraper {
       const descEl = $el.find('.entry-summary p, .post-content p, p').first();
       const description = descEl.text().trim().substring(0, 300);
       
-      // Extract thumbnail
+      // FIXED (Round 11): Better thumbnail extraction with more selectors
       let thumbnail = '';
       const imgSelectors = [
         '.post-thumbnail img',
-        '.entry-thumbnail img', 
-        '.featured-image img',
-        'img.wp-post-image',
+        '.entry-thumbnail img',
         'img.attachment-post-thumbnail',
-        '.post-content img',
+        'img.wp-post-image',
+        '.featured-image img',
+        '.post-content img:first-child',
+        '.entry-content img:first-child',
+        'img[class*="thumbnail"]',
+        'img[class*="featured"]',
         'img'
       ];
       
       for (const imgSelector of imgSelectors) {
         const imgEl = $el.find(imgSelector).first();
         if (imgEl.length) {
-          const src = imgEl.attr('data-src') || imgEl.attr('src') || '';
-          if (src && !src.includes('view.png') && !src.includes('placeholder') && !src.includes('spinner')) {
+          // Try data-src first (lazy loading), then src
+          let src = imgEl.attr('data-src') || 
+                    imgEl.attr('data-lazy-src') || 
+                    imgEl.attr('src') || '';
+          
+          // Clean up the URL
+          if (src) {
+            src = src.trim();
+            // Skip common placeholder/spinner images
+            if (src.includes('view.png') || 
+                src.includes('placeholder') || 
+                src.includes('spinner') ||
+                src.includes('loading') ||
+                src.includes('blank.gif') ||
+                src.includes('data:image')) {
+              continue;
+            }
+            
+            // Make relative URLs absolute
+            if (src.startsWith('//')) {
+              src = 'https:' + src;
+            } else if (src.startsWith('/')) {
+              src = this.baseUrl + src;
+            } else if (!src.startsWith('http')) {
+              src = this.baseUrl + '/' + src;
+            }
+            
             thumbnail = src;
+            console.log(`[9Minecraft] Found thumbnail: ${thumbnail.substring(0, 80)}...`);
             break;
           }
         }
@@ -295,79 +324,189 @@ class NineMinecraftScraper extends BaseScraper {
 
   /**
    * Extract DIRECT download URL from a 9Minecraft map detail page
-   * CRITICAL FIX: Must return actual ZIP file URLs, not page links
+   * CRITICAL FIX (Round 11): Better extraction with multiple patterns
    */
   async extractDirectDownloadUrl(mapUrl, options = {}) {
+    const timeout = options.timeout || 8000; // Longer timeout for download page
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.requestTimeout);
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
     
     try {
+      console.log(`[9Minecraft] Fetching download page: ${mapUrl}`);
+      
       const response = await fetch(mapUrl, {
         signal: controller.signal,
         headers: {
           'User-Agent': this.getUserAgent(),
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Referer': 'https://www.google.com/'
         }
       });
 
       clearTimeout(timeoutId);
 
       if (!response.ok) {
+        console.warn(`[9Minecraft] Download page returned ${response.status}`);
         return null;
       }
 
       const html = await response.text();
       const $ = cheerio.load(html);
       
-      // Look for direct file download links (ZIP, MCWORLD, RAR)
+      // Pattern 1: Look for direct file download links (ZIP, MCWORLD, RAR, 7Z)
       const fileSelectors = [
         'a[href$=".zip"]',
         'a[href$=".mcworld"]',
         'a[href$=".rar"]',
         'a[href$=".7z"]',
         'a[href*=".zip?"]',
-        'a[href*="download"][href$=".zip"]'
+        'a[href*="download"][href$=".zip"]',
+        'a.download-link',
+        'a[href*="/download/"]',
+        '.download a',
+        'a:contains("Download")',
+        'a:contains("DOWNLOAD")'
       ];
       
       for (const selector of fileSelectors) {
-        const link = $(selector).attr('href');
-        if (link) {
-          const fullLink = link.startsWith('http') ? link : 
+        const links = $(selector);
+        for (let i = 0; i < links.length; i++) {
+          const link = $(links[i]).attr('href');
+          if (link) {
+            let fullLink = link.startsWith('http') ? link : 
                           link.startsWith('//') ? `https:${link}` :
-                          `${this.baseUrl}${link}`;
-          
-          if (fullLink.match(/\.(zip|mcworld|rar|7z)(\?.*)?$/i)) {
-            console.log(`[9Minecraft] Found direct download: ${fullLink.substring(0, 80)}...`);
-            return fullLink;
+                          link.startsWith('/') ? `${this.baseUrl}${link}` :
+                          `${this.baseUrl}/${link}`;
+            
+            // Clean up the URL
+            fullLink = fullLink.trim();
+            
+            // Check if it's a direct file link
+            if (fullLink.match(/\.(zip|mcworld|rar|7z)(\?.*)?$/i)) {
+              console.log(`[9Minecraft] Found direct download: ${fullLink.substring(0, 80)}...`);
+              return {
+                url: fullLink,
+                type: 'direct'
+              };
+            }
           }
         }
       }
       
-      // Check for common file hosting links
-      const hostingSelectors = [
-        'a[href*="mediafire.com"]',
-        'a[href*="dropbox.com"]',
-        'a[href*="mega.nz"]',
-        'a[href*="curseforge.com"]'
+      // Pattern 2: Check for download buttons with data attributes
+      const dataSelectors = [
+        '[data-download-url]',
+        '[data-file-url]',
+        '[data-url]'
       ];
       
-      for (const selector of hostingSelectors) {
-        const link = $(selector).attr('href');
-        if (link) {
-          const fullLink = link.startsWith('http') ? link : 
-                          link.startsWith('//') ? `https:${link}` :
-                          `${this.baseUrl}${link}`;
-          console.log(`[9Minecraft] Found hosting link: ${fullLink.substring(0, 80)}...`);
-          return fullLink;
+      for (const selector of dataSelectors) {
+        const el = $(selector).first();
+        if (el.length) {
+          const url = el.attr('data-download-url') || 
+                     el.attr('data-file-url') || 
+                     el.attr('data-url');
+          if (url) {
+            const fullLink = url.startsWith('http') ? url : 
+                            url.startsWith('//') ? `https:${url}` :
+                            `${this.baseUrl}${url}`;
+            console.log(`[9Minecraft] Found data-attribute download: ${fullLink.substring(0, 80)}...`);
+            return {
+              url: fullLink,
+              type: url.match(/\.(zip|mcworld|rar|7z)/i) ? 'direct' : 'page'
+            };
+          }
         }
       }
       
-      return null;
+      // Pattern 3: Check for common file hosting links
+      const hostingPatterns = [
+        { pattern: /mediafire\.com/, type: 'page' },
+        { pattern: /dropbox\.com/, type: 'direct' },
+        { pattern: /mega\.nz/, type: 'page' },
+        { pattern: /curseforge\.com/, type: 'page' },
+        { pattern: /github\.com.*releases/, type: 'direct' },
+        { pattern: /cdn\.discordapp\.com/, type: 'direct' }
+      ];
+      
+      const allLinks = $('a[href]');
+      for (let i = 0; i < allLinks.length; i++) {
+        const href = $(allLinks[i]).attr('href') || '';
+        for (const hosting of hostingPatterns) {
+          if (hosting.pattern.test(href)) {
+            const fullLink = href.startsWith('http') ? href : 
+                            href.startsWith('//') ? `https:${href}` :
+                            `${this.baseUrl}${href}`;
+            console.log(`[9Minecraft] Found hosting link (${hosting.type}): ${fullLink.substring(0, 80)}...`);
+            return {
+              url: fullLink,
+              type: hosting.type
+            };
+          }
+        }
+      }
+      
+      console.log(`[9Minecraft] No direct download found, returning page URL`);
+      return {
+        url: mapUrl,
+        type: 'page'
+      };
     } catch (error) {
       clearTimeout(timeoutId);
       console.warn(`[9Minecraft] Extract download URL error: ${error.message}`);
-      return null;
+      return {
+        url: mapUrl,
+        type: 'page'
+      };
     }
+  }
+
+  /**
+   * CRITICAL FIX (Round 11): Enrich maps with direct download URLs
+   * Call this after search to fetch actual download URLs
+   */
+  async enrichWithDownloadUrls(maps, options = {}) {
+    const maxConcurrent = options.maxConcurrent || 2;
+    const enrichedMaps = [];
+    
+    console.log(`[9Minecraft] Enriching ${maps.length} maps with download URLs...`);
+    
+    // Process in batches to avoid overwhelming the server
+    for (let i = 0; i < maps.length; i += maxConcurrent) {
+      const batch = maps.slice(i, i + maxConcurrent);
+      
+      const batchPromises = batch.map(async (map) => {
+        try {
+          const downloadInfo = await this.extractDirectDownloadUrl(map.url, options);
+          if (downloadInfo && downloadInfo.type === 'direct') {
+            return {
+              ...map,
+              downloadUrl: downloadInfo.url,
+              downloadType: 'direct',
+              downloadNote: null
+            };
+          }
+          return map;
+        } catch (error) {
+          console.warn(`[9Minecraft] Failed to enrich ${map.title}: ${error.message}`);
+          return map;
+        }
+      });
+      
+      const enrichedBatch = await Promise.all(batchPromises);
+      enrichedMaps.push(...enrichedBatch);
+      
+      // Small delay between batches
+      if (i + maxConcurrent < maps.length) {
+        await this.sleep(1000);
+      }
+    }
+    
+    const directCount = enrichedMaps.filter(m => m.downloadType === 'direct').length;
+    console.log(`[9Minecraft] Enrichment complete: ${directCount}/${enrichedMaps.length} direct downloads`);
+    
+    return enrichedMaps;
   }
 
   async checkHealth() {

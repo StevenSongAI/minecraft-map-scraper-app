@@ -194,8 +194,11 @@ class MapAggregator {
       }
     }
 
+    // CRITICAL FIX (Round 11): Filter out mods/modpacks first
+    const noMods = this.filterOutMods(allMaps);
+    
     // Deduplicate results
-    const deduplicated = this.deduplicateMaps(allMaps);
+    const deduplicated = this.deduplicateMaps(noMods);
     
     // Apply multi-word filtering if needed (for queries like "underwater city")
     const filtered = isMultiWordQuery 
@@ -284,6 +287,82 @@ class MapAggregator {
     });
     
     console.log(`[Aggregator] Multi-word filter: ${maps.length} -> ${filtered.length} results`);
+    return filtered;
+  }
+
+  /**
+   * CRITICAL FIX (Round 11): Aggressive filtering to exclude mods/modpacks
+   * Filters out .jar files, .mrpack files, and mod-related content
+   */
+  filterOutMods(maps) {
+    const filtered = maps.filter(map => {
+      const title = (map.name || map.title || '').toLowerCase();
+      const description = (map.summary || map.description || '').toLowerCase();
+      const fullText = `${title} ${description}`;
+      
+      // Check download URL for mod file extensions
+      const downloadUrl = (map.downloadUrl || '').toLowerCase();
+      const hasModExtension = /\.(jar|mrpack|litemod)$/i.test(downloadUrl);
+      if (hasModExtension) {
+        console.log(`[Aggregator] FILTERED (mod extension): ${title.substring(0, 50)}...`);
+        return false;
+      }
+      
+      // Check fileInfo for mod extensions
+      if (map.fileInfo && map.fileInfo.filename) {
+        const filename = map.fileInfo.filename.toLowerCase();
+        if (/\.(jar|mrpack|litemod)$/i.test(filename)) {
+          console.log(`[Aggregator] FILTERED (mod filename): ${title.substring(0, 50)}...`);
+          return false;
+        }
+      }
+      
+      // Check for strong mod indicators (these alone can disqualify if no map keywords)
+      const strongModIndicators = [
+        /\bmod\b(?!\s*ern)/,  // "mod" but not "modern"
+        /\bmodpack\b/,
+        /\bplugin\b/,
+        /\baddon\b(?!s?\s+for)/,  // "addon" but not "addons for"
+        /\bforge\b/,
+        /\bfabric\b/,
+        /\blitematica\b/,
+        /\bschematic\b/,
+        /\bresource\s*pack\b/,
+        /\bdata\s*pack\b/,
+        /\bbehavior\s*pack\b/
+      ];
+      
+      // Check for map/world indicators
+      const mapIndicators = [
+        'map', 'world', 'adventure', 'parkour', 'puzzle', 'survival', 'horror',
+        'castle', 'city', 'house', 'mansion', 'skyblock', 'dungeon', 'quest',
+        'minigame', 'pvp', 'spawn', 'lobby', 'structure', 'build'
+      ];
+      const hasMapIndicator = mapIndicators.some(kw => fullText.includes(kw));
+      
+      // If it has mod indicators but NO map indicators, filter it out
+      const hasStrongModIndicator = strongModIndicators.some(pattern => pattern.test(fullText));
+      if (hasStrongModIndicator && !hasMapIndicator) {
+        console.log(`[Aggregator] FILTERED (mod content, no map indicators): ${title.substring(0, 50)}...`);
+        return false;
+      }
+      
+      // Check for client-side only mods (cosmetics, UI, etc)
+      const clientSideModIndicators = [
+        /\bhud\b/, /\bui\b/, /\bgui\b/, /\bminimap\b/, /\bshader\b/,
+        /\boptifine\b/, /\bsodium\b/, /\biris\b/, /\bjourneymap\b/,
+        /\bjei\b/, /\bjust enough items\b/, /\bhwyla\b/, /\bwaila\b/
+      ];
+      const hasClientSideIndicator = clientSideModIndicators.some(pattern => pattern.test(fullText));
+      if (hasClientSideIndicator && !hasMapIndicator) {
+        console.log(`[Aggregator] FILTERED (client-side mod): ${title.substring(0, 50)}...`);
+        return false;
+      }
+      
+      return true;
+    });
+    
+    console.log(`[Aggregator] Mod filter: ${maps.length} -> ${filtered.length} results`);
     return filtered;
   }
 

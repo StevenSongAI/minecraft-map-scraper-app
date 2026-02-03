@@ -113,10 +113,10 @@ class ModrinthScraper extends BaseScraper {
   transformHitToMapSync(hit) {
     // FIXED (Round 10): Get proper thumbnail and use sync transform
     // FIXED (Round 10): Use 'name' field to match CurseForge format
+    // FIXED (Round 11): Better download URL handling with version info
     const projectId = hit.project_id || hit.slug;
     
-    // Store project_id for lazy loading download URL later
-    // For now, use the versions page URL
+    // Use project page as default, will be updated with direct URL when available
     const downloadUrl = `https://modrinth.com/project/${hit.slug}/versions`;
     
     return {
@@ -156,13 +156,104 @@ class ModrinthScraper extends BaseScraper {
       license: hit.license || '',
       clientSide: hit.client_side,
       serverSide: hit.server_side,
-      url: `https://modrinth.com/project/${hit.slug}`
+      url: `https://modrinth.com/project/${hit.slug}`,
+      // Store version IDs for later download URL fetching
+      _versionIds: hit.versions || []
     };
   }
 
-  async getLatestVersionInfo(projectId) {
+  /**
+   * CRITICAL FIX (Round 11): Fetch direct download URL for a project
+   * This method can be called separately to get the actual download URL
+   */
+  async fetchDirectDownloadUrl(projectId, versionId = null) {
     try {
-      const versionsUrl = `${this.baseUrl}/project/${projectId}/version?limit=1`;
+      // If no version ID provided, fetch latest version first
+      let targetVersionId = versionId;
+      
+      if (!targetVersionId) {
+        const versionsUrl = `${this.baseUrl}/project/${projectId}/version`;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+        
+        const versionsResponse = await fetch(versionsUrl, {
+          signal: controller.signal,
+          headers: {
+            'User-Agent': this.getUserAgent(),
+            'Accept': 'application/json'
+          }
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!versionsResponse.ok) {
+          console.warn(`[Modrinth] Failed to fetch versions for ${projectId}: ${versionsResponse.status}`);
+          return null;
+        }
+        
+        const versions = await versionsResponse.json();
+        if (!versions || versions.length === 0) {
+          return null;
+        }
+        
+        // Find first version with files
+        const versionWithFiles = versions.find(v => v.files && v.files.length > 0);
+        if (!versionWithFiles) {
+          return null;
+        }
+        
+        targetVersionId = versionWithFiles.id;
+      }
+      
+      // Now fetch the specific version to get download URL
+      // FIXED (Round 11): Use correct endpoint format
+      const versionUrl = `${this.baseUrl}/version/${targetVersionId}`;
+      
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      const response = await fetch(versionUrl, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': this.getUserAgent(),
+          'Accept': 'application/json'
+        }
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        console.warn(`[Modrinth] Failed to fetch version ${targetVersionId}: ${response.status}`);
+        return null;
+      }
+      
+      const versionData = await response.json();
+      
+      if (!versionData.files || versionData.files.length === 0) {
+        return null;
+      }
+      
+      // Get primary file or first file
+      const primaryFile = versionData.files.find(f => f.primary) || versionData.files[0];
+      
+      return {
+        downloadUrl: primaryFile.url,
+        filename: primaryFile.filename,
+        filesize: primaryFile.size,
+        version: versionData.version_number,
+        gameVersions: versionData.game_versions || []
+      };
+    } catch (error) {
+      console.warn(`[Modrinth] Error fetching direct download: ${error.message}`);
+      return null;
+    }
+  }
+
+  async getLatestVersionInfo(projectId) {
+    // CRITICAL FIX (Round 11): Use correct API endpoint format
+    try {
+      // First get versions list
+      const versionsUrl = `${this.baseUrl}/project/${projectId}/version`;
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 3000);
       
@@ -185,8 +276,31 @@ class ModrinthScraper extends BaseScraper {
         return null;
       }
       
+      // Get the first version ID
       const latestVersion = versions[0];
-      const primaryFile = latestVersion.files?.find(f => f.primary) || latestVersion.files?.[0];
+      const versionId = latestVersion.id;
+      
+      // CRITICAL FIX: Fetch the specific version for file details
+      const versionDetailUrl = `${this.baseUrl}/version/${versionId}`;
+      const detailController = new AbortController();
+      const detailTimeoutId = setTimeout(() => detailController.abort(), 3000);
+      
+      const detailResponse = await fetch(versionDetailUrl, {
+        signal: detailController.signal,
+        headers: {
+          'User-Agent': this.getUserAgent(),
+          'Accept': 'application/json'
+        }
+      });
+      
+      clearTimeout(detailTimeoutId);
+      
+      if (!detailResponse.ok) {
+        return null;
+      }
+      
+      const versionData = await detailResponse.json();
+      const primaryFile = versionData.files?.find(f => f.primary) || versionData.files?.[0];
       
       if (!primaryFile) {
         return null;
@@ -195,11 +309,11 @@ class ModrinthScraper extends BaseScraper {
       return {
         downloadUrl: primaryFile.url,
         fileInfo: {
-          id: latestVersion.id,
+          id: versionData.id,
           filename: primaryFile.filename,
           filesize: primaryFile.size,
-          version: latestVersion.version_number,
-          gameVersions: latestVersion.game_versions
+          version: versionData.version_number,
+          gameVersions: versionData.game_versions
         }
       };
     } catch (error) {
