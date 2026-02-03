@@ -3,12 +3,32 @@ const express = require('express');
 const path = require('path');
 const cors = require('cors');
 
+// Polyfill File API for Node.js 18 compatibility (Playwright needs this)
+if (typeof File === 'undefined') {
+  global.File = class File {
+    constructor(bits, name, options = {}) {
+      this.bits = bits;
+      this.name = name;
+      this.type = options.type || '';
+      this.lastModified = options.lastModified || Date.now();
+    }
+    async text() {
+      return Buffer.concat(this.bits.map(b => Buffer.from(b))).toString('utf8');
+    }
+    async arrayBuffer() {
+      const buf = Buffer.concat(this.bits.map(b => Buffer.from(b)));
+      return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+    }
+  };
+}
+
 // Import multi-source scrapers (optional - graceful fallback if not available)
 let MapAggregator = null;
 let scraperModuleError = null;
 try {
   const scrapers = require('./scraper/scrapers');
   MapAggregator = scrapers.MapAggregator;
+  console.log('[Server] Multi-source scrapers loaded successfully');
 } catch (error) {
   console.warn('[Server] Multi-source scrapers not available:', error.message);
   scraperModuleError = error.message;

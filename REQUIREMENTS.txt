@@ -1,5 +1,17 @@
 # Minecraft Map Scraper - QA Requirements
 
+## ⚠️ ABSOLUTE RULE - LIVE TESTING ONLY ⚠️
+
+**ALL QA AND RED TEAM TESTING MUST USE LIVE DEPLOYMENT URL ONLY**
+
+**Live URL:** https://web-production-631b7.up.railway.app
+
+**FORBIDDEN:** localhost, 127.0.0.1, local testing, "works on my machine"
+
+**REQUIRED:** All test reports must include timestamped evidence from the live URL above.
+
+---
+
 ## Absolute Standards (No Compromise)
 
 ### API Configuration
