@@ -4,7 +4,26 @@ const path = require('path');
 const cors = require('cors');
 
 // Deployment timestamp for verification
-const DEPLOY_TIMESTAMP = '2026-02-04-0300';
+const DEPLOY_TIMESTAMP = '2026-02-04-0301';
+
+// Polyfill File API for Node.js 18 compatibility
+if (typeof File === 'undefined') {
+  global.File = class File {
+    constructor(bits, name, options = {}) {
+      this.bits = bits;
+      this.name = name;
+      this.type = options.type || '';
+      this.lastModified = options.lastModified || Date.now();
+    }
+    async text() {
+      return Buffer.concat(this.bits.map(b => Buffer.from(b))).toString('utf8');
+    }
+    async arrayBuffer() {
+      const buf = Buffer.concat(this.bits.map(b => Buffer.from(b)));
+      return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+    }
+  };
+}
 
 // Import multi-source scrapers (optional - graceful fallback if not available)
 let MapAggregator = null;

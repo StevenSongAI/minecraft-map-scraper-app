@@ -36,15 +36,14 @@ class ModrinthScraper extends BaseScraper {
   }
 
   async fetchSearchResults(query, limit) {
-    // Modrinth API: search for projects with category 'worlds' (maps)
+    // Modrinth API: search for projects with category 'map'
     const params = new URLSearchParams({
       query: query,
-      limit: Math.min(limit * 2, 20).toString(),
+      limit: Math.min(limit, 20).toString(),
       offset: '0',
-      facets: '[["project_type:mod"],["categories:worldgen"]]' // Try worldgen category
+      facets: '[["categories:map"]]'
     });
 
-    // Also try searching for datapacks which often contain maps
     const searchUrl = `${this.baseUrl}/search?${params.toString()}`;
     
     console.log(`[Modrinth] Fetching: ${searchUrl}`);
@@ -68,24 +67,7 @@ class ModrinthScraper extends BaseScraper {
       }
       
       const data = await response.json();
-      
-      // Filter for map/world related results
-      const results = (data.hits || []).filter(hit => {
-        const categories = hit.categories || [];
-        const title = (hit.title || '').toLowerCase();
-        const description = (hit.description || '').toLowerCase();
-        
-        // Include if it looks like a world/map
-        const isWorldRelated = categories.includes('worldgen') || 
-                              categories.includes('adventure') ||
-                              title.includes('map') ||
-                              title.includes('world') ||
-                              description.includes('map') ||
-                              description.includes('world') ||
-                              hit.project_type === 'mod';
-        
-        return isWorldRelated;
-      });
+      const results = data.hits || [];
       
       console.log(`[Modrinth] Found ${results.length} results`);
       return results.map(hit => this.transformHitToMap(hit));

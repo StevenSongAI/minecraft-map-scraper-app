@@ -5,6 +5,7 @@ require('dotenv').config();
 
 const CurseForgeClient = require('./curseforge');
 const CacheManager = require('./cache');
+const { MapAggregator } = require('./scrapers');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -31,6 +32,9 @@ try {
 
 // Initialize CurseForge client
 const cfClient = new CurseForgeClient(CURSEFORGE_API_KEY);
+
+// Initialize multi-source aggregator
+const aggregator = new MapAggregator();
 
 // Middleware
 app.use(cors());
