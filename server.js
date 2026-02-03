@@ -7,7 +7,7 @@ const cors = require('cors');
 let MapAggregator = null;
 let scraperModuleError = null;
 try {
-  const scrapers = require('../../scraper/scrapers');
+  const scrapers = require('./scraper/scrapers');
   MapAggregator = scrapers.MapAggregator;
 } catch (error) {
   console.warn('[Server] Multi-source scrapers not available:', error.message);
