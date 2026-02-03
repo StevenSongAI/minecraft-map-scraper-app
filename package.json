@@ -5,7 +5,7 @@
   "deployTimestamp": "2026-02-04-1738-R38",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "echo 'Round 38 Deploy' && node server.js",
     "dev": "node server.js"
   },
   "dependencies": {
