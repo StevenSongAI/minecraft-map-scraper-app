@@ -28,7 +28,31 @@
 - "futuristic city" → no longer includes "atlantis", "underwater" in search terms
 - Results are properly filtered for relevance
 
-### Deployment Status:
-- Code committed: `53ad617 Add word boundary match requirement`
-- Pushed to origin/main
-- Waiting for Railway auto-deploy
+### Deployment Status - BLOCKED:
+- Code committed: `53ad617 Add word boundary match requirement` (in GitHub repo)
+- Latest push: `8e17b6a Trigger Railway redeploy - v6 fixes verification`
+- GitHub Actions workflow "Deploy to Railway" shows "success" BUT deployment didn't actually update
+- **Production API still running OLD code**: https://web-production-631b7.up.railway.app
+  - "stray" still returns "Stranded Islandd" (FALSE POSITIVE)
+  - "futuristic city" still includes "atlantis", "underwater" in searchTerms (SEMANTIC OVERREACH)
+- **Root Cause**: RAILWAY_TOKEN GitHub secret may be invalid/expired
+- **GitHub Actions deploy step completes in 0 seconds** (indicates auth failure masked by `|| echo`)
+
+### BLOCKER - Requires Manual Intervention:
+1. Option A: Steven logs into Railway dashboard (https://railway.com/dashboard)
+   - Generate new token at Settings → Tokens
+   - Add to GitHub Secrets as RAILWAY_TOKEN
+   - Re-run workflow
+   
+2. Option B: Manual deploy from Railway dashboard
+   - Go to project web-production-631b7
+   - Click "Deploy" to trigger manually
+   
+3. Option C: Use Railway CLI with fresh login
+   - `railway login` (interactive required)
+   - `railway up` from local repo
+
+### Next Steps:
+- builder-v7 has verified code fixes are in GitHub
+- builder-v7 cannot complete because deployment blocked
+- Red team testing blocked until deployment resolves

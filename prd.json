@@ -4,15 +4,17 @@
       "id": "builder-1",
       "type": "builder",
       "description": "Fix search algorithm - iteration 5: RESTORE FUNCTIONALITY",
-      "passes": true
+      "passes": false,
+      "blocker": "DEPLOYMENT_FAILED: v6 code fixes pushed to GitHub (commit 8e17b6a) but Railway deployment not updating. RAILWAY_TOKEN secret may be invalid or expired. Production API still returning old behavior."
     },
     {
       "id": "red-1",
       "type": "red-team",
       "linked_builder_task": "builder-1",
       "description": "Test search accuracy across 1000 diverse keywords and validate <5% false positive rate",
-      "passes": null
+      "passes": null,
+      "blocked_by": "builder-1 deployment"
     }
   ],
-  "status": "IN_PROGRESS"
+  "status": "BLOCKED"
 }
