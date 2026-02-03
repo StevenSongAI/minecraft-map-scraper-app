@@ -681,10 +681,20 @@ app.get('/api/categories', (req, res) => {
 });
 
 /**
+ * GET /api/download/:modId
+ * Download endpoint - path parameter format
+ * Supports: /api/download/123 or /api/download/:modId
+ */
+app.get('/api/download/:modId', async (req, res) => {
+  // Redirect to query param format for consistent handling
+  const modId = req.params.modId;
+  return res.redirect(307, `/api/download?id=${modId}`);
+});
+
+/**
  * GET /api/download
  * Download endpoint - fetches map files from CurseForge
  * Supports: /api/download?id=X or /api/download?url=...
- * NOTE: This route MUST be registered BEFORE /api/download/:id to avoid route conflicts
  */
 app.get('/api/download', async (req, res) => {
   try {
