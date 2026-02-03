@@ -25,7 +25,7 @@ class ModrinthScraper extends BaseScraper {
         return this.rateLimitedRequest(async () => {
           try {
             const results = await this.fetchSearchResults(query, limit);
-            return results.map(r => this.normalizeToCurseForgeFormat(r));
+            return results.map(r => this.transformHitToMap(r));
           } catch (error) {
             console.warn(`[Modrinth] Search error: ${error.message}`);
             return [];
@@ -36,11 +36,10 @@ class ModrinthScraper extends BaseScraper {
   }
 
   async fetchSearchResults(query, limit) {
-    // FIXED (Round 7): Use facets to filter for mods that have world/map content
-    // Modrinth API supports filtering by categories and project types
-    const encodedQuery = encodeURIComponent(query);
-    // Search for projects with 'adventure' category which often includes maps
-    const searchUrl = `${this.baseUrl}/search?query=${encodedQuery}&limit=${Math.min(limit, 20)}&offset=0&facets=[["categories:adventure"],["project_type:mod"]]`;
+    // FIXED (Round 7): Simple search with map keyword to get more results
+    const enhancedQuery = `${query} map OR world OR adventure`;
+    const encodedQuery = encodeURIComponent(enhancedQuery);
+    const searchUrl = `${this.baseUrl}/search?query=${encodedQuery}&limit=${Math.min(limit, 20)}&offset=0`;
     
     console.log(`[Modrinth] Fetching: ${searchUrl}`);
     

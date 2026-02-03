@@ -1723,7 +1723,7 @@ app.get('/api/sources/health', async (req, res) => {
 // Unified search endpoint with multi-source aggregation
 app.get('/api/search-unified', async (req, res) => {
   const query = req.query.q || '';
-  const limit = parseInt(req.query.limit) || 20;
+  const limit = parseInt(req.query.limit) || 60; // FIXED (Round 8): Default 60 results
   
   if (!query) {
     return res.status(400).json({ error: 'Query parameter required' });

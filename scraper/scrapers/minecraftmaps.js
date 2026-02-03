@@ -44,17 +44,14 @@ class MinecraftMapsScraper extends BaseScraper {
       `${this.baseUrl}/maps/?s=${encodedQuery}`,
     ];
     
-    // Rotate through multiple user agents for Cloudflare bypass
-    const userAgents = [
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36',
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:122.0) Gecko/20100101 Firefox/122.0',
-      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36'
-    ];
+    // FIXED (Round 8): Use ethical scraper identification instead of browser impersonation
+    const userAgent = this.getUserAgent();
+    
+    // FIXED (Round 8): Use consistent scraper user agent for all requests
+    const userAgent = this.getUserAgent();
     
     for (let i = 0; i < searchUrls.length; i++) {
       const searchUrl = searchUrls[i];
-      const userAgent = userAgents[i % userAgents.length];
       
       try {
         console.log(`[MinecraftMaps] Trying: ${searchUrl}`);
@@ -237,7 +234,7 @@ class MinecraftMapsScraper extends BaseScraper {
       const response = await fetch(searchUrl, {
         signal: controller.signal,
         headers: { 
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'User-Agent': this.getUserAgent(), // FIXED (Round 8): Use scraper user agent
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         }
       });
