@@ -4,8 +4,9 @@
       "id": "builder-1",
       "type": "builder",
       "description": "Fix search algorithm - word boundaries AND semantic expansion overreach",
-      "passes": true,
-      "notes": "Code fixes committed and pushed (commit 20821b7). Changes include: (1) Added strict conflicting terms for underwater/atlantis/ocean vs futuristic/modern/city, (2) Separated 'town' from 'city' keyword mapping to reduce false expansions. GitHub Actions deployment reported success but production API may still be caching old code. Health check confirms apiConfigured: true, demoMode: false. Search returns real CurseForge data."
+      "passes": null,
+      "notes": "Code fixes committed and pushed (commits 20821b7, cdc9fd3). Conflicting terms logic added to server.js. GitHub Actions workflow simplified. PRODUCTION STILL RUNNING OLD CODE - 'futuristic city' still returns atlantis/underwater in searchTerms.",
+      "blocker": "RAILWAY_TOKEN unauthorized - GitHub Actions fails with 'Unauthorized. Please check that your RAILWAY_TOKEN is valid and has access to the resource you're trying to use.' Token needs regeneration in Railway dashboard: https://railway.com/account/tokens"
     },
     {
       "id": "red-1",
@@ -13,7 +14,8 @@
       "linked_builder_task": "builder-1",
       "description": "Test search accuracy across 1000 diverse keywords and validate <5% false positive rate",
       "passes": null,
-      "blocked_by": "builder-1 verification"
+      "blocked_by": "builder-1 verification",
+      "blocker": null
     }
   ],
   "status": "LOOPING"
