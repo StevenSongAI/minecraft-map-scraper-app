@@ -554,7 +554,7 @@ function isRelevantResult(map, query, searchTerms) {
     const compoundMatches = detectCompoundConcepts(query);
     
     if (compoundMatches.length > 0) {
-      // This is a compound concept query - require at least ONE compound concept to match
+      // This is a compound concept query - check if result matches the compound concept
       let hasCompoundMatch = false;
       for (const concept of compoundMatches) {
         // Check for compound synonyms (highest priority)
@@ -580,22 +580,22 @@ function isRelevantResult(map, query, searchTerms) {
         }
       }
       
-      // For compound queries, reject if no compound match AND not all words match
+      // RELAXED: For compound queries, accept if we have a compound match
+      // OR if we match at least 2 query words (for flexibility)
       if (!hasCompoundMatch) {
-        // Require ALL query words to match for non-compound results
-        const allWordsMatch = queryWords.every(word => {
+        const matchedWordCount = queryWords.filter(word => {
           if (containsWord(allText, word)) return true;
-          // Check synonyms
           for (const [key, synonyms] of Object.entries(keywordMappings)) {
             if (key === word || synonyms.includes(word)) {
               return synonyms.some(syn => containsWord(allText, syn));
             }
           }
           return false;
-        });
+        }).length;
         
-        if (!allWordsMatch) {
-          console.log(`[Filter] Rejected "${map.title}" - compound query "${query}" not fully matched`);
+        // Require at least 2 words to match for compound queries
+        if (matchedWordCount < 2) {
+          console.log(`[Filter] Rejected "${map.title}" - only ${matchedWordCount}/${queryWords.length} compound query words matched for "${query}"`);
           return false;
         }
       }
