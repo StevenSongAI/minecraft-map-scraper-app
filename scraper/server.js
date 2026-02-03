@@ -57,6 +57,17 @@ app.use((req, res, next) => {
 });
 
 /**
+ * GET /health
+ * Simple health check endpoint for load balancers
+ */
+app.get('/health', async (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    timestamp: new Date().toISOString()
+  });
+});
+
+/**
  * GET /api/health
  * Health check endpoint
  */
@@ -672,11 +683,23 @@ app.get('/api/categories', (req, res) => {
 /**
  * GET /api/download
  * Download endpoint - fetches map files from CurseForge
+ * Supports: /api/download?id=X or /api/download?url=...
  */
 app.get('/api/download', async (req, res) => {
   try {
     const { url, id, filename } = req.query;
-    const mapId = id ? parseInt(id) : null;
+    let mapId = null;
+    
+    // Validate and parse ID
+    if (id !== undefined && id !== '') {
+      mapId = parseInt(id);
+      if (isNaN(mapId) || mapId <= 0) {
+        return res.status(400).json({ 
+          error: 'INVALID_ID', 
+          message: 'Invalid map ID. ID must be a positive number.' 
+        });
+      }
+    }
 
     // Check if demo download
     const isDemoDownload = IS_DEMO_MODE || (mapId && mapId >= 1001 && mapId <= 1020);
@@ -726,9 +749,13 @@ app.get('/api/download', async (req, res) => {
       return res.send(zipBuffer);
     }
 
-    // Live mode
+    // Live mode - require either url or valid id
     if (!url && !mapId) {
-      return res.status(400).json({ error: 'BAD_REQUEST', message: 'url or id required' });
+      return res.status(400).json({ 
+        error: 'BAD_REQUEST', 
+        message: 'Missing required parameter: url or id',
+        usage: '/api/download?id=<map_id> or /api/download?url=<download_url>'
+      });
     }
 
     let downloadUrl = url;
@@ -747,12 +774,27 @@ app.get('/api/download', async (req, res) => {
         }
       } catch (error) {
         console.error(`[Download] Failed to get map ${mapId}:`, error.message);
-        return res.status(404).json({ error: 'MAP_NOT_FOUND', message: `Map ${mapId} not found` });
+        if (error.message.includes('API_ERROR') || error.message.includes('404')) {
+          return res.status(404).json({ 
+            error: 'MAP_NOT_FOUND', 
+            message: `Map ${mapId} not found`,
+            id: mapId
+          });
+        }
+        return res.status(500).json({ 
+          error: 'API_ERROR', 
+          message: 'Failed to fetch map details from CurseForge',
+          details: error.message
+        });
       }
     }
 
     if (!downloadUrl) {
-      return res.status(400).json({ error: 'BAD_REQUEST', message: 'Could not determine download URL' });
+      return res.status(404).json({ 
+        error: 'DOWNLOAD_URL_NOT_FOUND', 
+        message: 'Could not determine download URL for this map',
+        id: mapId
+      });
     }
 
     console.log(`[Download] Fetching: ${downloadUrl}`);
@@ -773,7 +815,11 @@ app.get('/api/download', async (req, res) => {
           const redirectUrl = `https://www.curseforge.com/minecraft/worlds/${mapId}`;
           return res.redirect(redirectUrl);
         }
-        return res.status(response.status).json({ error: 'DOWNLOAD_FAILED', message: `HTTP ${response.status}` });
+        return res.status(response.status).json({ 
+          error: 'DOWNLOAD_FAILED', 
+          message: `HTTP ${response.status}`,
+          statusCode: response.status
+        });
       }
 
       // Determine filename
@@ -822,7 +868,11 @@ app.get('/api/download', async (req, res) => {
 
   } catch (error) {
     console.error('Download error:', error.message);
-    res.status(500).json({ error: 'DOWNLOAD_ERROR', message: error.message });
+    res.status(500).json({ 
+      error: 'DOWNLOAD_ERROR', 
+      message: 'An unexpected error occurred while processing the download',
+      details: error.message 
+    });
   }
 });
 

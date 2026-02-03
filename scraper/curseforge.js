@@ -105,6 +105,9 @@ class CurseForgeClient {
     const expandedKeywords = new Set();
     const matchedCategories = [];
     
+    // Check for compound concepts first (e.g., "underwater city")
+    const compoundConcepts = this.extractCompoundConcepts(lowerQuery);
+    
     for (const [concept, synonyms] of Object.entries(SEMANTIC_KEYWORD_MAP)) {
       // Check if query contains this concept or any of its synonyms
       const isMatch = synonyms.some(term => 
@@ -146,8 +149,75 @@ class CurseForgeClient {
       primaryTerm: primaryTerm,
       expandedTerms: Array.from(expandedKeywords),
       matchedCategories: matchedCategories,
+      compoundConcepts: compoundConcepts,
       allSearchTerms: uniqueTerms
     };
+  }
+  
+  /**
+   * Extract compound concepts from query (e.g., "underwater city")
+   * These require BOTH concepts to be present for relevance
+   */
+  extractCompoundConcepts(query) {
+    const compounds = [];
+    const lowerQuery = query.toLowerCase();
+    
+    // Define compound concept patterns
+    const compoundPatterns = [
+      { 
+        name: 'underwater_city', 
+        required: ['underwater', 'city'],
+        synonyms: ['underwater city', 'sunken city', 'atlantis', 'submerged city', 'undersea city', 'aquatic city']
+      },
+      { 
+        name: 'underwater_base', 
+        required: ['underwater', 'base'],
+        synonyms: ['underwater base', 'submarine base', 'undersea base', 'aquatic base']
+      },
+      { 
+        name: 'modern_city', 
+        required: ['modern', 'city'],
+        synonyms: ['modern city', 'contemporary city', 'urban city']
+      },
+      { 
+        name: 'medieval_castle', 
+        required: ['medieval', 'castle'],
+        synonyms: ['medieval castle', 'ancient castle', 'old castle']
+      },
+      { 
+        name: 'fantasy_castle', 
+        required: ['fantasy', 'castle'],
+        synonyms: ['fantasy castle', 'magic castle', 'enchanted castle']
+      },
+      { 
+        name: 'sky_city', 
+        required: ['sky', 'city'],
+        synonyms: ['sky city', 'floating city', 'cloud city', 'aerial city']
+      },
+      { 
+        name: 'space_station', 
+        required: ['space', 'station'],
+        synonyms: ['space station', 'orbital station', 'star base']
+      },
+      { 
+        name: 'horror_map', 
+        required: ['horror'],
+        synonyms: ['horror map', 'scary map', 'haunted map', 'spooky map']
+      }
+    ];
+    
+    for (const pattern of compoundPatterns) {
+      const hasAllRequired = pattern.required.every(term => lowerQuery.includes(term));
+      if (hasAllRequired) {
+        compounds.push({
+          name: pattern.name,
+          required: pattern.required,
+          synonyms: pattern.synonyms
+        });
+      }
+    }
+    
+    return compounds;
   }
 
   /**
@@ -175,7 +245,45 @@ class CurseForgeClient {
       return regex.test(text);
     };
     
-    // === TITLE MATCHES (Highest weight) ===
+    // === COMPOUND CONCEPT MATCHING (Highest Priority) ===
+    // For compound queries like "underwater city", BOTH terms must be present
+    if (searchTerms.compoundConcepts && searchTerms.compoundConcepts.length > 0) {
+      for (const compound of searchTerms.compoundConcepts) {
+        let compoundMatches = 0;
+        
+        // Check if title contains compound synonyms
+        for (const synonym of compound.synonyms) {
+          if (nameLower.includes(synonym)) {
+            score += 250; // Huge bonus for exact compound match in title
+            hasAnyMatch = true;
+            compoundMatches++;
+            break;
+          }
+        }
+        
+        // Check if all required terms appear in the content
+        const allRequiredPresent = compound.required.every(term => 
+          searchableText.includes(term)
+        );
+        
+        if (allRequiredPresent) {
+          score += 100;
+          hasAnyMatch = true;
+          compoundMatches++;
+        } else {
+          // PENALTY: For compound queries, if not all required terms are present
+          // this is likely a false positive (e.g., "underwater city" returning just "city")
+          const someTermsPresent = compound.required.some(term => 
+            searchableText.includes(term)
+          );
+          if (someTermsPresent && !allRequiredPresent) {
+            score -= 50; // Penalty for partial matches on compound queries
+          }
+        }
+      }
+    }
+    
+    // === TITLE MATCHES (High weight) ===
     
     // Exact title match
     if (nameLower === lowerQuery) {
@@ -266,6 +374,12 @@ class CurseForgeClient {
    * @returns {Array} Filtered and sorted maps
    */
   filterAndSortByRelevance(maps, query, searchTerms, minScore = RELEVANCE_THRESHOLD) {
+    // Increase threshold for compound queries to reduce false positives
+    let adjustedMinScore = minScore;
+    if (searchTerms.compoundConcepts && searchTerms.compoundConcepts.length > 0) {
+      adjustedMinScore = Math.max(minScore, 40); // Higher threshold for compound queries
+    }
+    
     // Calculate scores for all maps
     const scoredMaps = maps.map(map => ({
       ...map,
@@ -273,7 +387,7 @@ class CurseForgeClient {
     }));
     
     // Filter out results below threshold
-    const filteredMaps = scoredMaps.filter(map => map._relevanceScore >= minScore);
+    const filteredMaps = scoredMaps.filter(map => map._relevanceScore >= adjustedMinScore);
     
     // Sort by relevance score (descending)
     const sortedMaps = filteredMaps.sort((a, b) => b._relevanceScore - a._relevanceScore);
@@ -546,6 +660,7 @@ class CurseForgeClient {
       downloadUrl: downloadUrl,
       fileInfo: fileInfo,
       downloadCount: apiMod.downloadCount || 0,
+      likes: apiMod.thumbsUpCount || 0,
       gameVersions: gameVersions,
       primaryGameVersion: gameVersions[0] || null,
       category: this.getCategoryName(apiMod.classId),

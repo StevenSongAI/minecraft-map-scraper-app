@@ -9,9 +9,36 @@
  * - Unified format matching CurseForge API
  */
 
-const PlanetMinecraftScraper = require('./planetminecraft');
-const MinecraftMapsScraper = require('./minecraftmaps');
-const NineMinecraftScraper = require('./nineminecraft');
+// Try to load scrapers, with fallback to simple versions
+let PlanetMinecraftScraper = null;
+let MinecraftMapsScraper = null;
+let NineMinecraftScraper = null;
+
+// Try Playwright-based PlanetMinecraft first, fall back to simple version
+try {
+  PlanetMinecraftScraper = require('./planetminecraft');
+} catch (error) {
+  console.log('[Aggregator] Playwright not available, using simple HTTP scraper for Planet Minecraft');
+  try {
+    PlanetMinecraftScraper = require('./planetminecraft_simple');
+  } catch (e) {
+    console.warn('[Aggregator] Planet Minecraft scraper unavailable:', e.message);
+  }
+}
+
+// Try MinecraftMaps
+try {
+  MinecraftMapsScraper = require('./minecraftmaps');
+} catch (error) {
+  console.warn('[Aggregator] MinecraftMaps scraper unavailable:', error.message);
+}
+
+// Try 9Minecraft
+try {
+  NineMinecraftScraper = require('./nineminecraft');
+} catch (error) {
+  console.warn('[Aggregator] 9Minecraft scraper unavailable:', error.message);
+}
 
 class MapAggregator {
   constructor(options = {}) {
@@ -24,41 +51,52 @@ class MapAggregator {
   }
 
   initScrapers() {
-    // Planet Minecraft (primary scraper with browser automation)
-    try {
-      this.scrapers.push({
-        name: 'planetminecraft',
-        instance: new PlanetMinecraftScraper(),
-        enabled: true,
-        priority: 1
-      });
-    } catch (error) {
-      console.warn('[Aggregator] Failed to initialize Planet Minecraft scraper:', error.message);
+    // Planet Minecraft (primary scraper with browser automation or simple HTTP fallback)
+    if (PlanetMinecraftScraper) {
+      try {
+        this.scrapers.push({
+          name: 'planetminecraft',
+          instance: new PlanetMinecraftScraper(),
+          enabled: true,
+          priority: 1
+        });
+        console.log('[Aggregator] Planet Minecraft scraper initialized');
+      } catch (error) {
+        console.warn('[Aggregator] Failed to initialize Planet Minecraft scraper:', error.message);
+      }
     }
 
     // MinecraftMaps.com
-    try {
-      this.scrapers.push({
-        name: 'minecraftmaps',
-        instance: new MinecraftMapsScraper(),
-        enabled: true,
-        priority: 2
-      });
-    } catch (error) {
-      console.warn('[Aggregator] Failed to initialize MinecraftMaps scraper:', error.message);
+    if (MinecraftMapsScraper) {
+      try {
+        this.scrapers.push({
+          name: 'minecraftmaps',
+          instance: new MinecraftMapsScraper(),
+          enabled: true,
+          priority: 2
+        });
+        console.log('[Aggregator] MinecraftMaps scraper initialized');
+      } catch (error) {
+        console.warn('[Aggregator] Failed to initialize MinecraftMaps scraper:', error.message);
+      }
     }
 
     // 9Minecraft
-    try {
-      this.scrapers.push({
-        name: 'nineminecraft',
-        instance: new NineMinecraftScraper(),
-        enabled: true,
-        priority: 3
-      });
-    } catch (error) {
-      console.warn('[Aggregator] Failed to initialize 9Minecraft scraper:', error.message);
+    if (NineMinecraftScraper) {
+      try {
+        this.scrapers.push({
+          name: 'nineminecraft',
+          instance: new NineMinecraftScraper(),
+          enabled: true,
+          priority: 3
+        });
+        console.log('[Aggregator] 9Minecraft scraper initialized');
+      } catch (error) {
+        console.warn('[Aggregator] Failed to initialize 9Minecraft scraper:', error.message);
+      }
     }
+    
+    console.log(`[Aggregator] Total scrapers initialized: ${this.scrapers.length}`);
   }
 
   /**

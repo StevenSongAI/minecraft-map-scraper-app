@@ -135,14 +135,48 @@ const keywordMappings = {
 // STRICT antonym/contrast mappings - terms that should filter out results when mismatched
 // These are mutually exclusive categories - ZERO tolerance for conflicts
 const conflictingTerms = {
-  'futuristic': ['medieval', 'ancient', 'castle', 'knight', 'feudal', 'underwater', 'ocean', 'atlantis', 'sunken', 'submarine', 'aquatic', 'marine', 'drowned'],
-  'modern': ['medieval', 'ancient', 'castle', 'fantasy', 'underwater', 'ocean', 'atlantis', 'sunken'],
-  'city': ['underwater', 'atlantis', 'sunken', 'ocean', 'submarine'],
+  'futuristic': ['medieval', 'ancient', 'castle', 'knight', 'feudal'],
+  'modern': ['medieval', 'ancient', 'castle', 'fantasy'],
   'medieval': ['futuristic', 'scifi', 'space', 'tech', 'modern', 'cyberpunk'],
   'horror': ['cute', 'cozy', 'peaceful', 'relaxing'],
-  'hell': ['heaven', 'paradise', 'angel', 'sky', 'underwater', 'ocean'],
-  'nether': ['overworld', 'end', 'sky', 'underwater', 'ocean']
+  'hell': ['heaven', 'paradise', 'angel', 'sky'],
+  'nether': ['overworld', 'end', 'sky']
 };
+
+// COMPOUND CONCEPTS - Queries that require ALL terms to match for relevance
+// e.g., "underwater city" requires BOTH underwater AND city concepts
+const compoundConcepts = [
+  {
+    name: 'underwater_city',
+    terms: ['underwater', 'city'],
+    requiredMatches: 2, // Both terms required
+    synonyms: ['sunken city', 'atlantis', 'submerged city', 'undersea city', 'aquatic city', 'ocean city', 'water city']
+  },
+  {
+    name: 'underwater_base',
+    terms: ['underwater', 'base'],
+    requiredMatches: 2,
+    synonyms: ['submarine base', 'undersea base', 'ocean base', 'submerged base']
+  },
+  {
+    name: 'sky_city',
+    terms: ['sky', 'city'],
+    requiredMatches: 2,
+    synonyms: ['floating city', 'cloud city', 'aerial city', 'skyland city']
+  },
+  {
+    name: 'modern_city',
+    terms: ['modern', 'city'],
+    requiredMatches: 2,
+    synonyms: ['contemporary city', 'urban city']
+  },
+  {
+    name: 'medieval_castle',
+    terms: ['medieval', 'castle'],
+    requiredMatches: 2,
+    synonyms: ['ancient castle', 'old castle', 'fortress medieval']
+  }
+];
 
 // Minimum relevance thresholds to filter false positives
 const MIN_RELEVANCE_SCORE = 20;  // Lowered to allow more results
@@ -226,6 +260,24 @@ function hasConflictingTerms(query, map) {
   return false;
 }
 
+// Check if query is a compound concept query
+function detectCompoundConcepts(query) {
+  const queryLower = query.toLowerCase();
+  const matchedCompounds = [];
+  
+  for (const concept of compoundConcepts) {
+    const matchedTerms = concept.terms.filter(term => queryLower.includes(term));
+    if (matchedTerms.length >= 2) {
+      matchedCompounds.push({
+        ...concept,
+        matchedTerms
+      });
+    }
+  }
+  
+  return matchedCompounds;
+}
+
 // Calculate relevance score with penalty for mismatches
 function calculateRelevance(map, query, searchTerms) {
   const queryLower = query.toLowerCase();
@@ -239,6 +291,39 @@ function calculateRelevance(map, query, searchTerms) {
   const descLower = map.description.toLowerCase();
   const tagsLower = map.tags ? map.tags.map(t => t.toLowerCase()) : [];
   const allText = titleLower + ' ' + descLower + ' ' + tagsLower.join(' ');
+  
+  // === COMPOUND CONCEPT CHECK (for queries like "underwater city") ===
+  const compoundMatches = detectCompoundConcepts(query);
+  let compoundScore = 0;
+  
+  if (compoundMatches.length > 0) {
+    for (const concept of compoundMatches) {
+      // Check if title contains compound synonyms (highest priority)
+      let hasSynonymMatch = false;
+      for (const synonym of concept.synonyms) {
+        if (allText.includes(synonym)) {
+          compoundScore += 200;
+          hasSynonymMatch = true;
+          hasExactMatch = true;
+          break;
+        }
+      }
+      
+      // Check if ALL required terms are present in the content
+      const allTermsPresent = concept.terms.every(term => allText.includes(term));
+      const someTermsPresent = concept.terms.some(term => allText.includes(term));
+      
+      if (allTermsPresent) {
+        compoundScore += 100;
+        matchCount += 1.5;
+      } else if (someTermsPresent && !allTermsPresent) {
+        // Partial match - penalize heavily (e.g., "city" but not "underwater")
+        compoundScore -= 80;
+      }
+    }
+  }
+  
+  score += compoundScore;
   
   // EXACT query match is most important - use word boundaries ONLY
   if (containsWord(titleLower, queryLower)) {
@@ -604,6 +689,126 @@ app.get('/api/download-file/:modId/:fileId', async (req, res) => {
   } catch (error) {
     console.error('Download proxy error:', error);
     res.status(500).json({ error: 'Download failed' });
+  }
+});
+
+/**
+ * GET /api/download
+ * Download endpoint - supports ?id=X query parameter
+ */
+app.get('/api/download', async (req, res) => {
+  try {
+    const { id, url } = req.query;
+    
+    // Validate ID parameter
+    if (!id && !url) {
+      return res.status(400).json({
+        error: 'BAD_REQUEST',
+        message: 'Missing required parameter: id or url',
+        usage: '/api/download?id=<map_id> or /api/download?url=<download_url>'
+      });
+    }
+    
+    let mapId = null;
+    if (id !== undefined && id !== '') {
+      mapId = parseInt(id);
+      if (isNaN(mapId) || mapId <= 0) {
+        return res.status(400).json({
+          error: 'INVALID_ID',
+          message: 'Invalid map ID. ID must be a positive number.'
+        });
+      }
+    }
+    
+    // If URL is provided directly, redirect to it
+    if (url) {
+      return res.redirect(url);
+    }
+    
+    // Otherwise, fetch download info from CurseForge
+    if (!CURSEFORGE_API_KEY) {
+      return res.status(503).json({
+        error: 'API_KEY_MISSING',
+        message: 'CURSEFORGE_API_KEY not configured'
+      });
+    }
+    
+    try {
+      const headers = {
+        'Accept': 'application/json',
+        'x-api-key': CURSEFORGE_API_KEY
+      };
+      
+      // Get mod details
+      const modResponse = await fetch(`${CURSEFORGE_BASE_URL}/mods/${mapId}`, { headers });
+      
+      if (!modResponse.ok) {
+        if (modResponse.status === 404) {
+          return res.status(404).json({
+            error: 'MAP_NOT_FOUND',
+            message: `Map ${mapId} not found`,
+            id: mapId
+          });
+        }
+        throw new Error(`API error: ${modResponse.status}`);
+      }
+      
+      const modData = await modResponse.json();
+      const mod = modData.data;
+      
+      // Get files for this mod
+      const filesResponse = await fetch(`${CURSEFORGE_BASE_URL}/mods/${mapId}/files`, { headers });
+      
+      if (!filesResponse.ok) {
+        throw new Error(`Files API error: ${filesResponse.status}`);
+      }
+      
+      const filesData = await filesResponse.json();
+      
+      if (!filesData.data || filesData.data.length === 0) {
+        return res.status(404).json({
+          error: 'NO_FILES_FOUND',
+          message: 'No files found for this map'
+        });
+      }
+      
+      // Get the latest file
+      const latestFile = filesData.data[0];
+      let downloadUrl = latestFile.downloadUrl;
+      
+      if (!downloadUrl) {
+        // Construct API download URL
+        downloadUrl = `https://www.curseforge.com/api/v1/mods/${mapId}/files/${latestFile.id}/download`;
+      }
+      
+      // Redirect to download URL
+      res.redirect(downloadUrl);
+      
+    } catch (error) {
+      console.error('[Download] Error:', error.message);
+      
+      if (error.message.includes('API error') || error.message.includes('404')) {
+        return res.status(404).json({
+          error: 'MAP_NOT_FOUND',
+          message: `Map ${mapId} not found or API error`,
+          id: mapId
+        });
+      }
+      
+      return res.status(500).json({
+        error: 'DOWNLOAD_ERROR',
+        message: 'Failed to fetch download information',
+        details: error.message
+      });
+    }
+    
+  } catch (error) {
+    console.error('Download endpoint error:', error);
+    res.status(500).json({
+      error: 'INTERNAL_ERROR',
+      message: 'An unexpected error occurred',
+      details: error.message
+    });
   }
 });
 
@@ -1092,6 +1297,14 @@ function formatFileSize(bytes) {
   if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
   return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
 }
+
+// Simple health check endpoint for load balancers (no /api prefix)
+app.get('/health', async (req, res) => {
+  res.status(200).json({
+    status: 'healthy',
+    timestamp: new Date().toISOString()
+  });
+});
 
 // Health check endpoint
 app.get('/api/health', async (req, res) => {
