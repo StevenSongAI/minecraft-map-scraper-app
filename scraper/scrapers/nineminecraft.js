@@ -125,10 +125,30 @@ class NineMinecraftScraper extends BaseScraper {
       if (!titleEl.length) continue;
       
       const title = titleEl.text().trim();
-      const url = titleEl.attr('href') || '';
+      let url = titleEl.attr('href') || '';
+      
+      // FIXED (Round 12): Better URL extraction
+      if (!url) {
+        // Try to find any link in the post
+        const anyLink = $el.find('a[href*="9minecraft.net"]').first();
+        if (anyLink.length) {
+          url = anyLink.attr('href');
+        }
+      }
+      
       if (!url) continue;
       
-      const fullUrl = url.startsWith('http') ? url : `${this.baseUrl}${url}`;
+      // Ensure URL is absolute
+      let fullUrl;
+      if (url.startsWith('http')) {
+        fullUrl = url;
+      } else if (url.startsWith('//')) {
+        fullUrl = 'https:' + url;
+      } else if (url.startsWith('/')) {
+        fullUrl = this.baseUrl + url;
+      } else {
+        fullUrl = this.baseUrl + '/' + url;
+      }
       
       // Check if it's map-related content
       const text = (title + ' ' + $el.text()).toLowerCase();

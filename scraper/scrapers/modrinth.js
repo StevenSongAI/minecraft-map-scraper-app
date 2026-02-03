@@ -37,15 +37,12 @@ class ModrinthScraper extends BaseScraper {
   }
 
   async fetchSearchResults(query, limit) {
-    // CRITICAL FIX (Round 11): Only search for projects that could be maps
-    // Filter by categories that are map-related
+    // CRITICAL FIX (Round 12): Simplified search without restrictive category facets
+    // The facets were filtering out valid map results
     const encodedQuery = encodeURIComponent(query);
     
-    // Add map-related category filters to reduce mod results
-    const mapCategories = ['adventure', 'worldgen', 'decoration'];
-    const facets = mapCategories.map(cat => `[%22categories:${cat}%22]`).join(',');
-    
-    const searchUrl = `${this.baseUrl}/search?query=${encodedQuery}&limit=${Math.min(limit * 2, 40)}&offset=0&facets=[${facets}]`;
+    // Search without restrictive facets - filter results manually instead
+    const searchUrl = `${this.baseUrl}/search?query=${encodedQuery}&limit=${Math.min(limit * 3, 50)}&offset=0`;
     
     console.log(`[Modrinth] Fetching: ${searchUrl}`);
     
@@ -71,41 +68,43 @@ class ModrinthScraper extends BaseScraper {
       const data = await response.json();
       const results = data.hits || [];
       
-      // FIXED (Round 10): Stricter filtering to exclude pure mods
+      // FIXED (Round 12): Balanced filtering - exclude obvious mods but keep maps
       const filteredResults = results.filter(hit => {
         const text = `${hit.title || ''} ${hit.description || ''}`.toLowerCase();
         
-        // Must have at least one strong map indicator
-        const strongMapKeywords = ['map', 'world', 'adventure', 'structure', 'datapack', 'castle', 'city build'];
-        const hasStrongIndicator = strongMapKeywords.some(kw => text.includes(kw));
-        
         // Exclude obvious non-map content (weapons, armor, tech mods, etc.)
-        // Use regex with word boundaries to catch plurals and variations
         const exclusionPatterns = [
-          /weapon/, /gun/, /armor/, /sword/, /integration/, /mekanism/, /robot/, 
-          /vehicle/, /car/, /plane/, /magic spell/, /enchantment/, /\btool\b/, /axe/, /pickaxe/,
-          /mod\b/, /plugin/  // Exclude things explicitly marked as mods/plugins
+          /\bweapon\b/, /\bgun\b/, /\barmor\b/, /\bsword\b/, /\bmekanism\b/, /\brobot\b/, 
+          /\bvehicle\b/, /\bcar\b/, /\bplane\b/, /\bhelicopter\b/, /\btank\b/,
+          /\bjetpack\b/, /\bdrill\b/, /\blaser\b/, /\bmissile\b/, /\brocket\b/,
+          /\bhud\b/, /\bminimap\b/, /\bshader\b/, /\boptifine\b/, /\bsodium\b/
         ];
         const hasExclusion = exclusionPatterns.some(pattern => pattern.test(text));
         
-        // FIXED (Round 10): If it has exclusion keywords, always exclude it
-        // Only accept if: (has strong indicator AND no exclusion) OR is datapack/worldgen
         if (hasExclusion) {
-          return false; // Always exclude mods with weapon/armor/tech keywords
+          return false; // Exclude obvious mods
         }
         
-        // Accept if has strong indicator OR is explicitly a datapack/worldgen
+        // Accept if it's a datapack (maps are often datapacks)
         const isDatapack = hit.project_type === 'datapack';
-        const hasWorldGenCategory = hit.categories && hit.categories.some(cat => 
-          ['worldgen', 'world-generation', 'adventure'].includes(cat));
         
-        return hasStrongIndicator || isDatapack || hasWorldGenCategory;
+        // Accept if it has any map-related keywords
+        const mapKeywords = ['map', 'world', 'adventure', 'parkour', 'puzzle', 'survival', 
+                            'horror', 'castle', 'city', 'house', 'mansion', 'dungeon', 
+                            'quest', 'minigame', 'pvp', 'spawn', 'structure', 'build'];
+        const hasMapKeyword = mapKeywords.some(kw => text.includes(kw));
+        
+        // Accept if it has worldgen category
+        const hasWorldGenCategory = hit.categories && hit.categories.some(cat => 
+          ['worldgen', 'world-generation', 'adventure', 'decoration'].includes(cat));
+        
+        // Accept datapacks, maps with keywords, or worldgen projects
+        return isDatapack || hasMapKeyword || hasWorldGenCategory;
       });
       
       console.log(`[Modrinth] Found ${results.length} results, ${filteredResults.length} map-related`);
       
-      // FIXED (Round 10): Use sync transform to avoid timeout issues
-      // Fetch version info separately only when needed
+      // FIXED (Round 12): Return all filtered results (increased limit)
       const transformedResults = filteredResults.map(hit => this.transformHitToMapSync(hit));
       return transformedResults;
       

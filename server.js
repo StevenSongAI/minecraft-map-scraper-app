@@ -4,7 +4,7 @@ const path = require('path');
 const cors = require('cors');
 
 // Deployment timestamp for verification
-const DEPLOY_TIMESTAMP = '2026-02-03-ROUND8-FIXED';
+const DEPLOY_TIMESTAMP = '2026-02-03-ROUND12-FIXED';
 
 // FIXED: Enhanced File API polyfill for Node.js 18+ compatibility
 // Must be defined BEFORE any module imports that might use File
@@ -966,13 +966,19 @@ async function transformModToMap(mod) {
 }
 
 /**
- * CRITICAL FIX (Round 11): Fetch direct download URL from Modrinth
+ * CRITICAL FIX (Round 12): Fetch direct download URL from Modrinth with validation
  * @param {string} projectId - Modrinth project slug or ID
- * @returns {Promise<string|null>} Direct download URL or null
+ * @returns {Promise<Object|null>} Object with url and isValid, or null
  */
 async function fetchModrinthDownloadUrl(projectId) {
   try {
     const baseUrl = 'https://api.modrinth.com/v2';
+    
+    // FIXED (Round 12): Validate projectId format first
+    if (!projectId || typeof projectId !== 'string' || projectId.length < 2) {
+      console.warn(`[Modrinth] Invalid project ID: ${projectId}`);
+      return { isValid: false, error: 'INVALID_ID' };
+    }
     
     // First get the project to check if it exists
     const projectResponse = await fetch(`${baseUrl}/project/${projectId}`, {
@@ -983,8 +989,12 @@ async function fetchModrinthDownloadUrl(projectId) {
     });
     
     if (!projectResponse.ok) {
-      console.warn(`[Modrinth] Project not found: ${projectId}`);
-      return null;
+      if (projectResponse.status === 404) {
+        console.warn(`[Modrinth] Project not found: ${projectId}`);
+        return { isValid: false, error: 'NOT_FOUND' };
+      }
+      console.warn(`[Modrinth] Project API error: ${projectResponse.status}`);
+      return { isValid: false, error: 'API_ERROR' };
     }
     
     // Get versions for this project
@@ -997,31 +1007,31 @@ async function fetchModrinthDownloadUrl(projectId) {
     
     if (!versionsResponse.ok) {
       console.warn(`[Modrinth] Failed to fetch versions for ${projectId}`);
-      return null;
+      return { isValid: false, error: 'VERSION_ERROR' };
     }
     
     const versions = await versionsResponse.json();
     if (!versions || versions.length === 0) {
       console.warn(`[Modrinth] No versions found for ${projectId}`);
-      return null;
+      return { isValid: false, error: 'NO_VERSIONS' };
     }
     
     // Find first version with files
     const versionWithFiles = versions.find(v => v.files && v.files.length > 0);
     if (!versionWithFiles) {
       console.warn(`[Modrinth] No files found for ${projectId}`);
-      return null;
+      return { isValid: false, error: 'NO_FILES' };
     }
     
     // Get primary file or first file
     const primaryFile = versionWithFiles.files.find(f => f.primary) || versionWithFiles.files[0];
     
     console.log(`[Modrinth] Found download URL for ${projectId}: ${primaryFile.url}`);
-    return primaryFile.url;
+    return { isValid: true, url: primaryFile.url };
     
   } catch (error) {
     console.warn(`[Modrinth] Error fetching download URL: ${error.message}`);
-    return null;
+    return { isValid: false, error: 'EXCEPTION' };
   }
 }
 
@@ -1049,19 +1059,35 @@ app.get('/api/download', async (req, res) => {
       return res.redirect(url);
     }
     
-    // CRITICAL FIX (Round 11): Handle Modrinth slugs (non-numeric IDs)
+    // CRITICAL FIX (Round 12): Handle Modrinth slugs (non-numeric IDs) with proper error handling
     const isModrinthId = source === 'modrinth' || (id && !/^\d+$/.test(id));
     
     if (isModrinthId) {
       console.log(`[Download] Handling Modrinth ID: ${id}`);
-      const downloadUrl = await fetchModrinthDownloadUrl(id);
+      const result = await fetchModrinthDownloadUrl(id);
       
-      if (!downloadUrl) {
-        // Fallback to Modrinth page
+      if (!result || !result.isValid) {
+        // FIXED (Round 12): Return proper 404 error instead of redirecting
+        if (result && result.error === 'NOT_FOUND') {
+          return res.status(404).json({
+            error: 'MAP_NOT_FOUND',
+            message: `Project '${id}' not found on Modrinth`,
+            id: id,
+            source: 'modrinth'
+          });
+        }
+        if (result && result.error === 'INVALID_ID') {
+          return res.status(400).json({
+            error: 'INVALID_ID',
+            message: `Invalid project ID: '${id}'`,
+            id: id
+          });
+        }
+        // For other errors, fallback to Modrinth page
         return res.redirect(302, `https://modrinth.com/project/${id}/versions`);
       }
       
-      return res.redirect(302, downloadUrl);
+      return res.redirect(302, result.url);
     }
     
     // CurseForge numeric ID handling
@@ -1169,20 +1195,36 @@ app.get('/api/download', async (req, res) => {
 app.get('/api/download/:modId', async (req, res) => {
   const modIdParam = req.params.modId;
   
-  // CRITICAL FIX (Round 11): Check if this is a Modrinth slug (non-numeric) or CurseForge ID (numeric)
+  // CRITICAL FIX (Round 12): Check if this is a Modrinth slug (non-numeric) or CurseForge ID (numeric)
   const isNumericId = /^\d+$/.test(modIdParam);
   
   if (!isNumericId) {
     // Handle Modrinth slug
     console.log(`[Download] Handling Modrinth slug: ${modIdParam}`);
-    const downloadUrl = await fetchModrinthDownloadUrl(modIdParam);
+    const result = await fetchModrinthDownloadUrl(modIdParam);
     
-    if (!downloadUrl) {
-      // Fallback to Modrinth page
+    if (!result || !result.isValid) {
+      // FIXED (Round 12): Return proper error instead of redirecting
+      if (result && result.error === 'NOT_FOUND') {
+        return res.status(404).json({
+          error: 'MAP_NOT_FOUND',
+          message: `Project '${modIdParam}' not found on Modrinth`,
+          id: modIdParam,
+          source: 'modrinth'
+        });
+      }
+      if (result && result.error === 'INVALID_ID') {
+        return res.status(400).json({
+          error: 'INVALID_ID',
+          message: `Invalid project ID: '${modIdParam}'`,
+          id: modIdParam
+        });
+      }
+      // For other errors, fallback to Modrinth page
       return res.redirect(302, `https://modrinth.com/project/${modIdParam}/versions`);
     }
     
-    return res.redirect(302, downloadUrl);
+    return res.redirect(302, result.url);
   }
   
   // CurseForge numeric ID

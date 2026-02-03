@@ -1,27 +1,58 @@
 DEFECTS_FOUND
 
-# RED TEAM DEFECT REPORT - Minecraft Map Scraper
+RED TEAM ADVERSARIAL TEST RESULTS
+================================
+Live URL: https://web-production-631b7.up.railway.app
+Timestamp: 2026-02-03T19:06:00Z
 
-## Critical Defects Found: 5
+DEFECT #1: CRITICAL - Planet Minecraft Scraper Completely Broken
+----------------------------------------------------------------
+Requirement: "MUST aggregate results from multiple sources beyond CurseForge" / "Primary additional sources: Planet Minecraft"
+Evidence: Health check shows planetminecraft scraper returns HTTP 403 Forbidden with "Cloudflare bot protection active"
+Impact: ZERO results from Planet Minecraft in ANY search query. Multi-source requirement NOT met.
+Verification: curl /api/scrapers/status shows "accessible: false", "statusCode: 403"
 
-### 1. CRITICAL: Planet Minecraft Blocked
-- Returns HTTP 403 with Cloudflare bot protection
-- Zero results from the "largest repository after CurseForge"
+DEFECT #2: CRITICAL - 9Minecraft Downloads Return HTML Not ZIP Files
+--------------------------------------------------------------------
+Requirement: "Download buttons must return valid ZIP files" / "ZIP files must contain actual Minecraft map data"
+Evidence: 9Minecraft download URLs return HTML document text (verified via `file -` command)
+Impact: Users cannot download actual Minecraft maps from 9Minecraft results
+Verification: curl /api/download?id=9mc-... returns HTML content, not application/zip
 
-### 2. CRITICAL: 9Minecraft Downloads Broken
-- All results have `"downloadType":"page"`
-- Indirect links to HTML pages, NOT direct ZIP files
+DEFECT #3: HIGH - ALL 9Minecraft Results Require External Page Visit
+---------------------------------------------------------------------
+Requirement: "Download buttons must return valid ZIP files" / "Scraped results must have working download links"
+Evidence: Every 9Minecraft result has "downloadType": "page" with "downloadNote": "Visit 9Minecraft page for download link"
+Impact: Users must leave the app and navigate external sites - violates direct download requirement
+Verification: Query "medieval castle" - all 9mc-* IDs have downloadType: "page", NOT "direct"
 
-### 3. CRITICAL: False Positives - MODS instead of MAPS
-- 62.5% false positive rate on "hell" and "horror adventure jumpscares"
-- Returns .jar mods and .mrpack modpacks instead of world maps
+DEFECT #4: HIGH - 9Minecraft Results Have Empty/Missing Thumbnails
+------------------------------------------------------------------
+Requirement: "Thumbnails must load from original source" / "Each result must have working thumbnail images"
+Evidence: "Underwater City – Lumina Nocturnale Map" has empty thumbnail: "thumbnail": ""
+Impact: Broken UI experience, missing visual assets
+Verification: Query "underwater city" - result ID 9mc-1770145579755-1 has empty thumbnail
 
-### 4. HIGH: Modrinth Downloads HTTP 400
-- Download endpoint fails for all Modrinth items
-- Tested id=BTYYDdI1
+DEFECT #5: MEDIUM - Modrinth Scraper Not Returning Results
+----------------------------------------------------------
+Requirement: Multi-source aggregation / scrapersLoaded: true in health check
+Evidence: Health check shows modrinth scraper "enabled": true, "accessible": true, but NEVER appears in search sources
+Impact: Modrinth results completely absent despite being "enabled"
+Verification: Multiple searches ("mansion", "castle", "horror") only show curseforge + nineminecraft sources
 
-### 5. HIGH: Empty Thumbnails
-- Multiple 9Minecraft results have `"thumbnail":""`
+DEFECT #6: MEDIUM - Invalid Download ID Returns 302 Redirect Instead of Error
+-----------------------------------------------------------------------------
+Requirement: Proper error handling for invalid resources
+Evidence: curl /api/download?id=INVALID returns "Found. Redirecting to https://modrinth.com/project/INVALID/versions" with HTTP 302
+Impact: Poor error handling, unexpected external redirects, confusing user experience
+Expected: HTTP 400/404 with JSON error message
 
-**Live URL Tested:** https://web-production-631b7.up.railway.app
-**Timestamp:** 2026-02-03T18:50:00Z
+SUMMARY
+-------
+Total Defects Found: 6 (3 Critical, 2 High, 1 Medium)
+- 2 scrapers broken (Planet Minecraft 403, Modrinth silent)
+- Download functionality broken for 9Minecraft (HTML not ZIP)
+- UI defects (empty thumbnails)
+- Error handling defects (302 redirect instead of proper error)
+
+RED TEAM VERDICT: FAIL - Multiple critical requirements not met
