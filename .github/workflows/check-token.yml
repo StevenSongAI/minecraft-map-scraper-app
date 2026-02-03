@@ -1,0 +1,21 @@
+name: Check Railway Token
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Check if Railway token exists
+        run: |
+          if [ -n "${{ secrets.RAILWAY_TOKEN }}" ]; then
+            echo "RAILWAY_TOKEN exists (length: ${#RAILWAY_TOKEN})"
+            echo "First 10 chars: ${RAILWAY_TOKEN:0:10}..."
+          else
+            echo "RAILWAY_TOKEN is NOT set"
+          fi
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
