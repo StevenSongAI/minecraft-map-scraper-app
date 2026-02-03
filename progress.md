@@ -1,53 +1,62 @@
 # Progress - Minecraft Map Scraper QA
 
-## Current Status: BUILDER Phase - Deployment Blocked
+## Alternative Deployment Investigation - 2026-02-03
 
-### Previous Builder Work (builder-1)
-- Code fixes committed for word boundaries and semantic overreach (commit 20821b7)
-- Added version marker to health endpoint (commit 60c5261)
-- Simplified GitHub Actions workflow (commit cdc9fd3)
-- PRODUCTION API STILL RUNNING OLD CODE
+### Platforms Tested
 
-### Deployment Investigation (2026-02-03) - BUILDER-RAILWAY-DEPLOY-FIX
+#### 1. Fly.io
+**Status:** BLOCKED - Requires authentication
+**Command tried:** `flyctl launch --name minecraft-map-scraper --region yyz --no-deploy --yes`
+**Error:** `No access token available. Please login with 'flyctl auth login'`
+**Blocker:** CLI requires interactive login. No FLY_API_TOKEN available in environment.
+**Resolution path:** User needs to run `flyctl auth login` or set FLY_API_TOKEN env var.
 
-**Root Cause Identified:** RAILWAY_TOKEN unauthorized
+#### 2. Vercel
+**Status:** BLOCKED - Requires authentication
+**CLI version:** 50.9.6
+**Error:** `No existing credentials found. Please run 'vercel login' or pass '--token'`
+**Blocker:** CLI requires login or VERCEL_TOKEN env var. Neither available.
+**Config created:** vercel.json (ready for deployment if auth available)
+**Resolution path:** User needs to run `vercel login` or provide VERCEL_TOKEN.
 
-**Investigation Steps:**
-1. ✅ Verified production API still returns old code (searchTerms includes "atlantis", "underwater")
-2. ✅ Checked GitHub Actions workflow logs
-3. ✅ Found: GitHub Actions runs failing with "Unauthorized. Please check that your RAILWAY_TOKEN is valid"
-4. ✅ Simplified deployment workflow
-5. ❌ Cannot regenerate token - requires Railway dashboard access
+#### 3. Railway CLI
+**Status:** BLOCKED - Token unauthorized
+**Error:** `Unauthorized. Please login with 'railway login'`
+**Blocker:** RAILWAY_TOKEN expired/invalid in GitHub Actions secrets.
+**GitHub App status:** Railway GitHub App IS connected to repo - deployment status shows in commits
+**Recent deployment:** Failed (commit 9eb4e25) - see https://railway.com/project/a18c5404-6b6a-4d09-936f-e90d391a5a2d
 
-**GitHub Actions Error:**
-```
-Unauthorized. Please check that your RAILWAY_TOKEN is valid and has access to the resource you're trying to use.
-```
+#### 4. Render.com
+**Status:** NOT AVAILABLE - CLI not installed
+**Blocker:** `render` command not found in environment.
 
-**Attempted Fixes:**
-- Added explicit project ID to .railway/config.json
-- Simplified workflow to use `railway up` only
-- Multiple deployment trigger commits
+### Railway GitHub App - Detailed Investigation
 
-**Required Action:**
-Regenerate RAILWAY_TOKEN in Railway dashboard:
-1. Go to https://railway.com/account/tokens
-2. Create new token (Team or Account token, NOT Project token)
-3. Update GitHub Secret: https://github.com/StevenSongAI/minecraft-map-scraper-app/settings/secrets/actions
-4. Re-run GitHub Actions workflow
+**Positive findings:**
+- Railway GitHub App (railway-app[bot]) IS installed on the repository
+- App has created deployments: https://api.github.com/repos/StevenSongAI/minecraft-map-scraper-app/deployments
+- Deployment shows in commit status with link to Railway dashboard
+- Project ID: a18c5404-6b6a-4d09-936f-e90d391a5a2d
 
-**Verification Command:**
-```bash
-curl "https://web-production-631b7.up.railway.app/api/health" | grep version
-# Should return: "version": "2.0.1-fix"
-```
+**Negative findings:**
+- Latest deployment (commit 9eb4e25) status: **FAILURE**
+- Health endpoint returns: `{"status":"error","code":404,"message":"Application not found"}`
+- Service not currently running on Railway
+- GitHub Actions workflow also fails due to RAILWAY_TOKEN
 
-### Red Team Task (red-1)
-Test search accuracy across 1000 diverse keywords
-**BLOCKED BY:** RAILWAY_TOKEN unauthorized - deployment failing
+### Attempting Git Push Trigger
 
-### Next Action Required
-1. Regenerate RAILWAY_TOKEN in Railway dashboard
-2. Update GitHub Secret
-3. Re-run deployment workflow
-4. Verify production reflects committed code
+Creating commit with deployment configs (fly.toml, vercel.json) to test if Railway GitHub App auto-deploys on push without requiring the workflow.
+
+### If This Fails
+
+Next options:
+1. **GitHub Pages + Separate API**: Deploy static frontend to GitHub Pages, use CurseForge API directly from browser (limited by CORS)
+2. **Docker + Self-host**: Build Docker image, run locally with ngrok
+3. **Request user intervention**: Railway dashboard access needed to regenerate token or trigger manual deploy
+4. **Try Netlify**: Similar to Vercel, may require auth
+
+### Configuration Files Added
+
+- `fly.toml` - Fly.io deployment config (Node.js app, port 3000)
+- `vercel.json` - Vercel deployment config (Node.js serverless)
