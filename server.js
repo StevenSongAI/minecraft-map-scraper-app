@@ -1052,7 +1052,8 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
     apiConfigured: !!process.env.CURSEFORGE_API_KEY && process.env.CURSEFORGE_API_KEY !== 'demo',
     demoMode: isDemoMode,
-    apiKeyPreview: process.env.CURSEFORGE_API_KEY ? process.env.CURSEFORGE_API_KEY.substring(0, 10) + '...' : 'Not set'
+    apiKeyPreview: process.env.CURSEFORGE_API_KEY ? process.env.CURSEFORGE_API_KEY.substring(0, 10) + '...' : 'Not set',
+    version: '2.0.1-fix'
   });
 });
 
