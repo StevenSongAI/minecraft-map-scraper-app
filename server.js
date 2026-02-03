@@ -3,8 +3,16 @@ const express = require('express');
 const path = require('path');
 const cors = require('cors');
 
-// Import multi-source scrapers
-const { MapAggregator } = require('../../scraper/scrapers');
+// Import multi-source scrapers (optional - graceful fallback if not available)
+let MapAggregator = null;
+let scraperModuleError = null;
+try {
+  const scrapers = require('../../scraper/scrapers');
+  MapAggregator = scrapers.MapAggregator;
+} catch (error) {
+  console.warn('[Server] Multi-source scrapers not available:', error.message);
+  scraperModuleError = error.message;
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,10 +20,18 @@ const PORT = process.env.PORT || 3000;
 // Initialize aggregator (lazy init on first search)
 let aggregator = null;
 function getAggregator() {
-  if (!aggregator) {
+  if (!aggregator && MapAggregator) {
     aggregator = new MapAggregator({ timeout: 6000, maxResultsPerSource: 10 });
   }
+  if (!MapAggregator) {
+    throw new Error('Multi-source scrapers not available: ' + scraperModuleError);
+  }
   return aggregator;
+}
+
+// Check if multi-source is available
+function isMultiSourceEnabled() {
+  return !!MapAggregator;
 }
 
 // CurseForge API Key - use environment variable only (empty = demo mode with mock data)
@@ -1063,11 +1079,15 @@ app.get('/api/health', async (req, res) => {
   
   // Get scraper health if available
   let scraperHealth = null;
-  try {
-    const agg = getAggregator();
-    scraperHealth = await agg.getHealth();
-  } catch (error) {
-    scraperHealth = { error: error.message };
+  if (isMultiSourceEnabled()) {
+    try {
+      const agg = getAggregator();
+      scraperHealth = await agg.getHealth();
+    } catch (error) {
+      scraperHealth = { error: error.message };
+    }
+  } else {
+    scraperHealth = { error: 'Multi-source scrapers not loaded', details: scraperModuleError };
   }
   
   res.json({ 
@@ -1077,13 +1097,32 @@ app.get('/api/health', async (req, res) => {
     demoMode: isDemoMode,
     apiKeyPreview: process.env.CURSEFORGE_API_KEY ? process.env.CURSEFORGE_API_KEY.substring(0, 10) + '...' : 'Not set',
     version: '2.1.0-multi-source',
-    multiSourceEnabled: true,
+    multiSourceEnabled: isMultiSourceEnabled(),
     scrapers: scraperHealth
   });
 });
 
 // Multi-source scraper health endpoint
 app.get('/api/sources/health', async (req, res) => {
+  // Check if multi-source is available
+  if (!isMultiSourceEnabled()) {
+    const curseforgeConfigured = !!process.env.CURSEFORGE_API_KEY && process.env.CURSEFORGE_API_KEY !== 'demo';
+    return res.json({
+      timestamp: new Date().toISOString(),
+      sources: {
+        curseforge: {
+          name: 'CurseForge API',
+          enabled: true,
+          configured: curseforgeConfigured,
+          status: curseforgeConfigured ? 'healthy' : 'demo_mode'
+        }
+      },
+      scrapersAvailable: false,
+      error: 'Multi-source scrapers not loaded',
+      details: scraperModuleError
+    });
+  }
+  
   try {
     const agg = getAggregator();
     const health = await agg.getHealth();
@@ -1129,6 +1168,37 @@ app.get('/api/search-unified', async (req, res) => {
   
   if (!query) {
     return res.status(400).json({ error: 'Query parameter required' });
+  }
+  
+  // Check if multi-source is available
+  if (!isMultiSourceEnabled()) {
+    // Fallback to regular search
+    try {
+      const searchTerms = expandQuery(query);
+      let maps = await searchCurseForge(searchTerms, limit * 2);
+      
+      // Calculate relevance and filter
+      maps = maps.map(m => ({
+        ...m,
+        source: 'curseforge',
+        name: m.title,
+        summary: m.description
+      })).slice(0, limit);
+      
+      return res.json({
+        success: true,
+        query: query,
+        timestamp: new Date().toISOString(),
+        responseTime: 0,
+        totalCount: maps.length,
+        sources: { curseforge: { count: maps.length, success: true, responseTime: 0 } },
+        errors: [{ source: 'aggregator', error: 'Multi-source scrapers not available: ' + scraperModuleError }],
+        maps: maps,
+        fallback: true
+      });
+    } catch (error) {
+      return res.status(500).json({ error: 'Search failed', message: error.message });
+    }
   }
   
   try {
