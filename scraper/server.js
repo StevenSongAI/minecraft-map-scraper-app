@@ -560,12 +560,20 @@ app.get('/api/search', async (req, res) => {
 
     console.log(`[API] Searching: "${query}"`);
 
-    // Call CurseForge API
-    const maps = await cfClient.searchMaps(query, {
-      gameVersion: version,
-      pageSize: pageSizeNum,
-      index: parseInt(index) || 0
+    // Search using multi-source aggregator
+    const aggregatorResults = await aggregator.search(query, {
+      limit: pageSizeNum,
+      includeCurseForge: !IS_DEMO_MODE,
+      curseForgeSearchFn: IS_DEMO_MODE ? null : async (q, opts) => {
+        return await cfClient.searchMaps(q, {
+          gameVersion: version,
+          pageSize: opts.limit || pageSizeNum,
+          index: parseInt(index) || 0
+        });
+      }
     });
+
+    const maps = aggregatorResults.results || [];
 
     // Cache results
     cache.saveSearchResults(query, maps);
@@ -574,7 +582,8 @@ app.get('/api/search', async (req, res) => {
       query,
       results: maps,
       count: maps.length,
-      source: 'api',
+      source: 'multi-source',
+      sources: aggregatorResults.sources,
       mode: 'live',
       timestamp: new Date().toISOString()
     });

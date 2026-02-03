@@ -19,6 +19,11 @@ class MapAggregator {
     this.timeout = options.timeout || 5000; // 5 seconds per source max
     this.maxResultsPerSource = options.maxResultsPerSource || 6;
     
+    // Circuit breaker settings
+    this.failureThreshold = 3;
+    this.disableTimeMs = 5 * 60 * 1000; // 5 minutes
+    this.failures = new Map(); // Track failures per source
+    
     // Initialize scrapers
     this.initScrapers();
   }
@@ -97,9 +102,9 @@ class MapAggregator {
     const searchPromises = [];
     const scraperNames = [];
 
-    // Add scraper searches
+    // Add scraper searches (with circuit breaker check)
     for (const scraper of this.scrapers) {
-      if (scraper.enabled) {
+      if (scraper.enabled && !this.isCircuitOpen(scraper.name)) {
         searchPromises.push(
           this.searchWithTimeout(
             scraper.name,
@@ -108,6 +113,24 @@ class MapAggregator {
           )
         );
         scraperNames.push(scraper.name);
+      } else if (this.isCircuitOpen(scraper.name)) {
+        console.log(`[Aggregator] ${scraper.name} disabled by circuit breaker`);
+      }
+    }
+
+    // Add CurseForge if provided
+    if (includeCurseForge && curseForgeSearchFn) {
+      if (!this.isCircuitOpen('curseforge')) {
+        searchPromises.push(
+          this.searchWithTimeout(
+            'curseforge',
+            () => curseForgeSearchFn(query, { limit: this.maxResultsPerSource }),
+            this.timeout
+          )
+        );
+        scraperNames.push('curseforge');
+      } else {
+        console.log(`[Aggregator] curseforge disabled by circuit breaker`);
       }
     }
 
@@ -142,6 +165,8 @@ class MapAggregator {
           success: true
         };
         allMaps.push(...maps);
+        // Reset failures on success
+        this.recordSuccess(sourceName);
       } else {
         results.sources[sourceName] = {
           count: 0,
@@ -152,6 +177,8 @@ class MapAggregator {
           source: sourceName,
           error: result.reason?.message || 'Unknown error'
         });
+        // Record failure for circuit breaker
+        this.recordFailure(sourceName);
       }
     }
 
@@ -329,12 +356,14 @@ class MapAggregator {
         health.scrapers.push({
           name: scraper.name,
           enabled: scraper.enabled,
+          circuitOpen: this.isCircuitOpen(scraper.name),
           ...scraperHealth
         });
       } catch (error) {
         health.scrapers.push({
           name: scraper.name,
           enabled: scraper.enabled,
+          circuitOpen: this.isCircuitOpen(scraper.name),
           accessible: false,
           error: error.message
         });
@@ -342,6 +371,50 @@ class MapAggregator {
     }
 
     return health;
+  }
+
+  /**
+   * Circuit breaker: check if a source should be disabled
+   */
+  isCircuitOpen(sourceName) {
+    const failure = this.failures.get(sourceName);
+    if (!failure) return false;
+    
+    // If we've hit the failure threshold
+    if (failure.count >= this.failureThreshold) {
+      // Check if the disable time has passed
+      const now = Date.now();
+      if (now - failure.lastFailureTime < this.disableTimeMs) {
+        return true;
+      } else {
+        // Reset the circuit after the timeout
+        this.failures.delete(sourceName);
+        return false;
+      }
+    }
+    
+    return false;
+  }
+
+  /**
+   * Record a failure for circuit breaker
+   */
+  recordFailure(sourceName) {
+    const failure = this.failures.get(sourceName) || { count: 0, lastFailureTime: 0 };
+    failure.count++;
+    failure.lastFailureTime = Date.now();
+    this.failures.set(sourceName, failure);
+    
+    if (failure.count >= this.failureThreshold) {
+      console.log(`[Circuit Breaker] ${sourceName} disabled for ${this.disableTimeMs / 1000}s after ${failure.count} failures`);
+    }
+  }
+
+  /**
+   * Record a success to reset failure count
+   */
+  recordSuccess(sourceName) {
+    this.failures.delete(sourceName);
   }
 }
 
