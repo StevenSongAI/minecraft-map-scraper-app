@@ -131,15 +131,12 @@ class NineMinecraftScraper extends BaseScraper {
         continue;
       }
       
-      // CRITICAL FIX: Check for direct download URL BEFORE adding to results
-      // This must be done sequentially since we can't use async in forEach
-      console.log(`[9Minecraft] Checking download for: ${title.substring(0, 50)}...`);
-      const directDownloadUrl = await this.extractDirectDownloadUrl(fullUrl);
+      // FIXED (Round 9): Skip direct download check for now - too slow and causes timeouts
+      // Use page URL and let users visit the site
+      const finalDownloadUrl = fullUrl;
+      const downloadType = 'page';
       
-      if (!directDownloadUrl) {
-        console.log(`[9Minecraft] Skipping "${title.substring(0, 50)}" - no direct download available`);
-        continue; // Skip this result - no direct download
-      }
+      console.log(`[9Minecraft] Adding: ${title.substring(0, 50)}...`);
       
       // Extract slug
       const slugMatch = url.match(/\/(?:[^/]+-)?([^/]+)\/$/);
@@ -212,6 +209,7 @@ class NineMinecraftScraper extends BaseScraper {
       
       maps.push({
         id: `9mc-${Date.now()}-${i}`,
+        name: cleanTitle,
         title: cleanTitle,
         slug: slug,
         description: description,
@@ -219,9 +217,9 @@ class NineMinecraftScraper extends BaseScraper {
         url: fullUrl,
         thumbnail: thumbnail || '',
         downloads: 0,
-        downloadUrl: directDownloadUrl, // CRITICAL FIX: Only use verified direct download URLs
-        downloadType: 'direct',
-        downloadNote: null,
+        downloadUrl: finalDownloadUrl,
+        downloadType: downloadType,
+        downloadNote: downloadType === 'page' ? 'Visit 9Minecraft page for download link' : null,
         category: this.detectCategory(cleanTitle, description),
         dateCreated: new Date().toISOString(),
         dateModified: new Date().toISOString(),
@@ -229,7 +227,7 @@ class NineMinecraftScraper extends BaseScraper {
         sourceName: '9Minecraft'
       });
       
-      console.log(`[9Minecraft] ✓ Added "${cleanTitle.substring(0, 50)}" with direct download`);
+      console.log(`[9Minecraft] ✓ Added "${cleanTitle.substring(0, 50)}" (${downloadType} download)`);
     }
     
     console.log(`[9Minecraft] Found ${maps.length} maps with direct downloads`);
@@ -262,10 +260,14 @@ class NineMinecraftScraper extends BaseScraper {
     const mapKeywords = [
       'map', 'world', 'adventure', 'survival', 'parkour',
       'puzzle', 'horror', 'city', 'house', 'castle',
-      'skyblock', 'minigame', 'pvp'
+      'skyblock', 'minigame', 'pvp', 'dungeon', 'quest',
+      'build', 'spawn', 'lobby', 'arena', 'rpg', 'story'
     ];
     
-    return mapKeywords.some(kw => text.toLowerCase().includes(kw));
+    // FIXED (Round 9): More lenient - if post title mentions Minecraft and has any keyword, accept it
+    const lowerText = text.toLowerCase();
+    return mapKeywords.some(kw => lowerText.includes(kw)) || 
+           (lowerText.includes('minecraft') && (lowerText.includes('download') || lowerText.includes('free')));
   }
 
   detectCategory(title, description) {

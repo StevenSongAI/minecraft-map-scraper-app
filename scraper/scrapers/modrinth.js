@@ -24,8 +24,9 @@ class ModrinthScraper extends BaseScraper {
       return this.circuitBreaker.execute(async () => {
         return this.rateLimitedRequest(async () => {
           try {
+            // fetchSearchResults already transforms results, don't double-transform
             const results = await this.fetchSearchResults(query, limit);
-            return results.map(r => this.transformHitToMap(r));
+            return results;
           } catch (error) {
             console.warn(`[Modrinth] Search error: ${error.message}`);
             return [];
@@ -36,10 +37,10 @@ class ModrinthScraper extends BaseScraper {
   }
 
   async fetchSearchResults(query, limit) {
-    // FIXED (Round 7): Simple search with map keyword to get more results
-    const enhancedQuery = `${query} map OR world OR adventure`;
-    const encodedQuery = encodeURIComponent(enhancedQuery);
-    const searchUrl = `${this.baseUrl}/search?query=${encodedQuery}&limit=${Math.min(limit, 20)}&offset=0`;
+    // FIXED (Round 9): Search without project type restriction to get all content
+    // Then filter for map-related keywords
+    const encodedQuery = encodeURIComponent(query);
+    const searchUrl = `${this.baseUrl}/search?query=${encodedQuery}&limit=${Math.min(limit, 30)}&offset=0`;
     
     console.log(`[Modrinth] Fetching: ${searchUrl}`);
     
@@ -65,15 +66,25 @@ class ModrinthScraper extends BaseScraper {
       const data = await response.json();
       const results = data.hits || [];
       
-      // Filter results to only include those that look like maps/worlds
-      const mapKeywords = ['map', 'world', 'adventure', 'dungeon', 'quest', 'exploration', 'structure'];
+      // FIXED (Round 9): More inclusive filtering - accept datapacks and modpacks with world/map content
+      const mapKeywords = ['map', 'world', 'adventure', 'dungeon', 'quest', 'exploration', 'structure', 
+                           'datapack', 'survival', 'city', 'castle', 'house', 'parkour', 'puzzle'];
       const filteredResults = results.filter(hit => {
         const text = `${hit.title || ''} ${hit.description || ''}`.toLowerCase();
-        return mapKeywords.some(kw => text.includes(kw));
+        // Accept if has map keywords OR is explicitly a world/datapack project type
+        return mapKeywords.some(kw => text.includes(kw)) || 
+               hit.project_type === 'datapack' ||
+               (hit.categories && hit.categories.some(cat => 
+                 ['worldgen', 'adventure', 'world-generation'].includes(cat)));
       });
       
       console.log(`[Modrinth] Found ${results.length} results, ${filteredResults.length} map-related`);
-      return filteredResults.map(hit => this.transformHitToMap(hit));
+      
+      // Transform all hits (async)
+      const transformedResults = await Promise.all(
+        filteredResults.map(hit => this.transformHitToMap(hit))
+      );
+      return transformedResults;
       
     } catch (error) {
       clearTimeout(timeoutId);
@@ -81,12 +92,27 @@ class ModrinthScraper extends BaseScraper {
     }
   }
 
-  transformHitToMap(hit) {
-    // FIXED (Round 7): Better normalization to match CurseForge format
+  async transformHitToMap(hit) {
+    // FIXED (Round 10): Get direct download URL and proper thumbnail
+    // FIXED (Round 10): Use 'name' field to match CurseForge format
     const projectId = hit.project_id || hit.slug;
+    
+    // Get direct download URL from Modrinth API
+    let directDownloadUrl = null;
+    let fileInfo = null;
+    try {
+      const versionInfo = await this.getLatestVersionInfo(hit.project_id);
+      if (versionInfo) {
+        directDownloadUrl = versionInfo.downloadUrl;
+        fileInfo = versionInfo.fileInfo;
+      }
+    } catch (error) {
+      console.warn(`[Modrinth] Failed to get version info for ${hit.slug}: ${error.message}`);
+    }
     
     return {
       id: projectId,
+      name: hit.title,
       title: hit.title,
       slug: hit.slug,
       summary: hit.description || '',
@@ -95,12 +121,12 @@ class ModrinthScraper extends BaseScraper {
         name: hit.author || 'Unknown',
         url: hit.author ? `https://modrinth.com/user/${hit.author}` : ''
       },
-      thumbnail: hit.icon_url || '',
-      screenshots: [],
-      downloadUrl: `https://modrinth.com/project/${hit.slug}/versions`,
-      downloadType: 'page', // Modrinth requires visiting the page to download
-      downloadNote: 'Visit Modrinth page to download',
-      fileInfo: null,
+      thumbnail: hit.icon_url || hit.gallery?.[0]?.url || '',
+      screenshots: hit.gallery || [],
+      downloadUrl: directDownloadUrl || `https://modrinth.com/project/${hit.slug}/versions`,
+      downloadType: directDownloadUrl ? 'direct' : 'page',
+      downloadNote: directDownloadUrl ? null : 'Visit Modrinth page to download',
+      fileInfo: fileInfo,
       downloadCount: hit.downloads || 0,
       downloads: hit.downloads || 0,
       gameVersions: hit.versions || [],
@@ -123,6 +149,54 @@ class ModrinthScraper extends BaseScraper {
       serverSide: hit.server_side,
       url: `https://modrinth.com/project/${hit.slug}`
     };
+  }
+
+  async getLatestVersionInfo(projectId) {
+    try {
+      const versionsUrl = `${this.baseUrl}/project/${projectId}/version?limit=1`;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+      
+      const response = await fetch(versionsUrl, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': this.getUserAgent(),
+          'Accept': 'application/json'
+        }
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        return null;
+      }
+      
+      const versions = await response.json();
+      if (!versions || versions.length === 0) {
+        return null;
+      }
+      
+      const latestVersion = versions[0];
+      const primaryFile = latestVersion.files?.find(f => f.primary) || latestVersion.files?.[0];
+      
+      if (!primaryFile) {
+        return null;
+      }
+      
+      return {
+        downloadUrl: primaryFile.url,
+        fileInfo: {
+          id: latestVersion.id,
+          filename: primaryFile.filename,
+          filesize: primaryFile.size,
+          version: latestVersion.version_number,
+          gameVersions: latestVersion.game_versions
+        }
+      };
+    } catch (error) {
+      console.warn(`[Modrinth] Error fetching version info: ${error.message}`);
+      return null;
+    }
   }
   
   detectCategory(title, description) {

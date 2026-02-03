@@ -177,6 +177,7 @@ class PlanetMinecraftScraper extends BaseScraper {
         
         results.push({
           id: projectId || `pmc-${Date.now()}-${index}`,
+          name: title,
           title: title,
           slug: projectId || '',
           description: description,

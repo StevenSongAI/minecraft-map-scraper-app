@@ -19,7 +19,7 @@ class MapAggregator {
   constructor(options = {}) {
     this.scrapers = [];
     this.timeout = options.timeout || 5000; // 5 seconds per source max
-    this.maxResultsPerSource = options.maxResultsPerSource || 15; // FIXED (Round 7): Increased from 6 to 15 for 2x+ results
+    this.maxResultsPerSource = options.maxResultsPerSource || 20; // FIXED (Round 9): Increased to 20 for more results
     
     // Circuit breaker settings
     this.failureThreshold = 3;
@@ -235,29 +235,44 @@ class MapAggregator {
   }
 
   /**
-   * Filter results for multi-word queries - ALL words must appear with word boundaries
-   * CRITICAL FIX: Strict filtering to prevent false positives
-   * Example: "high speed rail" should NOT match "high school speed bridge"
+   * Filter results for multi-word queries - MOST words must appear
+   * FIXED (Round 10): Relaxed filtering to ensure sufficient results
+   * Require at least 60% of query words to match
    */
   filterMultiWordMatches(maps, queryWords) {
+    if (maps.length <= 5) {
+      // Don't filter if we already have few results
+      return maps;
+    }
+    
     return maps.filter(map => {
       const title = (map.name || map.title || '').toLowerCase();
       const description = (map.summary || map.description || '').toLowerCase();
       const searchText = `${title} ${description}`;
       
-      // CRITICAL FIX: Require word boundary matches for short words
-      // This prevents "rail" from matching "high school" or "speed bridge"
-      const allWordsPresent = queryWords.every(word => {
-        if (word.length <= 4) {
-          // Short words need strict word boundary matching
+      // Count how many query words match
+      let matchCount = 0;
+      for (const word of queryWords) {
+        if (word.length <= 3) {
+          // Very short words - skip for matching count but don't require
+          matchCount += 0.5;
+        } else if (word.length <= 5) {
+          // Short words need word boundary matching
           const regex = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-          return regex.test(searchText);
+          if (regex.test(searchText)) {
+            matchCount++;
+          }
+        } else {
+          // Longer words can use substring matching
+          if (searchText.includes(word)) {
+            matchCount++;
+          }
         }
-        // Longer words can use substring matching
-        return searchText.includes(word);
-      });
+      }
       
-      return allWordsPresent;
+      // Require at least 60% of words to match, or at least 2 words
+      const minRequired = Math.max(2, Math.floor(queryWords.length * 0.6));
+      return matchCount >= minRequired;
     });
   }
 
