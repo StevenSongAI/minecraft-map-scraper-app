@@ -492,11 +492,8 @@ app.get('/api/search', async (req, res) => {
         hasWordBoundaryMatch: relevance.hasWordBoundaryMatch
       };
     }).filter(map => {
-      // Filter out low-relevance results (false positives)
-      if (map.hasExactMatch) return true;
-      // Must have word boundary match (not just substring)
-      if (!map.hasWordBoundaryMatch) return false;
-      return map.relevanceScore >= MIN_RELEVANCE_SCORE && map.matchCount >= MIN_MATCH_COUNT;
+      // Use the comprehensive relevance checker that includes compound concept filtering
+      return isRelevantResult(map, query, searchTerms);
     }).sort((a, b) => b.relevanceScore - a.relevanceScore);
     
     // Limit results
