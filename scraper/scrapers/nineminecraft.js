@@ -156,9 +156,9 @@ class NineMinecraftScraper extends BaseScraper {
         continue;
       }
       
-      // FIXED (Round 11): Try to extract direct download URL asynchronously
-      // Store the page URL as fallback, actual download will be fetched on demand
-      const finalDownloadUrl = fullUrl;
+      // FIXED (Round 12): Set both url and downloadUrl properly
+      // url = the detail page, downloadUrl = the download link (or page if indirect)
+      const pageUrl = fullUrl;
       const downloadType = 'page';
       
       console.log(`[9Minecraft] Adding: ${title.substring(0, 50)}...`);
@@ -268,10 +268,10 @@ class NineMinecraftScraper extends BaseScraper {
         slug: slug,
         description: description,
         author: author && author !== 'Unknown' ? author : this.extractAuthorFromTitle(cleanTitle),
-        url: fullUrl,
+        url: pageUrl,  // FIXED (Round 12): Properly set the detail page URL
         thumbnail: thumbnail || '',
         downloads: 0,
-        downloadUrl: finalDownloadUrl,
+        downloadUrl: pageUrl,  // For 9Minecraft, downloadUrl points to the page (indirect download)
         downloadType: downloadType,
         downloadNote: downloadType === 'page' ? 'Visit 9Minecraft page for download link' : null,
         category: this.detectCategory(cleanTitle, description),
