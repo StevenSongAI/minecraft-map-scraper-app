@@ -19,29 +19,27 @@ jobs:
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          # Create Railway config directory and file
+          # Create Railway config directory and file with project ID
           mkdir -p .railway
-          echo '{}' > .railway/config.json
+          echo '{"projectId": "a18c5404-6b6a-4d09-936f-e90d391a5a2d"}' > .railway/config.json
           
-          # Try to link or find the project
-          echo "Attempting to set environment variable..."
+          # Debug: Show config
+          echo "Railway config:"
+          cat .railway/config.json
+          
+          # Verify Railway CLI can see the project
+          echo "Checking Railway projects..."
+          railway project list || echo "Could not list projects"
           
       - name: Deploy and Set Environment
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-          RAILWAY_PROJECT_ID: a18c5404-6b6a-4d09-936f-e90d391a5a2d
         run: |
-          # Link to the specific project first
-          railway link --project $RAILWAY_PROJECT_ID
-          
-          # Deploy to the linked project
-          railway up --project $RAILWAY_PROJECT_ID
-          
-          # Try setting variable after deployment
-          railway variables set CURSEFORGE_API_KEY="${{ secrets.CURSEFORGE_API_KEY }}" --project $RAILWAY_PROJECT_ID || echo "Could not set variable automatically"
+          # Deploy using Railway CLI - it should use the token for authentication
+          # The project is linked via the RAILWAY_TOKEN which has project scope
+          railway up --verbose
           
           echo ""
           echo "=========================================="
-          echo "Deployment complete"
-          echo "Project ID: $RAILWAY_PROJECT_ID"
+          echo "Deployment triggered"
           echo "=========================================="
