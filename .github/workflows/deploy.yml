@@ -29,16 +29,19 @@ jobs:
       - name: Deploy and Set Environment
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: a18c5404-6b6a-4d09-936f-e90d391a5a2d
         run: |
-          # Deploy first
-          railway up || echo "Deploy may have failed"
+          # Link to the specific project first
+          railway link --project $RAILWAY_PROJECT_ID
+          
+          # Deploy to the linked project
+          railway up --project $RAILWAY_PROJECT_ID
           
           # Try setting variable after deployment
-          railway variables set CURSEFORGE_API_KEY="${{ secrets.CURSEFORGE_API_KEY }}" || echo "Could not set variable automatically"
+          railway variables set CURSEFORGE_API_KEY="${{ secrets.CURSEFORGE_API_KEY }}" --project $RAILWAY_PROJECT_ID || echo "Could not set variable automatically"
           
           echo ""
           echo "=========================================="
-          echo "NOTE: If deployment succeeded but API key was not set:"
-          echo "Please manually set CURSEFORGE_API_KEY in Railway dashboard:"
-          echo "https://railway.com/dashboard"
+          echo "Deployment complete"
+          echo "Project ID: $RAILWAY_PROJECT_ID"
           echo "=========================================="
