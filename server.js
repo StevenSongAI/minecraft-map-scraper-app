@@ -1061,3 +1061,4 @@ app.listen(PORT, () => {
   console.log(`Minecraft Map Scraper Server running on port ${PORT}`);
   console.log(`API Key configured: ${CURSEFORGE_API_KEY ? 'Yes' : 'No'}`);
 });
+// Deployment trigger: Mon Feb  2 22:56:43 EST 2026
