@@ -1,10 +1,10 @@
 /**
- * Planet Minecraft Scraper
- * Scrapes minecraft maps from planetminecraft.com using Playwright for browser automation
+ * Planet Minecraft HTTP Scraper (No Playwright)
+ * Uses fetch + Cheerio for reliable HTTP-based scraping
  */
 
 const { BaseScraper } = require('./base');
-const { chromium } = require('playwright');
+const cheerio = require('cheerio');
 
 class PlanetMinecraftScraper extends BaseScraper {
   constructor(options = {}) {
@@ -14,344 +14,189 @@ class PlanetMinecraftScraper extends BaseScraper {
       sourceName: 'Planet Minecraft',
       ...options
     });
-    this.browser = null;
-    this.context = null;
-    this.maxRetries = 2;
-    this.retryDelay = 1000;
-  }
-
-  async initBrowser() {
-    if (!this.browser) {
-      this.browser = await chromium.launch({
-        headless: true,
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-accelerated-2d-canvas',
-          '--disable-gpu',
-          '--window-size=1920,1080'
-        ]
-      });
-    }
-    if (!this.context) {
-      this.context = await this.browser.newContext({
-        userAgent: this.getRandomUserAgent(),
-        viewport: { width: 1920, height: 1080 },
-        locale: 'en-US',
-        timezoneId: 'America/New_York'
-      });
-    }
-  }
-
-  async closeBrowser() {
-    if (this.context) {
-      await this.context.close();
-      this.context = null;
-    }
-    if (this.browser) {
-      await this.browser.close();
-      this.browser = null;
-    }
+    this.requestTimeout = options.requestTimeout || 5000; // 5s timeout per request
   }
 
   async search(query, options = {}) {
-    const { limit = 20 } = options;
+    const { limit = 8 } = options;
     
-    // Use caching layer
     return this.searchWithCache(query, options, async (q, opts) => {
       return this.circuitBreaker.execute(async () => {
         return this.rateLimitedRequest(async () => {
-          let retries = 0;
-          let lastError;
-
-          while (retries < this.maxRetries) {
-            try {
-              await this.initBrowser();
-              let results = await this.scrapeSearch(query, limit);
-              
-              // Normalize to CurseForge format
-              results = results.map(r => this.normalizeToCurseForgeFormat(r));
-              
-              // Validate download URLs
-              console.log(`[Planet Minecraft] Validating ${results.length} download URLs...`);
-              results = await this.validateMapDownloads(results, { maxConcurrent: 2 });
-              
-              // Filter out maps without verified downloads
-              const verifiedCount = results.filter(r => r.downloadVerified).length;
-              console.log(`[Planet Minecraft] ${verifiedCount}/${results.length} download URLs verified`);
-              
-              return results;
-            } catch (error) {
-              lastError = error;
-              retries++;
-              console.warn(`[Planet Minecraft] Retry ${retries}/${this.maxRetries} after error: ${error.message}`);
-              await this.sleep(this.retryDelay * retries);
-              
-              // Reset browser on error
-              await this.closeBrowser();
-            }
+          try {
+            const results = await this.fetchSearchResults(query, limit);
+            return results.map(r => this.normalizeToCurseForgeFormat(r));
+          } catch (error) {
+            console.warn(`[Planet Minecraft HTTP] Search error: ${error.message}`);
+            return []; // Return empty on error - don't fail the whole search
           }
-
-          throw new Error(`Failed after ${this.maxRetries} retries: ${lastError.message}`);
         });
       });
     });
   }
 
-  async scrapeSearch(query, limit) {
-    const page = await this.context.newPage();
+  async fetchSearchResults(query, limit) {
+    const encodedQuery = encodeURIComponent(query);
+    const searchUrl = `${this.baseUrl}/resources/projects/?text=${encodedQuery}&order=order_popularity`;
+    
+    console.log(`[Planet Minecraft HTTP] Fetching: ${searchUrl}`);
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.requestTimeout);
     
     try {
-      // Build search URL
-      const encodedQuery = encodeURIComponent(query);
-      const searchUrl = `${this.baseUrl}/resources/projects/?text=${encodedQuery}&order=order_popularity`;
-      
-      console.log(`[Planet Minecraft] Navigating to: ${searchUrl}`);
-      
-      // Navigate with timeout and wait for content (use domcontentloaded for faster response)
-      await page.goto(searchUrl, { 
-        waitUntil: 'domcontentloaded',
-        timeout: 15000 
+      const response = await fetch(searchUrl, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': this.getRandomUserAgent(),
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Referer': 'https://www.google.com/',
+          'Connection': 'keep-alive',
+        }
       });
 
-      // Wait for results to load with shorter timeout
-      await page.waitForSelector('.resource, .r-content, .project-card, [data-project-id], .cont, article', 
-        { timeout: 8000 });
+      clearTimeout(timeoutId);
 
-      // Extract map data from the page
-      const maps = await page.evaluate((limit) => {
-        const results = [];
-        
-        // Try multiple selectors for different page layouts
-        const selectors = [
-          '.resource',
-          '.r-content',
-          '.project-card',
-          '[data-project-id]',
-          '.cont .r-item',
-          '.resource-item'
-        ];
-        
-        let elements = [];
-        for (const selector of selectors) {
-          elements = document.querySelectorAll(selector);
-          if (elements.length > 0) break;
-        }
-
-        elements.forEach((el, index) => {
-          if (index >= limit) return;
-
-          try {
-            // Extract data with multiple fallback selectors
-            const titleEl = el.querySelector('.r-title a, .title a, h3 a, .resource-title a, a[href*="/project/"]');
-            const authorEl = el.querySelector('.r-author a, .author a, .user a, [href*="/member/"]');
-            const descEl = el.querySelector('.r-desc, .description, .summary, p');
-            const thumbEl = el.querySelector('.r-img img, .thumbnail img, .preview img, img[src*="planetminecraft"]');
-            const downloadsEl = el.querySelector('.r-details .fa-eye, .r-stats, .stats');
-            
-            if (titleEl) {
-              const title = titleEl.textContent.trim();
-              const url = titleEl.href;
-              const projectMatch = url.match(/\/project\/([^\/]+)/);
-              const projectId = projectMatch ? projectMatch[1] : null;
-              
-              // Get thumbnail - handle lazy loaded images
-              let thumbnail = '';
-              if (thumbEl) {
-                thumbnail = thumbEl.dataset.src || thumbEl.src || '';
-              }
-              
-              // Parse download count
-              let downloads = 0;
-              if (downloadsEl) {
-                const text = downloadsEl.textContent || downloadsEl.parentElement.textContent || '';
-                const match = text.match(/([\d,.]+)([KM]?)\s*(?:views?|downloads?)/i);
-                if (match) {
-                  let num = parseFloat(match[1].replace(/,/g, ''));
-                  if (match[2] === 'K') num *= 1000;
-                  if (match[2] === 'M') num *= 1000000;
-                  downloads = Math.floor(num);
-                }
-              }
-
-              results.push({
-                id: projectId || `pmc-${Date.now()}-${index}`,
-                title: title,
-                slug: projectId || '',
-                description: descEl ? descEl.textContent.trim().substring(0, 500) : '',
-                author: authorEl ? authorEl.textContent.trim() : 'Unknown',
-                authorUrl: authorEl ? authorEl.href : '',
-                url: url.startsWith('http') ? url : `https://www.planetminecraft.com${url}`,
-                thumbnail: thumbnail,
-                downloads: downloads,
-                category: 'World',
-                dateCreated: new Date().toISOString(),
-                dateModified: new Date().toISOString()
-              });
-            }
-          } catch (e) {
-            // Skip invalid items
-          }
-        });
-
-        return results;
-      }, limit);
-
-      console.log(`[Planet Minecraft] Found ${maps.length} maps`);
-      
-      // Now fetch download URLs for each map (with timeout to keep it fast)
-      for (const map of maps) {
-        if (map.slug) {
-          try {
-            // Use a quick timeout for download URL fetching
-            const downloadPromise = this.getDownloadUrl(page, map.slug);
-            const timeoutPromise = new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Download URL timeout')), 5000)
-            );
-            map.downloadUrl = await Promise.race([downloadPromise, timeoutPromise]);
-          } catch (e) {
-            // Fallback to project page URL
-            map.downloadUrl = `${this.baseUrl}/project/${map.slug}/download`;
-          }
-        }
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
       }
 
-      return maps;
-    } finally {
-      await page.close();
-    }
-  }
-
-  async getDownloadUrl(page, projectSlug) {
-    try {
-      const downloadPageUrl = `${this.baseUrl}/project/${projectSlug}/download`;
-      
-      // Open new page for download
-      const downloadPage = await this.context.newPage();
-      
-      try {
-        await downloadPage.goto(downloadPageUrl, { waitUntil: 'networkidle', timeout: 20000 });
-        
-        // Look for download button/link with improved selectors
-        const downloadInfo = await downloadPage.evaluate(() => {
-          // Try multiple selectors for direct download link
-          const selectors = [
-            'a[href*=".zip"]',
-            'a[href*=".rar"]',
-            'a[href*=".mcworld"]',
-            'a[href*=".mcpack"]',
-            'a[href*="mediafire.com"]',
-            'a[href*="curseforge.com"]',
-            'a.download-button',
-            'a[href*="download"]:not([href*="/download"])',
-            'button[data-download]',
-            '.download a',
-            '[data-download-url]'
-          ];
-          
-          for (const selector of selectors) {
-            const el = document.querySelector(selector);
-            if (el) {
-              const href = el.href || el.dataset.download || el.dataset.url || el.dataset.downloadUrl;
-              if (href && !href.includes('javascript:')) {
-                return { url: href, source: 'selector', selector };
-              }
-            }
-          }
-          
-          // Look for any link with download text
-          const links = document.querySelectorAll('a');
-          for (const link of links) {
-            const text = link.textContent.toLowerCase();
-            const href = link.href;
-            if (text.includes('download') && href && 
-                (href.includes('.zip') || href.includes('.rar') || href.includes('.mcworld') || 
-                 href.includes('mediafire') || href.includes('curseforge'))) {
-              return { url: href, source: 'text-match' };
-            }
-          }
-          
-          return null;
-        });
-
-        return downloadInfo ? downloadInfo.url : null;
-      } finally {
-        await downloadPage.close();
-      }
+      const html = await response.text();
+      return this.parseSearchHTML(html, limit);
     } catch (error) {
-      console.warn(`[Planet Minecraft] Failed to get download URL for ${projectSlug}: ${error.message}`);
-      return null;
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        throw new Error(`Request timeout after ${this.requestTimeout}ms`);
+      }
+      throw error;
     }
   }
 
-  /**
-   * Extract and validate direct download URL from a Planet Minecraft project page
-   * Overrides BaseScraper.extractDownloadUrl
-   */
-  async extractDownloadUrl(mapUrl, options = {}) {
-    if (!mapUrl) return null;
+  parseSearchHTML(html, limit) {
+    const $ = cheerio.load(html);
+    const results = [];
     
-    // Extract project slug from URL
-    const slugMatch = mapUrl.match(/\/project\/([^\/]+)/);
-    if (!slugMatch) {
-      console.warn(`[Planet Minecraft] Could not extract slug from URL: ${mapUrl}`);
-      return null;
-    }
+    // Planet Minecraft uses .resource or article elements
+    const selectors = [
+      '.resource',
+      'article.resource',
+      '.r-item',
+      '.content .resource'
+    ];
     
-    const projectSlug = slugMatch[1];
-    
-    try {
-      await this.initBrowser();
-      const page = await this.context.newPage();
-      
-      try {
-        // First try the download page
-        const downloadUrl = await this.getDownloadUrl(page, projectSlug);
+    for (const selector of selectors) {
+      $(selector).each((index, element) => {
+        if (results.length >= limit) return false;
         
-        if (downloadUrl) {
-          // Validate the URL returns HTTP 200
-          const validatedUrl = await this.validateDownloadUrl(downloadUrl, options);
-          if (validatedUrl) {
-            console.log(`[Planet Minecraft] Validated download URL for ${projectSlug}`);
-            return validatedUrl;
+        const $el = $(element);
+        
+        // Extract title and URL
+        const titleEl = $el.find('h3 a, .r-title a, a[href*="/project/"]').first();
+        if (!titleEl.length) return;
+        
+        const title = titleEl.text().trim();
+        let url = titleEl.attr('href') || '';
+        if (!url) return;
+        
+        const fullUrl = url.startsWith('http') ? url : `${this.baseUrl}${url}`;
+        
+        // Extract project slug
+        const projectMatch = url.match(/\/project\/([^\/]+)/);
+        const projectId = projectMatch ? projectMatch[1] : null;
+        
+        // Extract thumbnail - handle lazy loading
+        const thumbEl = $el.find('img').first();
+        let thumbnail = '';
+        if (thumbEl.length) {
+          thumbnail = thumbEl.attr('data-src') || thumbEl.attr('src') || '';
+        }
+        
+        // Extract description
+        const descEl = $el.find('.r-desc, .description, p').first();
+        const description = descEl.text().trim().substring(0, 300);
+        
+        // Extract author
+        const authorEl = $el.find('a[href*="/member/"]').first();
+        const author = authorEl.text().trim() || 'Unknown';
+        
+        // Extract downloads/views
+        let downloads = 0;
+        const statsEl = $el.find('.r-details, .stats').first();
+        if (statsEl.length) {
+          const text = statsEl.text();
+          const match = text.match(/([\d,.]+)([KM]?)\s*(?:views?|downloads?)/i);
+          if (match) {
+            let num = parseFloat(match[1].replace(/,/g, ''));
+            if (match[2] === 'K') num *= 1000;
+            if (match[2] === 'M') num *= 1000000;
+            downloads = Math.floor(num);
           }
         }
         
-        return null;
-      } finally {
-        await page.close();
-      }
-    } catch (error) {
-      console.warn(`[Planet Minecraft] Error extracting download URL: ${error.message}`);
-      return null;
+        results.push({
+          id: projectId || `pmc-${Date.now()}-${index}`,
+          title: title,
+          slug: projectId || '',
+          description: description,
+          author: author,
+          authorUrl: authorEl.attr('href') ? `${this.baseUrl}${authorEl.attr('href')}` : '',
+          url: fullUrl,
+          thumbnail: thumbnail,
+          downloads: downloads,
+          downloadUrl: projectId ? `${this.baseUrl}/project/${projectId}/download` : null,
+          category: 'World',
+          dateCreated: new Date().toISOString(),
+          dateModified: new Date().toISOString(),
+          source: 'planetminecraft'
+        });
+      });
+      
+      if (results.length > 0) break;
     }
+    
+    console.log(`[Planet Minecraft HTTP] Parsed ${results.length} results`);
+    return results;
   }
 
-  // Health check
   async checkHealth() {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    
     try {
-      await this.initBrowser();
-      const page = await this.context.newPage();
+      // Test actual search functionality
+      const searchUrl = `${this.baseUrl}/resources/projects/?text=castle&order=order_popularity`;
       
-      try {
-        await page.goto(this.baseUrl, { timeout: 10000 });
-        const title = await page.title();
-        const isAccessible = title.toLowerCase().includes('planet minecraft');
-        
-        return {
-          ...this.getHealth(),
-          accessible: isAccessible,
-          pageTitle: title
-        };
-      } finally {
-        await page.close();
+      const response = await fetch(searchUrl, {
+        signal: controller.signal,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+        }
+      });
+      
+      clearTimeout(timeoutId);
+      
+      let canSearch = false;
+      if (response.ok) {
+        const html = await response.text();
+        // Check if we got valid search results
+        canSearch = html.includes('resource') && html.includes('project') && html.length > 5000;
       }
+      
+      return {
+        ...this.getHealth(),
+        accessible: response.ok && canSearch,
+        statusCode: response.status,
+        canSearch: canSearch,
+        error: canSearch ? null : 'Search not functional'
+      };
     } catch (error) {
+      clearTimeout(timeoutId);
       return {
         ...this.getHealth(),
         accessible: false,
-        error: error.message
+        error: error.name === 'AbortError' ? 'Health check timeout' : error.message
       };
     }
   }

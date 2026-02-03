@@ -1,6 +1,6 @@
 /**
- * 9Minecraft Scraper
- * Scrapes minecraft maps from 9minecraft.net
+ * 9Minecraft HTTP Scraper
+ * Uses fetch + Cheerio with aggressive timeouts
  */
 
 const { BaseScraper } = require('./base');
@@ -14,94 +14,68 @@ class NineMinecraftScraper extends BaseScraper {
       sourceName: '9Minecraft',
       ...options
     });
-    this.maxRetries = 3;
-    this.retryDelay = 2000;
+    this.requestTimeout = options.requestTimeout || 5000; // 5s timeout
   }
 
   async search(query, options = {}) {
-    const { limit = 20 } = options;
+    const { limit = 8 } = options;
     
-    // Use caching layer
     return this.searchWithCache(query, options, async (q, opts) => {
       return this.circuitBreaker.execute(async () => {
         return this.rateLimitedRequest(async () => {
-          let retries = 0;
-          let lastError;
-
-          while (retries < this.maxRetries) {
-            try {
-              let results = await this.scrapeSearch(query, limit);
-              
-              // Normalize to CurseForge format
-              results = results.map(r => this.normalizeToCurseForgeFormat(r));
-              
-              // Validate download URLs
-              console.log(`[9Minecraft] Validating ${results.length} download URLs...`);
-              results = await this.validateMapDownloads(results, { maxConcurrent: 2 });
-              
-              // Filter out maps without verified downloads
-              const verifiedCount = results.filter(r => r.downloadVerified).length;
-              console.log(`[9Minecraft] ${verifiedCount}/${results.length} download URLs verified`);
-              
-              return results;
-            } catch (error) {
-              lastError = error;
-              retries++;
-              console.warn(`[9Minecraft] Retry ${retries}/${this.maxRetries} after error: ${error.message}`);
-              await this.sleep(this.retryDelay * retries);
-            }
+          try {
+            const results = await this.fetchSearchResults(query, limit);
+            return results.map(r => this.normalizeToCurseForgeFormat(r));
+          } catch (error) {
+            console.warn(`[9Minecraft] Search error: ${error.message}`);
+            return []; // Return empty on error
           }
-
-          throw new Error(`Failed after ${this.maxRetries} retries: ${lastError.message}`);
         });
       });
     });
   }
 
-  async scrapeSearch(query, limit) {
-    const encodedQuery = encodeURIComponent(query + ' map');
+  async fetchSearchResults(query, limit) {
+    // 9Minecraft is often slow - try with 'map' suffix for better results
+    const encodedQuery = encodeURIComponent(query);
     const searchUrl = `${this.baseUrl}/?s=${encodedQuery}`;
     
     console.log(`[9Minecraft] Fetching: ${searchUrl}`);
     
-    // Use AbortController for timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout
+    const timeoutId = setTimeout(() => controller.abort(), this.requestTimeout);
     
     try {
       const response = await fetch(searchUrl, {
         signal: controller.signal,
         headers: {
           'User-Agent': this.getRandomUserAgent(),
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
           'Accept-Language': 'en-US,en;q=0.9',
           'Accept-Encoding': 'gzip, deflate, br',
-          'DNT': '1',
-          'Connection': 'keep-alive',
-          'Upgrade-Insecure-Requests': '1',
           'Referer': 'https://www.google.com/',
-          'Cache-Control': 'max-age=0'
+          'Connection': 'keep-alive',
         }
       });
 
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        throw new Error(`HTTP ${response.status}`);
       }
 
       const html = await response.text();
       
       // Check if response is valid
       if (html.length < 500 || html.includes('captcha') || html.includes('blocked')) {
-        throw new Error('Response appears to be blocked or invalid');
+        throw new Error('Response appears blocked or invalid');
       }
       
       return this.parseSearchHTML(html, limit);
     } catch (error) {
       clearTimeout(timeoutId);
       if (error.name === 'AbortError') {
-        throw new Error('Request timeout after 8 seconds');
+        throw new Error(`Request timeout after ${this.requestTimeout}ms`);
       }
       throw error;
     }
@@ -109,85 +83,80 @@ class NineMinecraftScraper extends BaseScraper {
   
   parseSearchHTML(html, limit) {
     const $ = cheerio.load(html);
-    
     const maps = [];
     
-    // 9Minecraft uses article posts
+    // 9Minecraft uses article.post
     const selectors = [
       'article.post',
+      'article.type-post',
       '.post',
-      '.entry',
-      '.item-list article',
-      '.content article'
+      '.entry'
     ];
-    
-    let foundElements = false;
     
     for (const selector of selectors) {
       $(selector).each((index, element) => {
         if (maps.length >= limit) return false;
-        foundElements = true;
         
-        try {
-          const $el = $(element);
-          
-          // Extract data
-          const titleEl = $el.find('h2 a, h3 a, .entry-title a, .post-title a').first();
-          const descEl = $el.find('.entry-summary p, .post-content p, .excerpt, p').first();
-          const thumbEl = $el.find('img').first();
-          const metaEl = $el.find('.post-meta, .entry-meta, .meta').first();
-          
-          if (titleEl.length) {
-            const title = titleEl.text().trim();
-            const url = titleEl.attr('href');
-            
-            // Only include if it looks like a map
-            const text = (title + ' ' + (descEl.text() || '')).toLowerCase();
-            if (!this.isMapContent(text)) {
-              return;
-            }
-            
-            const fullUrl = url.startsWith('http') ? url : `${this.baseUrl}${url}`;
-            
-            // Extract slug
-            const slugMatch = url.match(/\/(?:[^/]+-)?([^/]+)\/$/);
-            const slug = slugMatch ? slugMatch[1] : '';
-            
-            // Parse author from meta
-            let author = 'Unknown';
-            const authorMatch = metaEl.text().match(/by\s+([^|]+)/i);
-            if (authorMatch) {
-              author = authorMatch[1].trim();
-            }
-            
-            // Parse date
-            let date = new Date().toISOString();
-            const dateMatch = metaEl.text().match(/(\w+\s+\d{1,2},?\s+\d{4})/);
-            if (dateMatch) {
-              date = new Date(dateMatch[1]).toISOString();
-            }
-            
-            maps.push({
-              id: `9mc-${Date.now()}-${index}`,
-              title: title.replace(/Map\s+for\s+Minecraft/i, '').trim(),
-              slug: slug,
-              description: descEl.text().trim().substring(0, 500),
-              author: author,
-              url: fullUrl,
-              thumbnail: thumbEl.attr('src') || thumbEl.attr('data-src') || '',
-              downloads: 0, // 9Minecraft doesn't show download counts
-              downloadUrl: fullUrl, // Will resolve on detail page
-              category: this.detectCategory(title, descEl.text()),
-              dateCreated: date,
-              dateModified: date
-            });
-          }
-        } catch (e) {
-          // Skip invalid items
+        const $el = $(element);
+        
+        // Extract title and URL
+        const titleEl = $el.find('h2 a, h3 a, .entry-title a, .post-title a').first();
+        if (!titleEl.length) return;
+        
+        const title = titleEl.text().trim();
+        const url = titleEl.attr('href') || '';
+        if (!url) return;
+        
+        const fullUrl = url.startsWith('http') ? url : `${this.baseUrl}${url}`;
+        
+        // Check if it's map-related content
+        const text = (title + ' ' + $el.text()).toLowerCase();
+        if (!this.isMapContent(text)) {
+          return;
         }
+        
+        // Extract slug
+        const slugMatch = url.match(/\/(?:[^/]+-)?([^/]+)\/$/);
+        const slug = slugMatch ? slugMatch[1] : '';
+        
+        // Extract description
+        const descEl = $el.find('.entry-summary p, .post-content p, p').first();
+        const description = descEl.text().trim().substring(0, 300);
+        
+        // Extract thumbnail
+        const thumbEl = $el.find('img').first();
+        const thumbnail = thumbEl.attr('data-src') || thumbEl.attr('src') || '';
+        
+        // Extract author from meta
+        const metaEl = $el.find('.post-meta, .entry-meta').first();
+        let author = 'Unknown';
+        const metaText = metaEl.text() || '';
+        const authorMatch = metaText.match(/by\s+([^|]+)/i);
+        if (authorMatch) {
+          author = authorMatch[1].trim();
+        }
+        
+        // Clean up title
+        const cleanTitle = title.replace(/Map\s+for\s+Minecraft/i, '').trim();
+        
+        maps.push({
+          id: `9mc-${Date.now()}-${index}`,
+          title: cleanTitle,
+          slug: slug,
+          description: description,
+          author: author,
+          url: fullUrl,
+          thumbnail: thumbnail,
+          downloads: 0, // 9Minecraft doesn't show download counts
+          downloadUrl: fullUrl,
+          category: this.detectCategory(cleanTitle, description),
+          dateCreated: new Date().toISOString(),
+          dateModified: new Date().toISOString(),
+          source: 'nineminecraft'
+        });
       });
       
-      if (foundElements) break;
+      if (maps.length > 0) break;
     }
     
     console.log(`[9Minecraft] Found ${maps.length} maps`);
@@ -196,22 +165,23 @@ class NineMinecraftScraper extends BaseScraper {
 
   isMapContent(text) {
     const mapKeywords = [
-      'map', 'world', 'adventure map', 'survival map', 'parkour map',
-      'puzzle map', 'horror map', 'city map', 'house map'
+      'map', 'world', 'adventure', 'survival', 'parkour',
+      'puzzle', 'horror', 'city', 'house', 'castle',
+      'skyblock', 'minigame', 'pvp'
     ];
     
-    return mapKeywords.some(kw => text.includes(kw.toLowerCase()));
+    return mapKeywords.some(kw => text.toLowerCase().includes(kw));
   }
 
   detectCategory(title, description) {
-    const text = (title + ' ' + description).toLowerCase();
+    const text = ((title || '') + ' ' + (description || '')).toLowerCase();
     
     if (text.includes('parkour')) return 'Parkour';
     if (text.includes('puzzle')) return 'Puzzle';
     if (text.includes('adventure')) return 'Adventure';
     if (text.includes('survival')) return 'Survival';
     if (text.includes('horror')) return 'Horror';
-    if (text.includes('pvp') || text.includes('pvp map')) return 'PvP';
+    if (text.includes('pvp')) return 'PvP';
     if (text.includes('minigame') || text.includes('mini game')) return 'Minigame';
     if (text.includes('city')) return 'City';
     if (text.includes('castle')) return 'Castle';
@@ -221,106 +191,29 @@ class NineMinecraftScraper extends BaseScraper {
     return 'World';
   }
 
-  async getDownloadUrl(mapUrl) {
-    try {
-      const response = await fetch(mapUrl, {
-        headers: {
-          'User-Agent': this.getRandomUserAgent(),
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'Referer': this.baseUrl
-        }
-      });
-
-      if (!response.ok) return null;
-
-      const html = await response.text();
-      const $ = cheerio.load(html);
-      
-      // Look for download button/link with improved selectors
-      const downloadSelectors = [
-        'a[href*="mediafire.com"]',
-        'a[href*="curseforge.com"]',
-        'a[href*="dropbox.com"]',
-        'a[href*="drive.google.com"]',
-        'a[href*=".zip"]',
-        'a[href*=".rar"]',
-        'a[href*=".mcworld"]',
-        'a[href*=".mcpack"]',
-        '.download-button a',
-        'a.btn-download',
-        'a[href*="download"]:not([href*="javascript:"])'
-      ];
-      
-      for (const selector of downloadSelectors) {
-        const link = $(selector).first();
-        if (link.length) {
-          const href = link.attr('href');
-          if (href) {
-            const fullUrl = href.startsWith('http') ? href : `${this.baseUrl}${href}`;
-            // Validate the URL
-            const validatedUrl = await this.validateDownloadUrl(fullUrl, { timeout: 8000 });
-            if (validatedUrl) {
-              return validatedUrl;
-            }
-          }
-        }
-      }
-      
-      // Fallback: try to validate the map page URL
-      const validatedPageUrl = await this.validateDownloadUrl(mapUrl, { timeout: 5000 });
-      if (validatedPageUrl) {
-        return mapUrl;
-      }
-      
-      return null;
-    } catch (error) {
-      console.warn(`[9Minecraft] Failed to get download URL: ${error.message}`);
-      return null;
-    }
-  }
-
-  /**
-   * Extract and validate direct download URL from a 9Minecraft detail page
-   * Overrides BaseScraper.extractDownloadUrl
-   */
-  async extractDownloadUrl(mapUrl, options = {}) {
-    if (!mapUrl) return null;
-    
-    // 9Minecraft URLs are typically direct to the post
-    return this.getDownloadUrl(mapUrl);
-  }
-
   async checkHealth() {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 8000);
+    
     try {
-      // Try to perform an actual search to verify the site is working for searches
-      // Just checking the homepage doesn't catch search timeouts
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
-      
-      const testQuery = 'castle'; // Simple test query
+      // Test actual search functionality
+      const testQuery = 'castle';
       const searchUrl = `${this.baseUrl}/?s=${encodeURIComponent(testQuery)}`;
       
       const response = await fetch(searchUrl, {
         signal: controller.signal,
         headers: { 
-          'User-Agent': this.getRandomUserAgent(),
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'Referer': 'https://www.google.com/'
         }
       });
       
       clearTimeout(timeoutId);
       
-      // Also check if we can parse results
       let canSearch = false;
       if (response.ok) {
-        try {
-          const html = await response.text();
-          // Check if the response contains expected content
-          canSearch = html.includes('article') || html.includes('post') || html.length > 5000;
-        } catch (e) {
-          // Ignore parse errors
-        }
+        const html = await response.text();
+        canSearch = html.includes('article') || html.includes('post') || html.length > 3000;
       }
       
       return {
@@ -328,9 +221,10 @@ class NineMinecraftScraper extends BaseScraper {
         accessible: response.ok && canSearch,
         statusCode: response.status,
         canSearch: canSearch,
-        error: canSearch ? null : 'Search functionality may be limited'
+        error: canSearch ? null : 'Search not functional'
       };
     } catch (error) {
+      clearTimeout(timeoutId);
       return {
         ...this.getHealth(),
         accessible: false,

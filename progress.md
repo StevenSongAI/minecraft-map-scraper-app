@@ -1,207 +1,169 @@
 # RED TEAM DEFECT REPORT - Minecraft Map Scraper
 **Date:** 2026-02-03  
 **Live URL:** https://web-production-631b7.up.railway.app  
-**Tester:** Red Team (Adversarial)
-
----
-
-## DEFECT SUMMARY
-**Total Defects Found:** 5 CRITICAL defects  
-**Status:** ❌ DEFECTS_FOUND
-
----
-
-## DEFECT 1: Multi-Source Scrapers COMPLETELY BROKEN [CRITICAL]
-
-**Requirement Violated:**
-> "MUST aggregate results from multiple sources beyond CurseForge"  
-> "Primary additional sources: Planet Minecraft (largest repository after CurseForge)"  
-> "Secondary sources: MinecraftMaps.com, 9Minecraft"
-
-**Evidence (from /api/search-unified):**
-```json
-{
-  "sources": {
-    "curseforge": { "count": 61, "success": true },
-    "planetminecraft": { 
-      "count": 0, 
-      "success": false,
-      "error": "browserType.launch: Failed to launch: Error: spawn /root/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell ENOENT"
-    },
-    "minecraftmaps": { 
-      "count": 0, 
-      "success": false,
-      "error": "Timeout after 6000ms"
-    },
-    "nineminecraft": { 
-      "count": 0, 
-      "success": false,
-      "error": "Timeout after 6000ms"
-    }
-  }
-}
-```
-
-**Impact:** 
-- 0% of multi-source scrapers functional
-- Only 1 of 4 required data sources working
-- Violates "Commercial Grade" multi-source requirement
-- 75% data source failure rate
-
-**Timestamp:** 2026-02-03T16:35:01.892Z
-
----
-
-## DEFECT 2: Search Accuracy FAILS for Compound Queries [CRITICAL]
-
-**Requirement Violated:**
-> "'Underwater city' must return maps that are actually underwater-themed"  
-> "Result titles/descriptions must contain query keywords OR semantic equivalents"  
-> "False positive rate < 5%"
-
-**Evidence:**
-Query: `underwater city`
-
-Results returned (all marked as relevant):
-1. **Radiant City Official** - Regular city, NO underwater theme
-2. **Los Perrito City** - Country/city map, NO underwater theme
-3. **Horizon City** - Zombie survival city, NO underwater theme
-4. **New Port City** - Basic city, NO underwater theme
-5. **City of Waterton** - Modern city, NO underwater theme
-6. **Tideworn - Flooded City** - ✅ Only relevant result (flooded)
-
-**False Positive Rate:** 90% (9 out of 10 results are NOT underwater-themed)
-
-**Required:** <5% false positive rate  
-**Actual:** ~90% false positive rate
-
-**Impact:**
-- Users searching for "underwater city" get regular cities
-- Search is essentially broken for compound concept queries
-- Compound concept detection algorithm is non-functional
-
-**Timestamp:** 2026-02-03T16:35:01.892Z
-
----
-
-## DEFECT 3: Download Endpoint (Query Param) Returns 404 [CRITICAL]
-
-**Requirement Violated:**
-> "Download buttons must return valid ZIP files"  
-> "HTTP 200 responses, not 403 errors or JSON error messages"
-
-**Evidence:**
-```bash
-$ curl -sI "https://web-production-631b7.up.railway.app/api/download?id=62467"
-HTTP/2 404
-```
-
-**Working:** `GET /api/download/:modId` (path parameter)  
-**Broken:** `GET /api/download?id=X` (query parameter)
-
-The server.js code shows BOTH should work:
-- Line ~772: `app.get('/api/download/:modId', ...)` - WORKS
-- Line ~850: `app.get('/api/download', ...)` - RETURNS 404
-
-**Impact:**
-- API inconsistency
-- Client applications using query params will fail
-- Not all documented endpoints work
-
-**Timestamp:** 2026-02-03T16:35:21Z
-
----
-
-## DEFECT 4: Unified Search Response Time EXCEEDS Acceptable Threshold [HIGH]
-
-**Requirement Violated:**
-> "Search response time < 10 seconds including ALL sources"
-
-**Evidence:**
-```
-/api/search-unified?q=futuristic+city
-TIME_TOTAL: 6.346813s
-```
-
-While technically under 10s, this is:
-- 63% of maximum allowed time
-- With 3 out of 4 sources FAILING (timeouts)
-- Only CurseForge responding
-
-**Expected if all sources worked:** >10 seconds (would FAIL requirement)
-
-**Impact:**
-- Barely passes when most sources are broken
-- Would fail with all sources operational
-- Poor user experience
-
-**Timestamp:** 2026-02-03T16:35:01.892Z
-
----
-
-## DEFECT 5: Health Check Misrepresents Scraper Status [MEDIUM]
-
-**Evidence from /api/health:**
-```json
-{
-  "scrapers": {
-    "scrapers": [
-      {
-        "name": "planetminecraft",
-        "accessible": false,
-        "error": "browserType.launch: Failed to launch..."
-      },
-      {
-        "name": "minecraftmaps", 
-        "accessible": false,
-        "statusCode": 403
-      },
-      {
-        "name": "nineminecraft",
-        "accessible": true,
-        "statusCode": 200
-      }
-    ]
-  }
-}
-```
-
-**Discrepancy:**
-- Health check shows `nineminecraft` as "accessible": true
-- But `/api/search-unified` shows it failing with "Timeout after 6000ms"
-
-**Impact:**
-- Monitoring/alerting systems would be misled
-- False sense of system health
-- Operations teams unaware of failures
-
-**Timestamp:** 2026-02-03T16:26:00.621Z
-
----
-
-## RED TEAM CONCLUSION
-
-### Success Criteria Assessment:
-
-| Requirement | Status | Evidence |
-|-------------|--------|----------|
-| Multi-source aggregation | ❌ FAILED | 3/4 sources broken |
-| Search accuracy <5% FP | ❌ FAILED | ~90% false positive rate |
-| Download valid ZIP files | ⚠️ PARTIAL | One endpoint 404 |
-| Response time < 10s | ⚠️ MARGINAL | 6.3s with broken sources |
-| Demo mode = false | ✅ PASS | Correctly configured |
-| Real CurseForge IDs | ✅ PASS | Real IDs confirmed |
-| Working thumbnails | ✅ PASS | ForgeCDN thumbnails work |
-
-### Final Verdict:
-**5 CRITICAL DEFECTS FOUND** - System is NOT production ready.
-
-Key issues:
-1. Multi-source feature is completely non-functional (marketing vs reality)
-2. Search accuracy is severely compromised for compound queries
-3. API has broken endpoints
-4. Performance barely acceptable only because features are broken
-
----
-**Report Generated:** 2026-02-03T16:35:00Z  
 **Status:** DEFECTS_FOUND
+
+---
+
+## CRITICAL DEFECTS
+
+### DEFECT 1: Planet Minecraft Scraper COMPLETELY BROKEN (Playwright Launch Failure)
+**Severity:** CRITICAL  
+**Evidence Timestamp:** 2026-02-03T16:42:08.585Z
+
+**Expected:** Planet Minecraft scraper should be accessible and returning results from planetminecraft.com
+
+**Actual:** Planet Minecraft scraper is failing with browser launch error:
+```
+"error": "browserType.launch: Failed to launch: Error: spawn 
+/root/.cache/ms-playwright/chromium_headless_shell-1208/chrome-headless-shell-linux64/chrome-headless-shell ENOENT"
+```
+
+**Health Check Response:**
+```json
+{
+  "name": "planetminecraft",
+  "enabled": true,
+  "source": "Planet Minecraft",
+  "accessible": false,
+  "error": "browserType.launch: Failed to launch..."
+}
+```
+
+**Impact:** ZERO results from Planet Minecraft, one of the largest Minecraft map repositories. Completely fails the "Multi-Source Web Scraping" requirement.
+
+---
+
+### DEFECT 2: MinecraftMaps Scraper BLOCKED (403 Forbidden)
+**Severity:** CRITICAL  
+**Evidence Timestamp:** 2026-02-03T16:42:08.585Z
+
+**Expected:** MinecraftMaps scraper should return results from minecraftmaps.com
+
+**Actual:** Receiving HTTP 403 Forbidden - blocked by Cloudflare/anti-bot protection
+
+**Health Check Response:**
+```json
+{
+  "name": "minecraftmaps",
+  "enabled": true,
+  "source": "MinecraftMaps",
+  "accessible": false,
+  "statusCode": 403
+}
+```
+
+**Impact:** Zero results from MinecraftMaps. Combined with Planet Minecraft failure, multi-source aggregation is 66% non-functional.
+
+---
+
+### DEFECT 3: Multi-Source Aggregation COMPLETELY NON-FUNCTIONAL
+**Severity:** CRITICAL  
+**Evidence Timestamp:** 2026-02-03T16:47:59.530Z
+
+**Requirement:** "Results from ALL sources must appear seamlessly unified with CurseForge API results"
+
+**Actual Behavior:**
+- Searched: "futuristic city with railways" → 20 results, ALL from "source": "CurseForge"
+- Searched: "medieval castle" → 19 results, ALL from "source": "CurseForge"  
+- Searched: "planet minecraft exclusive" → 8 results, ALL from "source": "CurseForge"
+- Searched: "horror jumpscares" → 20 results, ALL from "source": "CurseForge"
+
+**Evidence:**
+```json
+{
+  "query": "futuristic city with railways",
+  "count": 20,
+  "maps": [
+    {"id": 1272043, "source": "CurseForge"},
+    {"id": 558131, "source": "CurseForge"},
+    ... ALL 20 results show "source": "CurseForge"
+  ]
+}
+```
+
+**Impact:** Despite health check claiming "multiSourceEnabled": true, the app is effectively a single-source (CurseForge) application. Fails the core multi-source aggregation requirement.
+
+---
+
+## MAJOR DEFECTS
+
+### DEFECT 4: Search Accuracy - "Underwater City" Returns Generic City Results
+**Severity:** MAJOR  
+**Evidence Timestamp:** 2026-02-03T16:48:08.107Z
+
+**Requirement:** "Underwater city must return maps that are actually underwater-themed"
+
+**Search Query:** "underwater city"
+
+**Expected Results:** Maps with actual underwater themes, coral reefs, submarine bases, Atlantis-style builds
+
+**Actual Results (Top 5):**
+1. "Water City" - Generic city map (NOT underwater)
+2. "Radiant City Official" - Generic city with METRO 
+3. "Los Perrito City" - Generic country/city map
+4. "Horizon City" - Zombie survival city
+5. "New Port City" - Basic city map
+
+**Only water-related result:** "Tideworn - 8 sqkm Forgotten Flooded City" (#12 in results)
+
+**Accuracy Rating:** ~5% - Nearly all results are false positives for "underwater"
+
+---
+
+### DEFECT 5: Missing API Endpoints
+**Severity:** MAJOR  
+**Evidence Timestamp:** 2026-02-03T16:48:50.499Z
+
+**Issue:** `/api/scrapers/status` returns 404 Not Found
+
+**Expected:** Consistent API endpoints for monitoring scraper health
+
+**Actual:**  
+- `/api/health` works and includes scraper status  
+- `/api/scrapers/status` returns 404
+
+This inconsistency indicates incomplete API implementation.
+
+---
+
+## MINOR DEFECTS
+
+### DEFECT 6: Search Results Lack Diverse Keywords (False Semantic Match)
+**Severity:** MINOR  
+**Evidence Timestamp:** 2026-02-03T16:48:00.436Z
+
+**Issue:** Search "medieval castle" correctly finds castle maps, but many high-ranking results have weak semantic relevance:
+
+- "Greek City" (relevance: 106.15) - not a castle
+- "Japanese City [Castle Edo]" (relevance: 20.99) - castle mentioned but ranked low
+- "Castle Rushers" (relevance: 198.36) - game map, not a build
+
+The relevance scoring algorithm appears inconsistent.
+
+---
+
+## SUMMARY
+
+| Defect | Severity | Status |
+|--------|----------|--------|
+| Planet Minecraft scraper broken | CRITICAL | FAIL |
+| MinecraftMaps scraper blocked | CRITICAL | FAIL |
+| Multi-source aggregation non-functional | CRITICAL | FAIL |
+| "Underwater city" search inaccurate | MAJOR | FAIL |
+| Missing API endpoints | MAJOR | FAIL |
+| Relevance scoring inconsistent | MINOR | FAIL |
+
+## VERDICT
+
+**DEFECTS_FOUND: 6 defects identified (3 Critical, 2 Major, 1 Minor)**
+
+The application:
+- ❌ FAILS multi-source aggregation requirements (only 1 of 3 sources working)
+- ❌ FAILS search accuracy for semantic queries
+- ✅ PASSES basic CurseForge API integration
+- ✅ PASSES download functionality (ZIP files work)
+- ✅ PASSES thumbnail loading
+- ✅ PASSES response time (< 10 seconds)
+
+**Recommendation:** Fix Playwright browser installation on Railway deployment and resolve MinecraftMaps 403 blocking before claiming multi-source support.

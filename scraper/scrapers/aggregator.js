@@ -1,99 +1,66 @@
 /**
  * Multi-Source Map Aggregator
- * Aggregates search results from multiple scrapers (CurseForge, Planet Minecraft, etc.)
+ * Aggregates search results from multiple scrapers with parallel fetching
  * Features:
- * - Parallel fetching with rate limiting
+ * - Parallel fetching with per-source timeouts
  * - Deduplication by title+author
  * - Circuit breaker for resilience
- * - Response time < 10 seconds
+ * - Response time < 10 seconds guarantee
  * - Unified format matching CurseForge API
  */
 
-// Try to load scrapers, with fallback to simple versions
-let PlanetMinecraftScraper = null;
-let MinecraftMapsScraper = null;
-let NineMinecraftScraper = null;
-
-// Try Playwright-based PlanetMinecraft first, fall back to simple version
-try {
-  PlanetMinecraftScraper = require('./planetminecraft');
-} catch (error) {
-  console.log('[Aggregator] Playwright not available, using simple HTTP scraper for Planet Minecraft');
-  try {
-    PlanetMinecraftScraper = require('./planetminecraft_simple');
-  } catch (e) {
-    console.warn('[Aggregator] Planet Minecraft scraper unavailable:', e.message);
-  }
-}
-
-// Try MinecraftMaps
-try {
-  MinecraftMapsScraper = require('./minecraftmaps');
-} catch (error) {
-  console.warn('[Aggregator] MinecraftMaps scraper unavailable:', error.message);
-}
-
-// Try 9Minecraft
-try {
-  NineMinecraftScraper = require('./nineminecraft');
-} catch (error) {
-  console.warn('[Aggregator] 9Minecraft scraper unavailable:', error.message);
-}
+const PlanetMinecraftScraper = require('./planetminecraft');
+const MinecraftMapsScraper = require('./minecraftmaps');
+const NineMinecraftScraper = require('./nineminecraft');
 
 class MapAggregator {
   constructor(options = {}) {
     this.scrapers = [];
-    this.timeout = options.timeout || 4000; // 4 seconds per source max (reduced for faster response)
-    this.maxResultsPerSource = options.maxResultsPerSource || 8; // Reduced to improve speed
+    this.timeout = options.timeout || 5000; // 5 seconds per source max
+    this.maxResultsPerSource = options.maxResultsPerSource || 6;
     
     // Initialize scrapers
     this.initScrapers();
   }
 
   initScrapers() {
-    // Planet Minecraft (primary scraper with browser automation or simple HTTP fallback)
-    if (PlanetMinecraftScraper) {
-      try {
-        this.scrapers.push({
-          name: 'planetminecraft',
-          instance: new PlanetMinecraftScraper(),
-          enabled: true,
-          priority: 1
-        });
-        console.log('[Aggregator] Planet Minecraft scraper initialized');
-      } catch (error) {
-        console.warn('[Aggregator] Failed to initialize Planet Minecraft scraper:', error.message);
-      }
+    // Planet Minecraft (HTTP-only)
+    try {
+      this.scrapers.push({
+        name: 'planetminecraft',
+        instance: new PlanetMinecraftScraper({ requestTimeout: this.timeout }),
+        enabled: true,
+        priority: 1
+      });
+      console.log('[Aggregator] Planet Minecraft scraper initialized');
+    } catch (error) {
+      console.warn('[Aggregator] Failed to initialize Planet Minecraft scraper:', error.message);
     }
 
     // MinecraftMaps.com
-    if (MinecraftMapsScraper) {
-      try {
-        this.scrapers.push({
-          name: 'minecraftmaps',
-          instance: new MinecraftMapsScraper(),
-          enabled: true,
-          priority: 2
-        });
-        console.log('[Aggregator] MinecraftMaps scraper initialized');
-      } catch (error) {
-        console.warn('[Aggregator] Failed to initialize MinecraftMaps scraper:', error.message);
-      }
+    try {
+      this.scrapers.push({
+        name: 'minecraftmaps',
+        instance: new MinecraftMapsScraper({ requestTimeout: this.timeout }),
+        enabled: true,
+        priority: 2
+      });
+      console.log('[Aggregator] MinecraftMaps scraper initialized');
+    } catch (error) {
+      console.warn('[Aggregator] Failed to initialize MinecraftMaps scraper:', error.message);
     }
 
     // 9Minecraft
-    if (NineMinecraftScraper) {
-      try {
-        this.scrapers.push({
-          name: 'nineminecraft',
-          instance: new NineMinecraftScraper(),
-          enabled: true,
-          priority: 3
-        });
-        console.log('[Aggregator] 9Minecraft scraper initialized');
-      } catch (error) {
-        console.warn('[Aggregator] Failed to initialize 9Minecraft scraper:', error.message);
-      }
+    try {
+      this.scrapers.push({
+        name: 'nineminecraft',
+        instance: new NineMinecraftScraper({ requestTimeout: this.timeout }),
+        enabled: true,
+        priority: 3
+      });
+      console.log('[Aggregator] 9Minecraft scraper initialized');
+    } catch (error) {
+      console.warn('[Aggregator] Failed to initialize 9Minecraft scraper:', error.message);
     }
     
     console.log(`[Aggregator] Total scrapers initialized: ${this.scrapers.length}`);
@@ -103,14 +70,11 @@ class MapAggregator {
    * Search across all enabled sources
    * @param {string} query - Search query
    * @param {Object} options - Search options
-   * @param {number} options.limit - Max total results
-   * @param {boolean} options.includeCurseForge - Include CurseForge API results
-   * @param {Function} options.curseForgeSearchFn - Function to search CurseForge
    * @returns {Promise<Object>} Unified search results
    */
   async search(query, options = {}) {
     const startTime = Date.now();
-    const { limit = 20, includeCurseForge = true, curseForgeSearchFn = null } = options;
+    const { limit = 20, includeCurseForge = false, curseForgeSearchFn = null } = options;
     
     console.log(`[Aggregator] Searching for: "${query}"`);
     
@@ -124,15 +88,9 @@ class MapAggregator {
       errors: []
     };
 
-    // Create search promises for all enabled scrapers
+    // Create search promises for all enabled scrapers with individual timeouts
     const searchPromises = [];
-
-    // Add CurseForge search if provided
-    if (includeCurseForge && curseForgeSearchFn) {
-      searchPromises.push(
-        this.searchWithTimeout('curseforge', curseForgeSearchFn, query, { limit: this.maxResultsPerSource })
-      );
-    }
+    const scraperNames = [];
 
     // Add scraper searches
     for (const scraper of this.scrapers) {
@@ -141,31 +99,42 @@ class MapAggregator {
           this.searchWithTimeout(
             scraper.name,
             () => scraper.instance.search(query, { limit: this.maxResultsPerSource }),
-            query,
-            { limit: this.maxResultsPerSource }
+            this.timeout
           )
         );
+        scraperNames.push(scraper.name);
       }
     }
 
-    // Execute all searches in parallel
-    const searchResults = await Promise.allSettled(searchPromises);
+    // Execute all searches in parallel with overall timeout
+    const overallTimeout = 8000; // 8s overall timeout
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Overall timeout')), overallTimeout)
+    );
+    
+    let searchResults;
+    try {
+      searchResults = await Promise.race([
+        Promise.allSettled(searchPromises),
+        timeoutPromise
+      ]);
+    } catch (timeoutError) {
+      console.warn(`[Aggregator] Overall search timeout after ${overallTimeout}ms`);
+      searchResults = []; // Will be treated as all rejected
+    }
 
     // Process results
     const allMaps = [];
     
     for (let i = 0; i < searchResults.length; i++) {
       const result = searchResults[i];
-      const sourceName = i === 0 && includeCurseForge && curseForgeSearchFn 
-        ? 'curseforge' 
-        : this.scrapers[includeCurseForge && curseForgeSearchFn ? i - 1 : i]?.name || 'unknown';
+      const sourceName = scraperNames[i];
 
       if (result.status === 'fulfilled') {
-        const maps = result.value.results || [];
+        const maps = result.value || [];
         results.sources[sourceName] = {
           count: maps.length,
-          success: true,
-          responseTime: result.value.responseTime
+          success: true
         };
         allMaps.push(...maps);
       } else {
@@ -198,21 +167,16 @@ class MapAggregator {
     return results;
   }
 
-  async searchWithTimeout(sourceName, searchFn, query, options) {
-    const startTime = Date.now();
-    
+  async searchWithTimeout(sourceName, searchFn, timeoutMs) {
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
-        reject(new Error(`Timeout after ${this.timeout}ms`));
-      }, this.timeout);
+        reject(new Error(`Timeout after ${timeoutMs}ms`));
+      }, timeoutMs);
 
-      searchFn(query, options)
+      searchFn()
         .then(results => {
           clearTimeout(timeout);
-          resolve({
-            results,
-            responseTime: Date.now() - startTime
-          });
+          resolve(results);
         })
         .catch(error => {
           clearTimeout(timeout);
@@ -223,7 +187,6 @@ class MapAggregator {
 
   deduplicateMaps(maps) {
     const seen = new Map();
-    const duplicates = [];
 
     for (const map of maps) {
       // Create deduplication key from title + author
@@ -234,24 +197,16 @@ class MapAggregator {
       if (seen.has(key)) {
         const existing = seen.get(key);
         
-        // Keep the one with more data (prefer CurseForge)
+        // Keep the one with more data
         const existingScore = this.scoreMapQuality(existing);
         const newScore = this.scoreMapQuality(map);
         
         if (newScore > existingScore) {
-          duplicates.push(existing);
           seen.set(key, map);
-        } else {
-          duplicates.push(map);
         }
       } else {
         seen.set(key, map);
       }
-    }
-
-    // Log deduplication stats
-    if (duplicates.length > 0) {
-      console.log(`[Aggregator] Removed ${duplicates.length} duplicates`);
     }
 
     return Array.from(seen.values());
@@ -260,10 +215,7 @@ class MapAggregator {
   scoreMapQuality(map) {
     let score = 0;
     
-    // Prefer CurseForge (usually more reliable)
-    if (map.source === 'curseforge') score += 50;
-    
-    // Has download URL
+    // Prefer sources with download URLs
     if (map.downloadUrl) score += 20;
     
     // Has thumbnail
@@ -286,10 +238,8 @@ class MapAggregator {
     const queryWords = queryLower.split(/\s+/).filter(w => w.length > 2);
 
     return maps.sort((a, b) => {
-      // Calculate relevance scores
       const scoreA = this.calculateRelevanceScore(a, queryLower, queryWords);
       const scoreB = this.calculateRelevanceScore(b, queryLower, queryWords);
-      
       return scoreB - scoreA;
     });
   }
@@ -300,7 +250,6 @@ class MapAggregator {
     const name = (map.name || '').toLowerCase();
     const summary = (map.summary || '').toLowerCase();
     const description = (map.description || '').toLowerCase();
-    const allText = `${name} ${summary} ${description}`;
     
     // Exact title match (highest priority)
     if (name === queryLower) {
@@ -322,28 +271,9 @@ class MapAggregator {
       score += 40;
     }
     
-    // Word boundary matches in description
-    for (const word of queryWords) {
-      const regex = new RegExp(`\\b${word}\\b`, 'i');
-      if (regex.test(summary) || regex.test(description)) {
-        score += 10;
-      }
-    }
-    
-    // Category match
-    const category = (map.category || '').toLowerCase();
-    if (queryWords.some(w => category.includes(w))) {
-      score += 20;
-    }
-    
-    // Popularity bonus (logarithmic to prevent dominance)
+    // Popularity bonus (logarithmic)
     const downloads = map.downloadCount || map.downloads || 0;
     score += Math.log10(downloads + 1) * 3;
-    
-    // Featured bonus
-    if (map.isFeatured) {
-      score += 10;
-    }
     
     // Prefer sources with working download links
     if (map.downloadUrl && !map.downloadUrl.includes('placeholder')) {
@@ -359,9 +289,16 @@ class MapAggregator {
       scrapers: []
     };
 
+    // Check health of each scraper with timeout
     for (const scraper of this.scrapers) {
       try {
-        const scraperHealth = await scraper.instance.checkHealth();
+        const healthPromise = scraper.instance.checkHealth();
+        const timeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Health check timeout')), 5000)
+        );
+        
+        const scraperHealth = await Promise.race([healthPromise, timeoutPromise]);
+        
         health.scrapers.push({
           name: scraper.name,
           enabled: scraper.enabled,
@@ -378,19 +315,6 @@ class MapAggregator {
     }
 
     return health;
-  }
-
-  async close() {
-    // Close browser instances
-    for (const scraper of this.scrapers) {
-      if (scraper.instance.closeBrowser) {
-        try {
-          await scraper.instance.closeBrowser();
-        } catch (error) {
-          console.warn(`[Aggregator] Error closing ${scraper.name}:`, error.message);
-        }
-      }
-    }
   }
 }
 

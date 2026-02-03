@@ -4,7 +4,7 @@ const path = require('path');
 const cors = require('cors');
 
 // Deployment timestamp for verification
-const DEPLOY_TIMESTAMP = '2026-02-03-1700';
+const DEPLOY_TIMESTAMP = '2026-02-04-0015';
 
 // Polyfill File API for Node.js 18 compatibility (Playwright needs this)
 if (typeof File === 'undefined') {
@@ -44,8 +44,8 @@ const PORT = process.env.PORT || 3000;
 let aggregator = null;
 function getAggregator() {
   if (!aggregator && MapAggregator) {
-    // Reduced timeout for faster response times - 3s per source to stay under 10s total
-    aggregator = new MapAggregator({ timeout: 3000, maxResultsPerSource: 6 });
+    // 5s timeout per source, 8 max results - keeps total under 10s even with all sources
+    aggregator = new MapAggregator({ timeout: 5000, maxResultsPerSource: 8 });
   }
   if (!MapAggregator) {
     throw new Error('Multi-source scrapers not available: ' + scraperModuleError);
@@ -101,7 +101,8 @@ const keywordMappings = {
   'redstone': ['redstone', 'mechanism', 'automatic', 'circuit'],
   'house': ['house', 'home', 'mansion', 'residence', 'villa', 'cottage'],
   'mansion': ['mansion', 'estate', 'manor', 'luxury'],
-  'skyblock': ['skyblock', 'sky', 'void', 'floating'],
+  'skyblock': ['skyblock', 'void', 'floating island'],
+  'sky': ['sky', 'floating', 'cloud', 'aerial', 'air', 'heaven', 'high'],
   'dungeon': ['dungeon', 'cave', 'underground', 'catacomb'],
   'minigame': ['minigame', 'mini-game', 'arcade', 'party game'],
   
@@ -112,6 +113,7 @@ const keywordMappings = {
   
   // Environment
   'island': ['island', 'isles', 'atoll'],
+  'underwater': ['underwater', 'undersea', 'submerged', 'sunken', 'aquatic', 'ocean floor', 'deep sea'],
   'reef': ['reef', 'coral', 'barrier reef'],
   'mountain': ['mountain', 'peak', 'alpine', 'cliff', 'highlands'],
   'forest': ['forest', 'woods', 'jungle', 'woodland', 'grove'],
