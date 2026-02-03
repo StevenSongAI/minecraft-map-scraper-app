@@ -6,7 +6,7 @@ const cors = require('cors');
 // Deployment timestamp for verification
 // ROUND 36 FIXES: 1) Added apiConfigured to health, 2) Fixed Planet Minecraft puppeteer, 3) Deleted 9Minecraft file
 // ROUND 36 FIXES: 4) Fixed Modrinth to use project_type:map facet, 5) Verified Railway deployment
-const DEPLOY_TIMESTAMP = '2026-02-04-ROUND38-DEPLOY';
+const DEPLOY_TIMESTAMP = '2026-02-05-ROUND40-DEPLOY';
 
 // FIXED: Enhanced File API polyfill for Node.js 18+ compatibility
 // Must be defined BEFORE any module imports that might use File
