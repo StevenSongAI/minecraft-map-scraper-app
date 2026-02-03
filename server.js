@@ -1241,8 +1241,9 @@ app.get('/api/search-unified', async (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`Minecraft Map Scraper Server running on port ${PORT}`);
+const HOST = process.env.HOST || '0.0.0.0';
+app.listen(PORT, HOST, () => {
+  console.log(`Minecraft Map Scraper Server running on http://${HOST}:${PORT}`);
   console.log(`API Key configured: ${CURSEFORGE_API_KEY ? 'Yes' : 'No'}`);
   console.log(`Multi-source scrapers enabled: Yes`);
 });
