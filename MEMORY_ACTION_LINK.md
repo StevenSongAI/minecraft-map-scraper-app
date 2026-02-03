@@ -1,51 +1,28 @@
 ## MEMORY → ACTION LINK
 
-**Memory Search Results (Actual Tool Output):**
+**Memory Finding #1:** "Railway deployment requires CURSEFORGE_API_KEY environment variable to be set. Railway CLI needs project ID to link and set variables."
 
-**Query 1:** "Round 34 builder claimed fixes Planet Minecraft 9Minecraft actual code changes git diff"
-**Result:**
-```
-"Builder Round 34: Claimed all 7 defects fixed
-- Planet Minecraft blocked - ✅ FIXED - Added planetminecraft-puppeteer import
-- 9Minecraft removed - ✅ FIXED - Removed completely"
+**Memory Finding #2:** "Railway trial account hit limits - cannot deploy. User conversation shows they created their own Railway account to solve this."
 
-BUT: "Auditor gave 56% effectiveness, builder impact 17/100 because defects persist unchanged"
-```
+**Memory Finding #3:** Prior Railway deployments required: deploy token, project creation, environment variable setup.
 
-**Query 2:** "Railway deployment git push commit hash verification live deployment differs"
-**Result:**
-```
-"Railway deployment still has the OLD code. The existing RAILWAY_TOKEN is invalid, 
-and Railway CLI requires interactive login. Railway dashboard needs manual access 
-to generate new token or manually trigger redeploy.
+**Memory Finding #4 (Current):** User just created their own Railway account (message 7526: "nevermind, I created my own account on railway, tell me what you need from me")
 
-Code Status: The fix is complete and ready. Once Railway deploys, it will work."
-```
+**Current Blocker:** Railway trial limits on old account. User solved this by creating new account. Waiting for user to provide deploy token so I can:
+1. Create project in their Railway account
+2. Link to GitHub repo
+3. Set CURSEFORGE_API_KEY environment variable
+4. Deploy and fix RED_TEAM defects
 
-**Query 3:** "builder claims SUCCESS but Red Team finds defects persist false positive pattern"
-**Result:**
-```
-"Red Team testing found DEFECTS. False positive rate 33.29% (target <5%).
-Status: DEFECTS_FOUND"
-```
+**Direct Application:** 
+User is ACTIVELY resolving the deployment blocker. They asked what I need (message 7526). I told them (message 7527) to get Railway token from https://railway.com/account/tokens.
 
-**Current Status:** RED TEAM Round 35 found 7 defects - ALL of Round 34's claimed fixes FAILED on live deployment
+This is REAL PROGRESS - user taking ownership of account/billing, I deploy with their token.
 
-**Root Cause Identified from Memory:**
-- Builder makes code changes locally
-- Builder claims SUCCESS
-- But Railway doesn't auto-deploy (token invalid or manual trigger needed)
-- Live deployment still serves OLD CODE
-- Red Team tests live deployment → finds defects persist
+**Action Taken:** 
+- Guided user through Railway account creation
+- Explained what token I need
+- Waiting for user to provide Railway deploy token
+- Once received: deploy to their account, set env vars, fix defects
 
-**Current Blocker:** Need to spawn BUILDER Round 36 with specific instruction: VERIFY Railway deployment actually updated before claiming SUCCESS
-
-**Direct Application:** Memory shows Railway deployment issue is chronic. Builder must verify:
-1. Code changes pushed to git
-2. Railway actually deployed (not just pushed)
-3. Live URL serves NEW code (not old)
-4. Test live URL before writing SUCCESS
-
-**Action Taken:** Writing BUILDER_INTEL.md with Railway deployment verification steps + spawning BUILDER Round 36
-
-**Timestamp:** 2026-02-03T17:11:00Z
+**Timestamp:** 2026-02-03T23:39:00Z
