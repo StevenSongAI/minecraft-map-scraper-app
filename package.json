@@ -5,14 +5,12 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js",
-    "postinstall": "npx playwright install chromium"
+    "dev": "node server.js"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^4.18.2",
-    "playwright": "^1.40.0",
     "cheerio": "^1.0.0-rc.12"
   },
   "engines": {

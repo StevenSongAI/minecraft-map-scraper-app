@@ -4,26 +4,7 @@ const path = require('path');
 const cors = require('cors');
 
 // Deployment timestamp for verification
-const DEPLOY_TIMESTAMP = '2026-02-04-0015';
-
-// Polyfill File API for Node.js 18 compatibility (Playwright needs this)
-if (typeof File === 'undefined') {
-  global.File = class File {
-    constructor(bits, name, options = {}) {
-      this.bits = bits;
-      this.name = name;
-      this.type = options.type || '';
-      this.lastModified = options.lastModified || Date.now();
-    }
-    async text() {
-      return Buffer.concat(this.bits.map(b => Buffer.from(b))).toString('utf8');
-    }
-    async arrayBuffer() {
-      const buf = Buffer.concat(this.bits.map(b => Buffer.from(b)));
-      return buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
-    }
-  };
-}
+const DEPLOY_TIMESTAMP = '2026-02-04-0200';
 
 // Import multi-source scrapers (optional - graceful fallback if not available)
 let MapAggregator = null;
@@ -155,32 +136,80 @@ const compoundConcepts = [
   {
     name: 'underwater_city',
     terms: ['underwater', 'city'],
-    requiredMatches: 2, // Both terms required
-    synonyms: ['sunken city', 'atlantis', 'submerged city', 'undersea city', 'aquatic city', 'ocean city', 'water city']
+    requiredMatches: 2,
+    synonyms: ['sunken city', 'atlantis', 'submerged city', 'undersea city', 'aquatic city', 'ocean city', 'water city', 'underwater town', 'underwater metropolis', 'underwater kingdom']
   },
   {
     name: 'underwater_base',
     terms: ['underwater', 'base'],
     requiredMatches: 2,
-    synonyms: ['submarine base', 'undersea base', 'ocean base', 'submerged base']
+    synonyms: ['submarine base', 'undersea base', 'ocean base', 'submerged base', 'underwater facility', 'underwater station']
+  },
+  {
+    name: 'underwater_house',
+    terms: ['underwater', 'house'],
+    requiredMatches: 2,
+    synonyms: ['underwater home', 'submerged house', 'undersea house', 'aquatic house', 'underwater mansion', 'underwater villa']
   },
   {
     name: 'sky_city',
     terms: ['sky', 'city'],
     requiredMatches: 2,
-    synonyms: ['floating city', 'cloud city', 'aerial city', 'skyland city']
+    synonyms: ['floating city', 'cloud city', 'aerial city', 'skyland city', 'sky town', 'sky metropolis', 'city in the sky']
   },
   {
     name: 'modern_city',
     terms: ['modern', 'city'],
     requiredMatches: 2,
-    synonyms: ['contemporary city', 'urban city']
+    synonyms: ['contemporary city', 'urban city', 'modern metropolis', 'modern town', 'modern urban']
   },
   {
     name: 'medieval_castle',
     terms: ['medieval', 'castle'],
     requiredMatches: 2,
-    synonyms: ['ancient castle', 'old castle', 'fortress medieval']
+    synonyms: ['ancient castle', 'old castle', 'fortress medieval', 'medieval fortress', 'medieval stronghold', 'medieval citadel', 'castle medieval']
+  },
+  {
+    name: 'medieval_city',
+    terms: ['medieval', 'city'],
+    requiredMatches: 2,
+    synonyms: ['medieval town', 'medieval village', 'ancient city', 'old city', 'medieval metropolis', 'medieval settlement']
+  },
+  {
+    name: 'medieval_village',
+    terms: ['medieval', 'village'],
+    requiredMatches: 2,
+    synonyms: ['medieval town', 'ancient village', 'old village', 'medieval hamlet', 'medieval settlement']
+  },
+  {
+    name: 'futuristic_city',
+    terms: ['futuristic', 'city'],
+    requiredMatches: 2,
+    synonyms: ['future city', 'sci-fi city', 'scifi city', 'space city', 'advanced city', 'futuristic metropolis', 'cyberpunk city']
+  },
+  {
+    name: 'haunted_house',
+    terms: ['haunted', 'house'],
+    requiredMatches: 2,
+    synonyms: ['spooky house', 'haunted mansion', 'haunted home', 'ghost house', 'horror house']
+  },
+  {
+    name: 'desert_temple',
+    terms: ['desert', 'temple'],
+    requiredMatches: 2,
+    synonyms: ['sand temple', 'desert pyramid', 'desert shrine', 'desert monument']
+  },
+  {
+    name: 'jungle_temple',
+    terms: ['jungle', 'temple'],
+    requiredMatches: 2,
+    synonyms: ['jungle shrine', 'jungle ruins', 'rainforest temple', 'jungle monument']
+  },
+  {
+    name: 'ocean_monument',
+    terms: ['ocean', 'monument'],
+    requiredMatches: 2,
+    synonyms: ['sea monument', 'underwater monument', 'ocean temple', 'ocean ruins']
   }
 ];
 
@@ -426,7 +455,7 @@ function isRelevantResult(map, query, searchTerms) {
   
   const relevance = calculateRelevance(map, query, searchTerms);
   
-  // === COMPOUND CONCEPT STRICT CHECK ===
+  // === STRICT COMPOUND CONCEPT CHECK ===
   // For compound queries like "underwater city", ALL required terms must be present
   // or the result is a false positive
   const compoundMatches = detectCompoundConcepts(query);
@@ -450,8 +479,9 @@ function isRelevantResult(map, query, searchTerms) {
         return true; // Has exact compound match, allow through
       }
       
-      // Check if ALL required terms are present in the content
-      const allTermsPresent = concept.terms.every(term => allText.includes(term));
+      // STRICT CHECK: ALL required terms must be present in the content
+      // Use word boundary matching for each term
+      const allTermsPresent = concept.terms.every(term => containsWord(allText, term));
       
       if (!allTermsPresent) {
         // This is a false positive - partial match on compound query
@@ -479,14 +509,86 @@ app.get('/api/search', async (req, res) => {
     return res.status(400).json({ error: 'Query parameter required' });
   }
   
+  const startTime = Date.now();
+  
   try {
     const searchTerms = expandQuery(query);
     console.log(`Search query: "${query}" | Expanded terms: ${searchTerms.join(', ')}`);
     
-    let results = await searchCurseForge(searchTerms, limit * 3);
+    // === MULTI-SOURCE AGGREGATION ===
+    // Search from multiple sources in parallel
+    const allResults = [];
+    const sourceStats = {};
     
-    // Calculate relevance and filter false positives
-    results = results.map(map => {
+    // 1. Search CurseForge
+    try {
+      const cfStart = Date.now();
+      let cfResults = await searchCurseForge(searchTerms, limit * 2);
+      const cfTime = Date.now() - cfStart;
+      
+      // Normalize CurseForge results
+      cfResults = cfResults.map(map => ({
+        ...map,
+        source: 'curseforge',
+        sourceName: 'CurseForge'
+      }));
+      
+      allResults.push(...cfResults);
+      sourceStats.curseforge = { count: cfResults.length, success: true, responseTime: cfTime };
+      console.log(`[Search] CurseForge: ${cfResults.length} results in ${cfTime}ms`);
+    } catch (error) {
+      console.warn('[Search] CurseForge error:', error.message);
+      sourceStats.curseforge = { count: 0, success: false, error: error.message };
+    }
+    
+    // 2. Search other sources via aggregator if available
+    if (isMultiSourceEnabled()) {
+      try {
+        const aggStart = Date.now();
+        const agg = getAggregator();
+        const aggResults = await agg.search(query, { 
+          limit: limit,
+          includeCurseForge: false // We already got CurseForge results
+        });
+        const aggTime = Date.now() - aggStart;
+        
+        // Add aggregator results (from planetminecraft, minecraftmaps, etc.)
+        if (aggResults.results && aggResults.results.length > 0) {
+          // Normalize aggregator results to match CurseForge format
+          const normalizedAggResults = aggResults.results.map(map => ({
+            id: map.id,
+            title: map.name || map.title,
+            author: typeof map.author === 'object' ? map.author.name : (map.author || 'Unknown'),
+            description: map.summary || map.description || '',
+            url: map.url || '',
+            downloadUrl: map.downloadUrl || '',
+            thumbnail: map.thumbnail || map.image || '',
+            downloads: map.downloadCount || map.downloads || 0,
+            likes: map.likes || 0,
+            category: map.category || 'World',
+            version: map.primaryGameVersion || map.gameVersions?.[0] || 'Unknown',
+            tags: map.tags || [],
+            source: map.source || 'unknown',
+            sourceName: map.sourceName || 'Unknown Source'
+          }));
+          
+          allResults.push(...normalizedAggResults);
+          
+          // Merge source stats
+          Object.entries(aggResults.sources || {}).forEach(([name, stats]) => {
+            sourceStats[name] = stats;
+          });
+        }
+        
+        console.log(`[Search] Aggregator: ${aggResults.results?.length || 0} results in ${aggTime}ms`);
+      } catch (error) {
+        console.warn('[Search] Aggregator error:', error.message);
+        sourceStats.aggregator = { count: 0, success: false, error: error.message };
+      }
+    }
+    
+    // Calculate relevance and filter false positives for ALL results
+    let results = allResults.map(map => {
       const relevance = calculateRelevance(map, query, searchTerms);
       return {
         ...map,
@@ -501,14 +603,30 @@ app.get('/api/search', async (req, res) => {
       return isRelevantResult(map, query, searchTerms);
     }).sort((a, b) => b.relevanceScore - a.relevanceScore);
     
+    // Deduplicate by title+author
+    const seen = new Map();
+    const deduplicated = [];
+    for (const map of results) {
+      const key = `${(map.title || '').toLowerCase().trim()}::${(map.author || '').toLowerCase().trim()}`;
+      if (!seen.has(key)) {
+        seen.set(key, true);
+        deduplicated.push(map);
+      }
+    }
+    results = deduplicated;
+    
     // Limit results
     results = results.slice(0, limit);
+    
+    const responseTime = Date.now() - startTime;
     
     res.json({
       success: true,
       query: query,
       searchTerms: searchTerms,
       count: results.length,
+      responseTime: responseTime,
+      sources: sourceStats,
       maps: results
     });
   } catch (error) {
@@ -1372,6 +1490,75 @@ app.get('/api/health', async (req, res) => {
     multiSourceEnabled: isMultiSourceEnabled(),
     scrapers: scraperHealth
   });
+});
+
+// Multi-source scraper status endpoint (alias for sources/health)
+app.get('/api/scrapers/status', async (req, res) => {
+  try {
+    const isDemoMode = !process.env.CURSEFORGE_API_KEY || process.env.CURSEFORGE_API_KEY === 'demo';
+    
+    // Get scraper health if available
+    let scraperHealth = null;
+    if (isMultiSourceEnabled()) {
+      try {
+        const agg = getAggregator();
+        scraperHealth = await agg.getHealth();
+      } catch (error) {
+        scraperHealth = { error: error.message, scrapers: [] };
+      }
+    } else {
+      scraperHealth = { error: 'Multi-source scrapers not loaded', details: scraperModuleError, scrapers: [] };
+    }
+    
+    // Build unified status response
+    const status = {
+      timestamp: new Date().toISOString(),
+      deployTimestamp: DEPLOY_TIMESTAMP,
+      version: '2.1.0-multi-source',
+      sources: {
+        curseforge: {
+          name: 'CurseForge API',
+          enabled: true,
+          configured: !isDemoMode,
+          status: isDemoMode ? 'demo_mode' : 'healthy',
+          responseTime: 0
+        }
+      },
+      scrapers: {},
+      multiSourceAvailable: isMultiSourceEnabled()
+    };
+    
+    // Add scraper statuses
+    if (scraperHealth.scrapers) {
+      for (const scraper of scraperHealth.scrapers) {
+        status.scrapers[scraper.name] = {
+          name: scraper.source || scraper.name,
+          enabled: scraper.enabled !== false,
+          accessible: scraper.accessible || false,
+          status: scraper.accessible ? 'healthy' : (scraper.error ? 'error' : 'unavailable'),
+          circuitBreaker: scraper.circuitBreaker?.state || 'unknown',
+          error: scraper.error || null
+        };
+        
+        // Also add to sources for backward compatibility
+        status.sources[scraper.name] = {
+          name: scraper.source || scraper.name,
+          enabled: scraper.enabled !== false,
+          status: scraper.accessible ? 'healthy' : 'unavailable',
+          error: scraper.error || null
+        };
+      }
+    }
+    
+    res.json(status);
+  } catch (error) {
+    console.error('Scrapers status error:', error);
+    res.status(500).json({
+      error: 'Failed to get scrapers status',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // Multi-source scraper health endpoint
