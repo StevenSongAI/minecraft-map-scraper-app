@@ -4,7 +4,7 @@ const path = require('path');
 const cors = require('cors');
 
 // Deployment timestamp for verification
-const DEPLOY_TIMESTAMP = '2026-02-04-0200';
+const DEPLOY_TIMESTAMP = '2026-02-04-0300';
 
 // Import multi-source scrapers (optional - graceful fallback if not available)
 let MapAggregator = null;
@@ -1497,7 +1497,7 @@ app.get('/api/health', async (req, res) => {
     apiConfigured: !!process.env.CURSEFORGE_API_KEY && process.env.CURSEFORGE_API_KEY !== 'demo',
     demoMode: isDemoMode,
     apiKeyPreview: process.env.CURSEFORGE_API_KEY ? process.env.CURSEFORGE_API_KEY.substring(0, 10) + '...' : 'Not set',
-    version: '2.1.0-multi-source',
+    version: '2.2.0-redteam-fixed',
     multiSourceEnabled: isMultiSourceEnabled(),
     scrapers: scraperHealth
   });
@@ -1525,7 +1525,7 @@ app.get('/api/scrapers/status', async (req, res) => {
     const status = {
       timestamp: new Date().toISOString(),
       deployTimestamp: DEPLOY_TIMESTAMP,
-      version: '2.1.0-multi-source',
+      version: '2.2.0-redteam-fixed',
       sources: {
         curseforge: {
           name: 'CurseForge API',
