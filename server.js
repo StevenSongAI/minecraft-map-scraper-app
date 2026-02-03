@@ -706,7 +706,9 @@ app.get('/api/search', async (req, res) => {
     const seen = new Map();
     const deduplicated = [];
     for (const map of results) {
-      const key = `${(map.title || '').toLowerCase().trim()}::${(map.author || '').toLowerCase().trim()}`;
+      // FIXED (Round 8): Handle author as object or string
+      const authorName = typeof map.author === 'object' ? map.author?.name : map.author;
+      const key = `${(map.title || '').toLowerCase().trim()}::${(authorName || 'unknown').toLowerCase().trim()}`;
       if (!seen.has(key)) {
         seen.set(key, true);
         deduplicated.push(map);
