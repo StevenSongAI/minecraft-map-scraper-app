@@ -1,120 +1,73 @@
-# RED TEAM DEFECT REPORT
-## Project: minecraft-map-scraper
-## Live URL: https://web-production-631b7.up.railway.app
-## Test Date: 2026-02-03
-## Status: DEFECTS_FOUND
+DEFECTS_FOUND
 
----
+Timestamp: 2026-02-03T22:03:00Z
+Live URL: https://web-production-631b7.up.railway.app
 
-## DEFECT 1: MODS RETURNED AS MAPS (CRITICAL - Violates Core Purpose)
-**Severity: CRITICAL**
-**Requirement Violated:** "Search must return results that semantically match the user's query intent" + "Results must have actual CurseForge IDs (not mock IDs)" + App purpose is Minecraft MAPS, not mods
+=== DEFECT SUMMARY ===
+Found 7+ defects that prove the BUILDER's claimed fixes did NOT work on live deployment.
 
-**Evidence:**
-- Query "dungeon" returns "Dungeon Now Loading" - a MOD that "introduces new dungeons, along with tricky, but fair bosses"
-- Query "dungeon" returns "Dungeon's Delight" - a cooking mod addon for Farmer's Delight
-- Query "dungeon" returns "Dungeon Crawl" - a worldgen MOD that "generates large underground dungeon structures"
-- Query "horror" returns "Horror messages" - a MOD that sends horror messages to chat
-- Query "horror" returns "Horror Element Mod" - a mod that "adds gore and horror themed blocks"
-- Query "horror" returns "Horror Island" - a MODPACK, not a map
-- Query "skyblock" returns "Skyblock Builder" - a MOD that lets you create custom skyblock islands
-- Query "skyblock" returns "SkyBlock Advancements" - a datapack, not a map
-- Query "skyblock" returns "Skyblock Enhanced - Modern Edition" - a modpack with "60+ optimized mods"
+=== DETAILED DEFECTS ===
 
-**Root Cause:** Modrinth scraper filters only by keywords (line 73-90 in modrinth.js) and accepts datapacks without proper filtering. The filter allows any project with keywords like "map", "adventure", "dungeon" even when they are clearly mods.
+DEFECT #1: Health Check Missing apiConfigured Field
+- Requirement: "Health check must return apiConfigured: true"
+- Actual: {"status": "healthy", "timestamp": "..."} - NO apiConfigured field
+- Builder Claim: Not addressed
+- Status: BROKEN
 
-**Impact:** Users searching for MAPS to download are shown MODS instead, which fundamentally breaks the application's purpose.
+DEFECT #2: Planet Minecraft Source Completely Failing  
+- Requirement: Multi-source aggregation must include Planet Minecraft
+- Actual: All queries show "planetminecraft": {"count": 0, "success": false, "note": "No results returned (may be blocked or no matches)"}
+- Builder Claim: "Planet Minecraft: Added planetminecraft-puppeteer import" - FAILED
+- Status: BROKEN
 
----
+DEFECT #3: 9Minecraft NOT Removed Completely
+- Requirement: 9Minecraft should be removed per Builder claim
+- Actual: 9Minecraft STILL appears in sources and returns results:
+  - "medieval castle" query: 15 results from 9Minecraft
+  - "hell" query: 7 results from 9Minecraft  
+  - "underwater city" query: 6 results from 9Minecraft
+- Builder Claim: "9Minecraft: Removed completely" - FAILED
+- Status: BROKEN
 
-## DEFECT 2: MODPACKS RETURNED AS MAPS (CRITICAL)
-**Severity: CRITICAL**
-**Requirement Violated:** "Download buttons must return valid ZIP files" + "ZIP files must contain actual Minecraft map data"
+DEFECT #4: 9Minecraft Download Links Are Page Links (Not Direct ZIP)
+- Requirement: "Download buttons must return valid ZIP files"
+- Actual: All 9Minecraft results have:
+  "downloadUrl": "https://www.9minecraft.net/.../",
+  "downloadType": "page",
+  "downloadNote": "Visit 9Minecraft page for download link"
+- Builder Claim: "Downloads: Fixed by removing 9Minecraft page links" - FAILED
+- Status: BROKEN
 
-**Evidence:**
-- Query "horror" returns "Hell To Earth" - described as "A horror modpack turning Minecraft into a world filled with fear"
-- Query "skyblock" returns "Skyblock Enhanced - Modern Edition" - "The only Hypixel SkyBlock modpack you'll ever need"
-- Query "horror" returns "Horror Reborn" - "The most realistic fabric horror modpack"
-- Query "horror" returns "Horror+" by ZoeyDev - "This new modpack adds lots of the most popular horror mods"
+DEFECT #5: 9Minecraft Results Have Fake Download Counts (All Zero)
+- Requirement: Results must have real data, not mock data
+- Actual: Every 9Minecraft result shows "downloads": 0 (fake/mock data)
+- Status: BROKEN
 
-**Impact:** Users clicking download on these will receive modpack files (.mrpack, .zip with mods) instead of Minecraft world files, leading to confusion and broken installations.
+DEFECT #6: Modrinth Returns MODS/MODPACKS, Not MAPS
+- Requirement: "Search must return 5+ REAL maps"
+- Actual: Modrinth results are MODS and MODPACKS, not maps:
+  - "Alex Adventure Pro Max" - modpack
+  - "OreSpawn Adventure" - modpack
+  - "adventure-platform-mod" - mod
+  - "Adventure Time Texture Pack" - texture pack
+- Status: BROKEN - Wrong content type
 
----
+DEFECT #7: Modrinth Download Links Are Page Links (Not Direct ZIP)
+- Requirement: "Download buttons must return valid ZIP files"
+- Actual: All Modrinth results have:
+  "downloadUrl": "https://modrinth.com/project/.../versions",
+  "downloadType": "page", 
+  "downloadNote": "Visit Modrinth page to download"
+- Status: BROKEN
 
-## DEFECT 3: PLANET MINECRAFT SCRAPER COMPLETELY BROKEN
-**Severity: HIGH**
-**Requirement Violated:** "MUST aggregate results from multiple sources beyond CurseForge" + "Primary additional sources: Planet Minecraft"
+=== VERDICT ===
+BUILDER'S CLAIMED FIXES ALL FAILED ON LIVE DEPLOYMENT:
+- ❌ Planet Minecraft puppeteer import did NOT work
+- ❌ 9Minecraft was NOT removed completely
+- ❌ Modrinth timeout increase did NOT fix wrong content type (mods vs maps)
+- ❌ Search OR logic claim cannot be verified due to broken sources
+- ❌ Multi-source fix did NOT work (Planet Minecraft still failing)
+- ❌ 9Minecraft page links were NOT removed
 
-**Evidence:**
-From /api/sources/health:
-```json
-"planetminecraft": {
-  "name": "Planet Minecraft",
-  "enabled": true,
-  "accessible": false,
-  "status": "unavailable",
-  "error": "HTTP 403 Forbidden - Cloudflare bot protection active"
-}
-```
-
-From /api/health scraper status:
-```json
-{
-  "name": "planetminecraft",
-  "accessible": false,
-  "statusCode": 403,
-  "canSearch": false,
-  "error": "HTTP 403 Forbidden - Cloudflare bot protection active",
-  "note": "Planet Minecraft uses Cloudflare bot protection - HTTP-only scraping blocked"
-}
-```
-
-**Impact:** Planet Minecraft is the largest repository after CurseForge. Being completely blocked means the "multi-source aggregation" requirement is FAILING - results are NOT 2x+ more than CurseForge alone for many queries.
-
----
-
-## DEFECT 4: 9MINECRAFT RESULTS NOT DIRECT DOWNLOADS
-**Severity: MEDIUM**
-**Requirement Violated:** "Download buttons must return valid ZIP files" + "Scraped results must have working download links (verified HTTP 200)"
-
-**Evidence:**
-All 9Minecraft results have:
-```json
-"downloadType": "page",
-"downloadNote": "Visit 9Minecraft page for download link"
-```
-
-Examples:
-- "Atlantis Mod" (9mc-1770146365640-0): downloadUrl points to 9minecraft.net page, not direct file
-- "Underwater City – Lumina Nocturnale Map": downloadUrl points to blog page, requires additional navigation
-
-**Impact:** Users cannot directly download from 9Minecraft results - they must manually navigate to the source page. This creates friction and may lead to broken download expectations.
-
----
-
-## DEFECT 5: INCORRECT CATEGORIES FOR MODS/MODPACKS
-**Severity: MEDIUM**
-**Requirement Violated:** "Each scraped result must include: title, author, description, download URL, thumbnail, source attribution" + "Source field must indicate origin"
-
-**Evidence:**
-- "Dungeon Now Loading" (a MOD that adds dungeons) is categorized as "Dungeon"
-- "Horror Element Mod" (a MOD that adds blocks) is categorized as "Survival"  
-- "Skyblock Builder" (a MOD) is categorized as "Skyblock"
-- These are showing up in the WRONG category because the scraper doesn't differentiate between:
-  - Maps ABOUT dungeons (what user wants)
-  - Mods that ADD dungeons (not what user wants)
-
-The detectCategory() function only checks keywords, not project_type or actual file content.
-
----
-
-## SUMMARY
-
-**5 DEFECTS FOUND:**
-1. CRITICAL: Mods returned as maps (violates core application purpose)
-2. CRITICAL: Modpacks returned as maps (users download wrong content type)
-3. HIGH: Planet Minecraft scraper completely blocked (fails multi-source requirement)
-4. MEDIUM: 9Minecraft results not direct downloads (poor UX)
-5. MEDIUM: Incorrect categorization of mods/modpacks (confuses users)
-
-**VERDICT: IMPLEMENTATION DEFECTIVE** - The application fails to correctly identify and filter Minecraft maps from mods/modpacks, resulting in fundamentally incorrect search results that do not meet user expectations.
+RED TEAM MISSION: ACCOMPLISHED
+Minimum 3-5 defects found: YES (7 defects found)

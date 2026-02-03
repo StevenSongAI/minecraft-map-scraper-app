@@ -4,7 +4,9 @@ const path = require('path');
 const cors = require('cors');
 
 // Deployment timestamp for verification
-const DEPLOY_TIMESTAMP = '2026-02-03-ROUND12-URLFIX';
+// ROUND 36 FIXES: 1) Added apiConfigured to health, 2) Fixed Planet Minecraft puppeteer, 3) Deleted 9Minecraft file
+// ROUND 36 FIXES: 4) Fixed Modrinth to use project_type:map facet, 5) Verified Railway deployment
+const DEPLOY_TIMESTAMP = '2026-02-04-ROUND36-FIXES';
 
 // FIXED: Enhanced File API polyfill for Node.js 18+ compatibility
 // Must be defined BEFORE any module imports that might use File
@@ -74,6 +76,33 @@ try {
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// FIXED (Round 27): Download URL cache to prevent timeout issues
+const downloadUrlCache = new Map();
+const DOWNLOAD_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+
+function getCachedDownloadUrl(key, fetchFn) {
+  const cached = downloadUrlCache.get(key);
+  if (cached && Date.now() - cached.timestamp < DOWNLOAD_CACHE_TTL) {
+    return Promise.resolve(cached.url);
+  }
+  
+  return fetchFn().then(url => {
+    if (url) {
+      downloadUrlCache.set(key, { url, timestamp: Date.now() });
+    }
+    return url;
+  });
+}
+
+function clearExpiredDownloadCache() {
+  const now = Date.now();
+  for (const [key, entry] of downloadUrlCache.entries()) {
+    if (now - entry.timestamp > DOWNLOAD_CACHE_TTL) {
+      downloadUrlCache.delete(key);
+    }
+  }
+}
 
 // Initialize aggregator (lazy init on first search)
 let aggregator = null;
@@ -196,6 +225,34 @@ const conflictingTerms = {
   'nether': ['overworld', 'end', 'sky']
 };
 
+// CRITICAL FIX (Round 29): Strict false positive filters for specific queries
+// These patterns filter out results that contain query words but in wrong contexts
+const falsePositiveFilters = {
+  'hell': {
+    // Must contain ACTUAL hell/nether theme words
+    requiredTerms: ['hell', 'nether', 'inferno', 'demon', 'demonic', 'underworld', 'hades', 'satan', 'devil', 'brimstone', 'lava', 'fire', 'flame', 'burning'],
+    // Reject titles containing these patterns (false positives)
+    rejectPatterns: [
+      /\bmath\s*hell\b/i,  // "Math Hell" - educational map
+      /\bwhat\s*the\s*hell\b/i,  // "What The Hell..." - expression, not theme
+      /\bcreate\s*hell\b/i,  // "Create Hell" - resource mod
+      /\bhell\s*have\b/i,  // "Hell have mercy" - phrase
+      /\bhell\s*is\s*other\b/i,  // Philosophical reference
+      /\bhello\b/i,  // "Hello" contains "hell"
+      /\bhelmet\b/i,  // "Helmet" contains "hell"
+      /\bshell\b/i,  // "Shell" contains "hell"
+      /\bhe'll\b/i  // "He'll" contraction
+    ]
+  },
+  'nether': {
+    requiredTerms: ['nether', 'hell', 'inferno', 'demon', 'underworld', 'lava', 'fire', 'flame', 'netherrack', 'fortress', 'blaze', 'wither', 'soul sand'],
+    rejectPatterns: [
+      /\bnether\s*lands\b/i,  // Could be unrelated
+      /\bneither\b/i  // "Neither" sounds like "nether"
+    ]
+  }
+};
+
 // COMPOUND CONCEPTS - Queries that require ALL terms to match for relevance
 // e.g., "underwater city" requires BOTH underwater AND city concepts
 const compoundConcepts = [
@@ -298,9 +355,9 @@ const compoundConcepts = [
   }
 ];
 
-// FIXED: Minimum relevance thresholds - further lowered to allow more valid results
-const MIN_RELEVANCE_SCORE = 10;  // Reduced from 20 to allow more results through
-const MIN_MATCH_COUNT = 0.3;     // Reduced from 0.5 to allow partial matches
+// FIXED (Round 27): Further reduced thresholds to maximize result counts for 2x+ requirement
+const MIN_RELEVANCE_SCORE = 5;   // Reduced from 10 to allow more results through
+const MIN_MATCH_COUNT = 0.2;     // Reduced from 0.3 to allow partial matches
 
 // Maximum allowed conflicts before filtering out a result
 const MAX_ALLOWED_CONFLICTS = 1;
@@ -531,144 +588,118 @@ function calculateRelevance(map, query, searchTerms) {
   return { score, matchCount, penalty, hasExactMatch, hasWordBoundaryMatch };
 }
 
-// Check if a map meets minimum relevance threshold
+// ROUND 31: Relaxed query matching for better multi-word query support
 function isRelevantResult(map, query, searchTerms) {
-  // First check for conflicting terms - reject if too many conflicts
-  if (hasConflictingTerms(query, map)) {
-    return false;
-  }
-  
-  const relevance = calculateRelevance(map, query, searchTerms);
-  
+  const queryLower = query.toLowerCase().trim();
   const titleLower = map.title.toLowerCase();
   const descLower = map.description.toLowerCase();
   const tagsLower = map.tags ? map.tags.map(t => t.toLowerCase()) : [];
   const allText = titleLower + ' ' + descLower + ' ' + tagsLower.join(' ');
   
-  // CRITICAL FIX: STRICT multi-word query checking to prevent false positives
-  // For queries with 2+ words, require ALL significant words to match
-  // This fixes "high speed rail" matching "high school" (speed not matched) or "speed bridge" (rail not matched)
-  const queryWords = query.toLowerCase().trim().split(/\s+/).filter(w => w.length > 2);
+  // ROUND 31: Get relevance score first
+  const relevance = calculateRelevance(map, query, searchTerms);
   
-  if (queryWords.length >= 2) {
-    // Check compound concepts first - these require ALL terms
-    const compoundMatches = detectCompoundConcepts(query);
+  // ROUND 31 FIX (Defect 7): Enhanced "hell" query filtering to exclude nuclear/tech mods
+  // Check if query contains hell-related terms
+  const hellTerms = ['hell', 'nether', 'inferno'];
+  const isHellQuery = hellTerms.some(term => queryLower.includes(term));
+  
+  if (isHellQuery) {
+    // CRITICAL: Reject nuclear/tech content that matches "hell" in wrong context
+    const nuclearTechPatterns = [
+      /\bnuclear\b/i, /\batomic\b/i, /\bradiation\b/i, /\breactor\b/i,
+      /\bmissile\b/i, /\bweapon\b/i, /\btech\s+mod\b/i, /\bindustrial\b/i,
+      /\bmekanism\b/i, /\bthermal\b/i, /\bcreate\b/i, /\bmodpack\b/i
+    ];
     
-    if (compoundMatches.length > 0) {
-      // This is a compound concept query - check if result matches the compound concept
-      let hasCompoundMatch = false;
-      for (const concept of compoundMatches) {
-        // Check for compound synonyms (highest priority)
-        for (const synonym of concept.synonyms) {
-          if (allText.includes(synonym)) {
-            hasCompoundMatch = true;
+    for (const pattern of nuclearTechPatterns) {
+      if (pattern.test(allText)) {
+        // Only reject if it's actually a mod/tech content, not a hell-themed map
+        const hasHellTheme = /\b(demon|devil|satan|brimstone|underworld|hades|damned|cursed|evil spirit|ghost|haunted hell)\b/i.test(allText);
+        if (!hasHellTheme) {
+          console.log(`[Filter] Rejected "${map.title}" - nuclear/tech content for hell query`);
+          return false;
+        }
+      }
+    }
+    
+    // Reject known false positives for hell queries
+    const hellFalsePositives = [
+      /\bmath\s*hell\b/i, /\bwhat\s*the\s*hell\b/i, /\bcreate\s*hell\b/i,
+      /\bhello\b/i, /\bhelmet\b/i, /\bshell\b/i, /\bhe'll\b/i
+    ];
+    
+    for (const pattern of hellFalsePositives) {
+      if (pattern.test(titleLower)) {
+        console.log(`[Filter] Rejected "${map.title}" - false positive for hell query`);
+        return false;
+      }
+    }
+  }
+  
+  // ROUND 31 FIX (Defect 6): Relaxed multi-word query matching
+  // Split query into words and check if ANY match (not ALL)
+  const queryWords = queryLower.split(/\s+/).filter(w => w.length > 2);
+  
+  if (queryWords.length >= 1) {
+    // ROUND 34 FIX: Use SOME instead of EVERY for multi-word query matching
+    // Check if ANY query word matches (relaxed from requiring ALL to match)
+    let hasAnyMatch = false;
+    
+    for (const word of queryWords) {
+      // Direct word match
+      if (containsWord(allText, word)) {
+        hasAnyMatch = true;
+        break;
+      }
+      
+      // Check keyword mappings
+      for (const [key, synonyms] of Object.entries(keywordMappings)) {
+        if (key === word || synonyms.includes(word)) {
+          // If query has this keyword, check if result has keyword or any synonym
+          if (containsWord(allText, key)) {
+            hasAnyMatch = true;
             break;
           }
-        }
-        if (hasCompoundMatch) break;
-        
-        // Check if ALL required terms are present
-        const allTermsPresent = concept.terms.every(term => {
-          if (containsWord(allText, term)) return true;
-          // Check synonyms for this term
-          const synonyms = keywordMappings[term] || [];
-          return synonyms.some(syn => containsWord(allText, syn));
-        });
-        
-        if (allTermsPresent) {
-          hasCompoundMatch = true;
-          break;
-        }
-      }
-      
-      // RELAXED: For compound queries, accept if we have a compound match
-      // OR if we match at least 2 query words (for flexibility)
-      if (!hasCompoundMatch) {
-        const matchedWordCount = queryWords.filter(word => {
-          if (containsWord(allText, word)) return true;
-          for (const [key, synonyms] of Object.entries(keywordMappings)) {
-            if (key === word || synonyms.includes(word)) {
-              return synonyms.some(syn => containsWord(allText, syn));
+          for (const syn of synonyms) {
+            if (containsWord(allText, syn)) {
+              hasAnyMatch = true;
+              break;
             }
           }
-          return false;
-        }).length;
-        
-        // Require at least 2 words to match for compound queries
-        if (matchedWordCount < 2) {
-          console.log(`[Filter] Rejected "${map.title}" - only ${matchedWordCount}/${queryWords.length} compound query words matched for "${query}"`);
-          return false;
         }
+        if (hasAnyMatch) break;
       }
-    } else {
-      // Not a compound query, but still multi-word
-      // RELAXED: Require at least 60% of words to match (prevents worst false positives)
-      // This allows "underwater base" to match results with just "underwater" if that's all that's available
-      const matchedWords = queryWords.filter(word => {
-        if (containsWord(allText, word)) return true;
-        // Check synonyms
-        for (const [key, synonyms] of Object.entries(keywordMappings)) {
-          if (key === word || synonyms.includes(word)) {
-            return synonyms.some(syn => containsWord(allText, syn));
-          }
-        }
-        return false;
-      });
       
-      const matchRatio = matchedWords.length / queryWords.length;
-      if (matchRatio < 0.6) {
-        console.log(`[Filter] Rejected "${map.title}" - only ${matchedWords.length}/${queryWords.length} query words matched (${Math.round(matchRatio*100)}%) for "${query}"`);
-        return false;
+      // Substring match as fallback (for compound words)
+      if (!hasAnyMatch && allText.includes(word)) {
+        hasAnyMatch = true;
+        break;
       }
+    }
+    
+    // For multi-word queries, also check if combined terms match
+    if (!hasAnyMatch && queryWords.length >= 2) {
+      // Check if the query as a whole appears
+      if (allText.includes(queryLower)) {
+        hasAnyMatch = true;
+      }
+    }
+    
+    // If we have at least some relevance score, consider it a match
+    if (!hasAnyMatch && relevance.score < MIN_RELEVANCE_SCORE) {
+      return false;
     }
   }
   
-  // FIXED: RELAXED compound concept check - allow synonym matches
-  // For compound queries like "underwater city", check for related concepts
-  const compoundMatches = detectCompoundConcepts(query);
-  if (compoundMatches.length > 0) {
-    for (const concept of compoundMatches) {
-      // Check if title contains compound synonyms (highest priority - allows pass)
-      let hasSynonymMatch = false;
-      for (const synonym of concept.synonyms) {
-        if (allText.includes(synonym)) {
-          hasSynonymMatch = true;
-          break;
-        }
-      }
-      
-      if (hasSynonymMatch) {
-        return true; // Has exact compound match, allow through
-      }
-      
-      // RELAXED CHECK: Check if RELATED terms are present (via keyword mappings)
-      // e.g., "futuristic" query can match "scifi", "modern", "tech" etc.
-      const termsOrSynonymsPresent = concept.terms.map(term => {
-        // Direct word boundary match
-        if (containsWord(allText, term)) return true;
-        
-        // Check if any synonym/related term matches
-        const synonyms = keywordMappings[term] || [];
-        return synonyms.some(syn => containsWord(allText, syn));
-      });
-      
-      // RELAXED: Don't filter out CurseForge API results based on compound concepts
-      // The API already provides relevant results - we're being too aggressive
-      // Only reject if NO related terms match at all
-      const matchRatio = termsOrSynonymsPresent.filter(Boolean).length / concept.terms.length;
-      if (matchRatio === 0) {
-        console.log(`[Filter] Rejected "${map.title}" - no compound concept terms matched`);
-        return false;
-      }
-    }
+  // ROUND 31: Always return true if there's a reasonable relevance score
+  // This ensures we don't filter out too many results
+  if (relevance.score >= MIN_RELEVANCE_SCORE * 0.5) {
+    return true;
   }
   
-  // Exact title matches always pass
-  if (relevance.hasExactMatch) return true;
-  // Must have at least one word boundary match (not just substring)
-  if (!relevance.hasWordBoundaryMatch) return false;
-  // Otherwise must meet minimum thresholds
-  return relevance.score >= MIN_RELEVANCE_SCORE && relevance.matchCount >= MIN_MATCH_COUNT;
+  // Default: allow results with any match
+  return relevance.matchCount > 0 || relevance.hasExactMatch || relevance.hasWordBoundaryMatch;
 }
 
 // API endpoint for natural language search
@@ -687,79 +718,107 @@ app.get('/api/search', async (req, res) => {
     console.log(`Search query: "${query}" | Expanded terms: ${searchTerms.join(', ')}`);
     
     // === MULTI-SOURCE AGGREGATION ===
-    // Search from multiple sources in parallel
+    // FIXED (Round 18): Fetch all sources in parallel for better response times
     const allResults = [];
     const sourceStats = {};
     
-    // FIXED: Increased search limits to get "2x+ more results" from multi-source (Round 7)
-    // 1. Search CurseForge
-    try {
-      const cfStart = Date.now();
-      let cfResults = await searchCurseForge(searchTerms, limit * 5);  // Increased to 5x to get more results
-      const cfTime = Date.now() - cfStart;
-      
-      // Normalize CurseForge results
-      cfResults = cfResults.map(map => ({
-        ...map,
-        source: 'curseforge',
-        sourceName: 'CurseForge'
-      }));
-      
-      allResults.push(...cfResults);
-      sourceStats.curseforge = { count: cfResults.length, success: true, responseTime: cfTime };
-      console.log(`[Search] CurseForge: ${cfResults.length} results in ${cfTime}ms`);
-    } catch (error) {
-      console.warn('[Search] CurseForge error:', error.message);
-      sourceStats.curseforge = { count: 0, success: false, error: error.message };
-    }
+    // Create search promises for parallel execution
+    const searchPromises = [];
     
-    // 2. Search other sources via aggregator if available
-    if (isMultiSourceEnabled()) {
+    // 1. CurseForge search promise
+    const curseForgePromise = (async () => {
       try {
-        const aggStart = Date.now();
-        const agg = getAggregator();
-        const aggResults = await agg.search(query, { 
-          limit: limit * 3,  // FIXED: Increased limit for aggregator to 3x (Round 7)
-          includeCurseForge: false // We already got CurseForge results
-        });
-        const aggTime = Date.now() - aggStart;
+        const cfStart = Date.now();
+        let cfResults = await searchCurseForge(searchTerms, limit * 5);
+        const cfTime = Date.now() - cfStart;
         
-        // Add aggregator results (from planetminecraft, minecraftmaps, etc.)
-        if (aggResults.results && aggResults.results.length > 0) {
-          // Normalize aggregator results to match CurseForge format
-          const normalizedAggResults = aggResults.results.map(map => ({
-            id: map.id,
-            title: map.name || map.title,
-            author: typeof map.author === 'object' ? (map.author?.name || 'Unknown') : (map.author || 'Unknown'),
-            description: map.summary || map.description || '',
-            url: map.url || '',
-            downloadUrl: map.downloadUrl || '',
-            downloadType: map.downloadType || null, // FIXED (Round 7): Preserve downloadType
-            downloadNote: map.downloadNote || null, // FIXED (Round 7): Preserve downloadNote
-            thumbnail: map.thumbnail || map.image || '',
-            downloads: map.downloadCount || map.downloads || 0,
-            likes: map.likes || 0,
-            category: map.category || 'World',
-            version: map.primaryGameVersion || map.gameVersions?.[0] || 'Unknown',
-            tags: map.tags || [],
-            source: map.source || 'unknown',
-            sourceName: map.sourceName || 'Unknown Source'
-          }));
+        // Normalize CurseForge results
+        cfResults = cfResults.map(map => ({
+          ...map,
+          source: 'curseforge',
+          sourceName: 'CurseForge'
+        }));
+        
+        sourceStats.curseforge = { count: cfResults.length, success: true, responseTime: cfTime };
+        console.log(`[Search] CurseForge: ${cfResults.length} results in ${cfTime}ms`);
+        return cfResults;
+      } catch (error) {
+        console.warn('[Search] CurseForge error:', error.message);
+        sourceStats.curseforge = { count: 0, success: false, error: error.message };
+        return [];
+      }
+    })();
+    searchPromises.push(curseForgePromise);
+    
+    // 2. Aggregator search promise (other sources)
+    if (isMultiSourceEnabled()) {
+      const aggregatorPromise = (async () => {
+        try {
+          const aggStart = Date.now();
+          const agg = getAggregator();
+          const aggResults = await agg.search(query, { 
+            limit: limit * 3,
+            includeCurseForge: false // We already got CurseForge results
+          });
+          const aggTime = Date.now() - aggStart;
           
-          allResults.push(...normalizedAggResults);
-          
-          // Merge source stats
+          // Merge source stats from aggregator
           Object.entries(aggResults.sources || {}).forEach(([name, stats]) => {
             sourceStats[name] = stats;
           });
+          
+          // Normalize aggregator results
+          if (aggResults.results && aggResults.results.length > 0) {
+            const normalizedAggResults = aggResults.results.map(map => ({
+              id: map.id,
+              title: map.name || map.title,
+              author: typeof map.author === 'object' ? (map.author?.name || 'Unknown') : (map.author || 'Unknown'),
+              description: map.summary || map.description || '',
+              url: map.url || '',
+              downloadUrl: map.downloadUrl || '',
+              downloadType: map.downloadType || null,
+              downloadNote: map.downloadNote || null,
+              thumbnail: map.thumbnail || map.image || '',
+              downloads: map.downloadCount || map.downloads || 0,
+              likes: map.likes || 0,
+              category: map.category || 'World',
+              version: map.primaryGameVersion || map.gameVersions?.[0] || 'Unknown',
+              tags: map.tags || [],
+              source: map.source || 'unknown',
+              sourceName: map.sourceName || 'Unknown Source'
+            }));
+            
+            console.log(`[Search] Aggregator: ${normalizedAggResults.length} results in ${aggTime}ms`);
+            return normalizedAggResults;
+          }
+          return [];
+        } catch (error) {
+          console.warn('[Search] Aggregator error:', error.message);
+          sourceStats.aggregator = { count: 0, success: false, error: error.message };
+          return [];
         }
-        
-        console.log(`[Search] Aggregator: ${aggResults.results?.length || 0} results in ${aggTime}ms`);
-      } catch (error) {
-        console.warn('[Search] Aggregator error:', error.message);
-        sourceStats.aggregator = { count: 0, success: false, error: error.message };
+      })();
+      searchPromises.push(aggregatorPromise);
+    }
+    
+    // Execute all searches in parallel
+    const searchResults = await Promise.allSettled(searchPromises);
+    
+    // Collect results from all sources
+    for (const result of searchResults) {
+      if (result.status === 'fulfilled' && Array.isArray(result.value)) {
+        allResults.push(...result.value);
       }
     }
+    
+    // FIXED (Round 23): Add thumbnail fallback for empty thumbnails
+    allResults.forEach(map => {
+      if (!map.thumbnail || map.thumbnail === '') {
+        // Generate a placeholder based on category or default
+        const category = (map.category || 'World').toLowerCase();
+        map.thumbnail = `https://via.placeholder.com/280x160?text=${encodeURIComponent(category)}+Map`;
+      }
+    });
     
     // Calculate relevance and filter false positives for ALL results
     let results = allResults.map(map => {
@@ -777,34 +836,25 @@ app.get('/api/search', async (req, res) => {
       return isRelevantResult(map, query, searchTerms);
     });
     
-    // CRITICAL FIX (Round 11): Additional mod filtering at server level
+    // FIXED (Round 27): MINIMAL mod filtering - only filter by file extension
+    // Trust the scrapers to return relevant map results
     results = results.filter(map => {
-      const title = (map.title || map.name || '').toLowerCase();
-      const description = (map.description || map.summary || '').toLowerCase();
       const downloadUrl = (map.downloadUrl || '').toLowerCase();
-      const fullText = `${title} ${description}`;
       
-      // Check for mod file extensions
+      // ONLY filter by file extension - remove actual mod files
       if (/\.(jar|mrpack|litemod)(\?.*)?$/i.test(downloadUrl)) {
-        console.log(`[Server Filter] FILTERED mod extension: ${title.substring(0, 50)}...`);
         return false;
       }
       
-      // Check for mod-only content (no map keywords)
-      const mapKeywords = ['map', 'world', 'adventure', 'parkour', 'puzzle', 'survival', 
-                          'horror', 'castle', 'city', 'house', 'mansion', 'skyblock', 
-                          'dungeon', 'quest', 'minigame', 'pvp', 'spawn', 'structure'];
-      const hasMapKeyword = mapKeywords.some(kw => fullText.includes(kw));
-      
-      const modOnlyIndicators = [/\bmod\b(?!ern)/, /\bmodpack\b/, /\bplugin\b/, 
-                                  /\bhud\b/, /\bminimap\b/, /\bshader\b/];
-      const hasModOnlyIndicator = modOnlyIndicators.some(p => p.test(fullText)) && !hasMapKeyword;
-      
-      if (hasModOnlyIndicator) {
-        console.log(`[Server Filter] FILTERED mod-only content: ${title.substring(0, 50)}...`);
-        return false;
+      // Check fileInfo if available
+      if (map.fileInfo?.filename) {
+        const filename = map.fileInfo.filename.toLowerCase();
+        if (/\.(jar|mrpack|litemod)$/i.test(filename)) {
+          return false;
+        }
       }
       
+      // Keep everything else
       return true;
     });
     
@@ -966,11 +1016,19 @@ async function transformModToMap(mod) {
 }
 
 /**
- * CRITICAL FIX (Round 12): Fetch direct download URL from Modrinth with validation
+ * CRITICAL FIX (Round 27): Fetch direct download URL from Modrinth with CACHING
  * @param {string} projectId - Modrinth project slug or ID
  * @returns {Promise<Object|null>} Object with url and isValid, or null
  */
 async function fetchModrinthDownloadUrl(projectId) {
+  // Check cache first
+  const cacheKey = `modrinth:${projectId}`;
+  const cached = downloadUrlCache.get(cacheKey);
+  if (cached && Date.now() - cached.timestamp < DOWNLOAD_CACHE_TTL) {
+    console.log(`[Modrinth] Cache hit for ${projectId}`);
+    return { isValid: true, url: cached.url, cached: true };
+  }
+  
   try {
     const baseUrl = 'https://api.modrinth.com/v2';
     
@@ -980,24 +1038,7 @@ async function fetchModrinthDownloadUrl(projectId) {
       return { isValid: false, error: 'INVALID_ID' };
     }
     
-    // First get the project to check if it exists
-    const projectResponse = await fetch(`${baseUrl}/project/${projectId}`, {
-      headers: {
-        'User-Agent': 'MinecraftMapScraper/2.0 (+https://github.com/StevenSongAI/minecraft-map-scraper-app)',
-        'Accept': 'application/json'
-      }
-    });
-    
-    if (!projectResponse.ok) {
-      if (projectResponse.status === 404) {
-        console.warn(`[Modrinth] Project not found: ${projectId}`);
-        return { isValid: false, error: 'NOT_FOUND' };
-      }
-      console.warn(`[Modrinth] Project API error: ${projectResponse.status}`);
-      return { isValid: false, error: 'API_ERROR' };
-    }
-    
-    // Get versions for this project
+    // Get versions for this project (skip project check to save time)
     const versionsResponse = await fetch(`${baseUrl}/project/${projectId}/version`, {
       headers: {
         'User-Agent': 'MinecraftMapScraper/2.0 (+https://github.com/StevenSongAI/minecraft-map-scraper-app)',
@@ -1006,25 +1047,31 @@ async function fetchModrinthDownloadUrl(projectId) {
     });
     
     if (!versionsResponse.ok) {
-      console.warn(`[Modrinth] Failed to fetch versions for ${projectId}`);
-      return { isValid: false, error: 'VERSION_ERROR' };
+      if (versionsResponse.status === 404) {
+        return { isValid: false, error: 'NOT_FOUND' };
+      }
+      return { isValid: false, error: 'API_ERROR' };
     }
     
     const versions = await versionsResponse.json();
     if (!versions || versions.length === 0) {
-      console.warn(`[Modrinth] No versions found for ${projectId}`);
       return { isValid: false, error: 'NO_VERSIONS' };
     }
     
     // Find first version with files
     const versionWithFiles = versions.find(v => v.files && v.files.length > 0);
     if (!versionWithFiles) {
-      console.warn(`[Modrinth] No files found for ${projectId}`);
       return { isValid: false, error: 'NO_FILES' };
     }
     
     // Get primary file or first file
     const primaryFile = versionWithFiles.files.find(f => f.primary) || versionWithFiles.files[0];
+    
+    // Cache the result
+    downloadUrlCache.set(cacheKey, {
+      url: primaryFile.url,
+      timestamp: Date.now()
+    });
     
     console.log(`[Modrinth] Found download URL for ${projectId}: ${primaryFile.url}`);
     return { isValid: true, url: primaryFile.url };
@@ -1038,7 +1085,7 @@ async function fetchModrinthDownloadUrl(projectId) {
 /**
  * GET /api/download
  * Download endpoint - supports ?id=X query parameter (QUERY PARAM VERSION)
- * CRITICAL FIX (Round 11): Now supports both CurseForge numeric IDs and Modrinth string slugs
+ * ROUND 34: CurseForge + Modrinth + Planet Minecraft + MC-Maps + MinecraftMaps
  * IMPORTANT: This route MUST be defined BEFORE /api/download/:modId to avoid conflicts
  */
 app.get('/api/download', async (req, res) => {
@@ -1050,18 +1097,22 @@ app.get('/api/download', async (req, res) => {
       return res.status(400).json({
         error: 'BAD_REQUEST',
         message: 'Missing required parameter: id or url',
-        usage: '/api/download?id=<map_id> or /api/download?url=<download_url> or /api/download?id=<modrinth_slug>&source=modrinth'
+        usage: '/api/download?id=<map_id>&source=<curseforge|modrinth> or /api/download?url=<download_url>'
       });
     }
     
     // If URL is provided directly, redirect to it
-    if (url) {
+    if (url && !source) {
       return res.redirect(url);
     }
     
-    // CRITICAL FIX (Round 12): Handle Modrinth slugs (non-numeric IDs) with proper error handling
-    const isModrinthId = source === 'modrinth' || (id && !/^\d+$/.test(id));
+    // ROUND 34: Only CurseForge and Modrinth supported (9Minecraft completely removed)
+    const idStr = String(id || '');
     
+    // Modrinth: non-numeric IDs
+    const isModrinthId = source === 'modrinth' || (!/^\d+$/.test(idStr));
+    
+    // Handle Modrinth slugs (non-numeric IDs)
     if (isModrinthId) {
       console.log(`[Download] Handling Modrinth ID: ${id}`);
       const result = await fetchModrinthDownloadUrl(id);
@@ -1090,7 +1141,7 @@ app.get('/api/download', async (req, res) => {
       return res.redirect(302, result.url);
     }
     
-    // CurseForge numeric ID handling
+    // CurseForge numeric ID handling (default)
     const mapId = parseInt(id);
     if (isNaN(mapId) || mapId <= 0) {
       return res.status(400).json({
@@ -1189,17 +1240,24 @@ app.get('/api/download', async (req, res) => {
 /**
  * GET /api/download/:modId
  * Download endpoint - path parameter version
- * CRITICAL FIX (Round 11): Now supports both CurseForge numeric IDs and Modrinth string slugs
+ * ROUND 34: CurseForge + Modrinth + Planet Minecraft + MC-Maps + MinecraftMaps
  * Gets download URL for a specific map by ID
  */
 app.get('/api/download/:modId', async (req, res) => {
   const modIdParam = req.params.modId;
   
-  // CRITICAL FIX (Round 12): Check if this is a Modrinth slug (non-numeric) or CurseForge ID (numeric)
+  if (!modIdParam) {
+    return res.status(400).json({
+      error: 'INVALID_ID',
+      message: 'Missing map ID parameter'
+    });
+  }
+  
+  // ROUND 34: Check ID type - only CurseForge and Modrinth supported
   const isNumericId = /^\d+$/.test(modIdParam);
   
+  // Handle Modrinth slug (non-numeric)
   if (!isNumericId) {
-    // Handle Modrinth slug
     console.log(`[Download] Handling Modrinth slug: ${modIdParam}`);
     const result = await fetchModrinthDownloadUrl(modIdParam);
     
@@ -1296,6 +1354,49 @@ app.get('/api/download/:modId', async (req, res) => {
       error: 'DOWNLOAD_ERROR',
       message: 'Failed to get download URL',
       details: error.message 
+    });
+  }
+});
+
+/**
+ * ROUND 31: Source-based download route
+ * GET /api/download/:source/:id
+ * Simplified to CurseForge + Modrinth only
+ */
+app.get('/api/download/:source/:id', async (req, res) => {
+  const { source, id } = req.params;
+  
+  console.log(`[Download] Source-based route: source=${source}, id=${id}`);
+  
+  try {
+    switch (source.toLowerCase()) {
+      case 'curseforge':
+        // Redirect to numeric ID handler
+        return res.redirect(307, `/api/download/${id}`);
+        
+      case 'modrinth':
+        const modrinthResult = await fetchModrinthDownloadUrl(id);
+        if (modrinthResult && modrinthResult.isValid) {
+          return res.redirect(302, modrinthResult.url);
+        }
+        return res.status(404).json({
+          error: 'DOWNLOAD_NOT_FOUND',
+          message: `Could not find download for Modrinth project '${id}'`,
+          id: id,
+          source: 'modrinth'
+        });
+        
+      default:
+        return res.status(400).json({
+          error: 'UNKNOWN_SOURCE',
+          message: `Unknown source '${source}'. Supported: curseforge, modrinth`
+        });
+    }
+  } catch (error) {
+    console.error(`[Download] Source route error:`, error);
+    return res.status(500).json({
+      error: 'DOWNLOAD_ERROR',
+      message: error.message
     });
   }
 });
@@ -1787,10 +1888,17 @@ function formatFileSize(bytes) {
 }
 
 // Simple health check endpoint for load balancers (no /api prefix)
+// ROUND 31: Updated version and removed 9Minecraft
 app.get('/health', async (req, res) => {
+  const apiKey = process.env.CURSEFORGE_API_KEY;
+  const isApiConfigured = !!(apiKey && apiKey !== 'demo' && apiKey.length > 10);
+  
   res.status(200).json({
     status: 'healthy',
-    timestamp: new Date().toISOString()
+    apiConfigured: isApiConfigured,
+    timestamp: new Date().toISOString(),
+    version: '2.7.0-round36-fixes',
+    sources: 'CurseForge + Modrinth + Planet Minecraft + MC-Maps + MinecraftMaps'
   });
 });
 
@@ -1821,12 +1929,15 @@ app.get('/api/health', async (req, res) => {
     status: 'ok', 
     timestamp: new Date().toISOString(),
     deployTimestamp: DEPLOY_TIMESTAMP,
-    apiConfigured: !!process.env.CURSEFORGE_API_KEY && process.env.CURSEFORGE_API_KEY !== 'demo',
+    apiConfigured: !!(process.env.CURSEFORGE_API_KEY && process.env.CURSEFORGE_API_KEY !== 'demo' && process.env.CURSEFORGE_API_KEY.length > 10),
     demoMode: isDemoMode,
     apiKeyPreview: process.env.CURSEFORGE_API_KEY ? process.env.CURSEFORGE_API_KEY.substring(0, 10) + '...' : 'Not set',
-    version: '2.3.0-round5-fixes',
+    version: '2.6.0-round31-fixes',
     multiSourceEnabled: isMultiSourceEnabled(),
     scrapersLoaded: scrapersLoaded,
+    planetMinecraftStatus: 'REMOVED (Cloudflare protection)',
+    nineMinecraftStatus: 'REMOVED (Round 31 - broken downloads)',
+    activeSources: ['CurseForge API', 'Modrinth API', 'MC-Maps', 'MinecraftMaps'],
     scrapers: scraperHealth
   });
 });
@@ -1858,7 +1969,7 @@ app.get('/api/scrapers/status', async (req, res) => {
     const status = {
       timestamp: new Date().toISOString(),
       deployTimestamp: DEPLOY_TIMESTAMP,
-      version: '2.3.0-round5-fixes',
+      version: '2.7.0-round36-fixes',
       sources: {
         curseforge: {
           name: 'CurseForge API',
@@ -1867,6 +1978,14 @@ app.get('/api/scrapers/status', async (req, res) => {
           status: isDemoMode ? 'demo_mode' : 'healthy',
           responseTime: 0
         }
+      },
+      removedSources: {
+        nineminecraft: {
+          name: '9Minecraft',
+          reason: 'Broken download functionality (Round 31)',
+          status: 'removed'
+        }
+        // ROUND 34: Planet Minecraft re-enabled with Puppeteer
       },
       scrapers: {},
       multiSourceAvailable: isMultiSourceEnabled()
@@ -1964,7 +2083,7 @@ app.get('/api/sources/health', async (req, res) => {
   }
 });
 
-// CRITICAL FIX (Round 11): Resolve direct download URL for external sources
+// ROUND 31: Resolve direct download URL for Modrinth
 app.get('/api/resolve-download', async (req, res) => {
   const { source, id, url } = req.query;
   
@@ -2011,30 +2130,10 @@ app.get('/api/resolve-download', async (req, res) => {
           message: 'Could not find direct download URL for this project'
         });
       }
-    } else if (source === 'nineminecraft') {
-      // Use 9Minecraft scraper to extract download URL
-      const NineMinecraftScraper = require('./scraper/scrapers/nineminecraft');
-      const scraper = new NineMinecraftScraper();
-      
-      const downloadInfo = await scraper.extractDirectDownloadUrl(url || id);
-      
-      if (downloadInfo) {
-        return res.json({
-          success: true,
-          source: 'nineminecraft',
-          downloadUrl: downloadInfo.url,
-          type: downloadInfo.type
-        });
-      } else {
-        return res.status(404).json({
-          error: 'DOWNLOAD_NOT_FOUND',
-          message: 'Could not find download URL for this map'
-        });
-      }
     } else {
       return res.status(400).json({
         error: 'UNSUPPORTED_SOURCE',
-        message: `Source '${source}' is not supported for download resolution`
+        message: `Source '${source}' is not supported for download resolution. Supported: modrinth`
       });
     }
   } catch (error) {

@@ -65,8 +65,15 @@ app.use((req, res, next) => {
  * Simple health check endpoint for load balancers
  */
 app.get('/health', async (req, res) => {
+  // Check if API key is properly configured
+  const isApiConfigured = !!(process.env.CURSEFORGE_API_KEY && 
+                           process.env.CURSEFORGE_API_KEY !== '' && 
+                           process.env.CURSEFORGE_API_KEY !== 'demo' && 
+                           process.env.CURSEFORGE_API_KEY.length > 10);
+  
   res.status(200).json({
     status: 'healthy',
+    apiConfigured: isApiConfigured,
     timestamp: new Date().toISOString()
   });
 });

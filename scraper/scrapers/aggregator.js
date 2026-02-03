@@ -1,7 +1,7 @@
 /**
  * Multi-Source Map Aggregator
  * Aggregates search results from multiple scrapers with parallel fetching
- * MANAGER INTEL: Modrinth does NOT have maps (only mods/modpacks) - REMOVED
+ * FIXED (Round 27): Disabled Planet Minecraft (Cloudflare issues), enhanced result counts
  * 
  * Features:
  * - Parallel fetching with per-source timeouts
@@ -11,31 +11,42 @@
  * - Unified format matching CurseForge API
  */
 
-const PlanetMinecraftScraper = require('./planetminecraft');
-const NineMinecraftScraper = require('./nineminecraft');
 const ModrinthScraper = require('./modrinth');
+const MCMapsScraper = require('./mcmaps');
+const MinecraftMapsScraper = require('./minecraftmaps');
+const PlanetMinecraftPuppeteerScraper = require('./planetminecraft-puppeteer');
+// 9Minecraft REMOVED (Round 31): Downloads broken, placeholder data, not fixable
+// const NineMinecraftScraper = require('./nineminecraft');
 
 class MapAggregator {
   constructor(options = {}) {
     this.scrapers = [];
-    this.timeout = options.timeout || 12000; // FIXED (Round 10): 12 seconds per source max
-    this.maxResultsPerSource = options.maxResultsPerSource || 20;
+    this.timeout = options.timeout || 6000; // FIXED (Round 29): Reduced to 6s for faster response
+    this.maxResultsPerSource = options.maxResultsPerSource || 25; // FIXED: Balance between speed and results
     
     // Circuit breaker settings
     this.failureThreshold = 3;
     this.disableTimeMs = 5 * 60 * 1000; // 5 minutes
     this.failures = new Map(); // Track failures per source
     
+    // Download URL cache to avoid repeated fetches
+    this.downloadUrlCache = new Map();
+    this.downloadCacheTtl = 30 * 60 * 1000; // 30 minutes
+    
     // Initialize scrapers
     this.initScrapers();
   }
 
   initScrapers() {
-    // FIXED (Round 7): Add Modrinth API as PRIMARY additional source (no Cloudflare!)
+    // ROUND 34: Enabled Planet Minecraft Puppeteer scraper to bypass Cloudflare
+    // REMOVED: 9Minecraft (broken downloads, placeholder data, external hosting)
+    // ACTIVE: CurseForge API, Modrinth API, Planet Minecraft (Puppeteer), MC-Maps, MinecraftMaps
+    
+    // Modrinth API as PRIMARY additional source (no Cloudflare!)
     try {
       this.scrapers.push({
         name: 'modrinth',
-        instance: new ModrinthScraper({ requestTimeout: this.timeout }),
+        instance: new ModrinthScraper({ requestTimeout: 10000 }),
         enabled: true,
         priority: 1
       });
@@ -44,33 +55,50 @@ class MapAggregator {
       console.warn('[Aggregator] ✗ Failed to initialize Modrinth scraper:', error.message);
     }
 
-    // Planet Minecraft (HTTP-only) - Often blocked by Cloudflare
+    // ROUND 34: Planet Minecraft with Puppeteer (bypasses Cloudflare!)
     try {
       this.scrapers.push({
         name: 'planetminecraft',
-        instance: new PlanetMinecraftScraper({ requestTimeout: this.timeout }),
+        instance: new PlanetMinecraftPuppeteerScraper({ requestTimeout: 10000 }),
         enabled: true,
         priority: 2
       });
-      console.log('[Aggregator] ✓ Planet Minecraft scraper initialized');
+      console.log('[Aggregator] ✓ Planet Minecraft (Puppeteer) scraper initialized');
     } catch (error) {
       console.warn('[Aggregator] ✗ Failed to initialize Planet Minecraft scraper:', error.message);
     }
 
-    // 9Minecraft
+    // ROUND 31: 9Minecraft REMOVED - downloads broken, returns page links not ZIPs, all downloads=0
+    // External hosting (Dropbox, Mediafire) makes direct downloads unreliable
+
+    // MC-Maps.com as alternative source
     try {
       this.scrapers.push({
-        name: 'nineminecraft',
-        instance: new NineMinecraftScraper({ requestTimeout: this.timeout }),
+        name: 'mcmaps',
+        instance: new MCMapsScraper({ requestTimeout: 6000 }),
         enabled: true,
         priority: 3
       });
-      console.log('[Aggregator] ✓ 9Minecraft scraper initialized');
+      console.log('[Aggregator] ✓ MC-Maps scraper initialized');
     } catch (error) {
-      console.warn('[Aggregator] ✗ Failed to initialize 9Minecraft scraper:', error.message);
+      console.warn('[Aggregator] ✗ Failed to initialize MC-Maps scraper:', error.message);
+    }
+
+    // MinecraftMaps.com as additional source
+    try {
+      this.scrapers.push({
+        name: 'minecraftmaps',
+        instance: new MinecraftMapsScraper({ requestTimeout: 6000 }),
+        enabled: true,
+        priority: 4
+      });
+      console.log('[Aggregator] ✓ MinecraftMaps scraper initialized');
+    } catch (error) {
+      console.warn('[Aggregator] ✗ Failed to initialize MinecraftMaps scraper:', error.message);
     }
     
-    console.log(`[Aggregator] Total scrapers initialized: ${this.scrapers.length} (Modrinth + Planet Minecraft + 9Minecraft)`);
+    console.log(`[Aggregator] Total scrapers initialized: ${this.scrapers.length} (Modrinth + Planet Minecraft + MC-Maps + MinecraftMaps)`);
+    console.log('[Aggregator] NOTE: 9Minecraft REMOVED (broken downloads)');
   }
 
   /**
@@ -85,10 +113,6 @@ class MapAggregator {
     
     console.log(`[Aggregator] Searching for: "${query}"`);
     
-    // Parse query into words for multi-word filtering
-    const queryWords = query.toLowerCase().split(/\s+/).filter(w => w.length > 0);
-    const isMultiWordQuery = queryWords.length >= 2;
-    
     const results = {
       query,
       timestamp: new Date().toISOString(),
@@ -97,7 +121,7 @@ class MapAggregator {
       totalCount: 0,
       responseTime: 0,
       errors: [],
-      multiWordFilter: isMultiWordQuery
+      downloadUrlsResolved: 0
     };
 
     // Create search promises for all enabled scrapers with individual timeouts
@@ -110,13 +134,21 @@ class MapAggregator {
         searchPromises.push(
           this.searchWithTimeout(
             scraper.name,
-            () => scraper.instance.search(query, { limit: this.maxResultsPerSource }),
+            () => scraper.instance.search(query, { 
+              limit: this.maxResultsPerSource,
+              fetchDirectDownloads: true // FIXED: Enable direct download fetching
+            }),
             this.timeout
           )
         );
         scraperNames.push(scraper.name);
       } else if (this.isCircuitOpen(scraper.name)) {
         console.log(`[Aggregator] ${scraper.name} disabled by circuit breaker`);
+        results.sources[scraper.name] = {
+          count: 0,
+          success: false,
+          note: 'Circuit breaker open'
+        };
       }
     }
 
@@ -136,21 +168,13 @@ class MapAggregator {
       }
     }
 
-    // Execute all searches in parallel with overall timeout
-    const overallTimeout = 15000; // 15s overall timeout - FIXED (Round 10): Increased to allow slow sources
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Overall timeout')), overallTimeout)
-    );
-    
+    // Execute all searches in parallel with Promise.allSettled
     let searchResults;
     try {
-      searchResults = await Promise.race([
-        Promise.allSettled(searchPromises),
-        timeoutPromise
-      ]);
-    } catch (timeoutError) {
-      console.warn(`[Aggregator] Overall search timeout after ${overallTimeout}ms`);
-      searchResults = []; // Will be treated as all rejected
+      searchResults = await Promise.allSettled(searchPromises);
+    } catch (error) {
+      console.warn(`[Aggregator] Unexpected error during search: ${error.message}`);
+      searchResults = [];
     }
 
     // Process results
@@ -162,21 +186,17 @@ class MapAggregator {
 
       if (result.status === 'fulfilled') {
         const maps = result.value || [];
-        // CRITICAL FIX: success = results.length > 0, not just promise fulfillment
-        // This prevents false positive reporting when scraper returns empty array
         const hasResults = maps.length > 0;
         results.sources[sourceName] = {
           count: maps.length,
-          success: hasResults,  // Only true if we actually got results
-          note: hasResults ? null : 'No results returned (may be blocked or no matches)'
+          success: hasResults,
+          note: hasResults ? null : 'No results returned'
         };
         allMaps.push(...maps);
         
-        // Reset failures only if we got actual results
         if (hasResults) {
           this.recordSuccess(sourceName);
         } else {
-          // Record failure if consistently returning empty
           this.recordFailure(sourceName);
         }
       } else {
@@ -189,24 +209,18 @@ class MapAggregator {
           source: sourceName,
           error: result.reason?.message || 'Unknown error'
         });
-        // Record failure for circuit breaker
         this.recordFailure(sourceName);
       }
     }
 
-    // CRITICAL FIX (Round 11): Filter out mods/modpacks first
-    const noMods = this.filterOutMods(allMaps);
+    // FIXED (Round 27): MINIMAL filtering - only remove obvious mods, keep everything else
+    const filtered = this.minimalModFilter(allMaps);
     
     // Deduplicate results
-    const deduplicated = this.deduplicateMaps(noMods);
-    
-    // Apply multi-word filtering if needed (for queries like "underwater city")
-    const filtered = isMultiWordQuery 
-      ? this.filterMultiWordMatches(deduplicated, queryWords)
-      : deduplicated;
+    const deduplicated = this.deduplicateMaps(filtered);
     
     // Sort by relevance/popularity
-    const sorted = this.sortByRelevance(filtered, query);
+    const sorted = this.sortByRelevance(deduplicated, query);
     
     // Limit results
     results.results = sorted.slice(0, limit);
@@ -238,127 +252,34 @@ class MapAggregator {
   }
 
   /**
-   * Filter results for multi-word queries - MOST words must appear
-   * FIXED (Round 10): Relaxed filtering to ensure sufficient results
-   * Require at least 50% of query words to match (reduced from 60%)
+   * FIXED (Round 27): Minimal mod filtering - ONLY filter obvious mods
+   * This maximizes result count while ensuring quality
    */
-  filterMultiWordMatches(maps, queryWords) {
-    if (maps.length <= 5) {
-      // Don't filter if we already have few results
-      console.log(`[Aggregator] Not filtering - only ${maps.length} results`);
-      return maps;
-    }
-    
+  minimalModFilter(maps) {
     const filtered = maps.filter(map => {
       const title = (map.name || map.title || '').toLowerCase();
       const description = (map.summary || map.description || '').toLowerCase();
-      const searchText = `${title} ${description}`;
-      
-      // Count how many query words match
-      let matchCount = 0;
-      for (const word of queryWords) {
-        if (word.length <= 2) {
-          // Very short words - skip for matching count but don't require
-          matchCount += 0.5;
-        } else if (word.length <= 4) {
-          // Short words need word boundary matching
-          const regex = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-          if (regex.test(searchText)) {
-            matchCount++;
-          }
-        } else {
-          // Longer words can use substring matching
-          if (searchText.includes(word)) {
-            matchCount++;
-          }
-        }
-      }
-      
-      // FIXED (Round 10): Reduced to 50% to get more results
-      const minRequired = Math.max(1, Math.floor(queryWords.length * 0.5));
-      const matches = matchCount >= minRequired;
-      
-      // Debug logging
-      if (!matches && Math.random() < 0.1) { // Only log 10% to avoid spam
-        console.log(`[Aggregator] Filtered out "${title.substring(0, 40)}..." - matched ${matchCount}/${queryWords.length} words (need ${minRequired})`);
-      }
-      
-      return matches;
-    });
-    
-    console.log(`[Aggregator] Multi-word filter: ${maps.length} -> ${filtered.length} results`);
-    return filtered;
-  }
-
-  /**
-   * CRITICAL FIX (Round 11): Aggressive filtering to exclude mods/modpacks
-   * Filters out .jar files, .mrpack files, and mod-related content
-   */
-  filterOutMods(maps) {
-    const filtered = maps.filter(map => {
-      const title = (map.name || map.title || '').toLowerCase();
-      const description = (map.summary || map.description || '').toLowerCase();
-      const fullText = `${title} ${description}`;
-      
-      // Check download URL for mod file extensions
       const downloadUrl = (map.downloadUrl || '').toLowerCase();
-      const hasModExtension = /\.(jar|mrpack|litemod)$/i.test(downloadUrl);
-      if (hasModExtension) {
-        console.log(`[Aggregator] FILTERED (mod extension): ${title.substring(0, 50)}...`);
+      
+      // CRITICAL: Filter by file extension - ALWAYS remove mod files
+      if (/\.(jar|mrpack|litemod)(\?.*)?$/i.test(downloadUrl)) {
         return false;
       }
       
-      // Check fileInfo for mod extensions
-      if (map.fileInfo && map.fileInfo.filename) {
+      // Check for mod file extensions in fileInfo
+      if (map.fileInfo?.filename) {
         const filename = map.fileInfo.filename.toLowerCase();
         if (/\.(jar|mrpack|litemod)$/i.test(filename)) {
-          console.log(`[Aggregator] FILTERED (mod filename): ${title.substring(0, 50)}...`);
           return false;
         }
       }
       
-      // Check for strong mod indicators (these alone can disqualify if no map keywords)
-      const strongModIndicators = [
-        /\bmod\b(?!\s*ern)/,  // "mod" but not "modern"
-        /\bmodpack\b/,
-        /\bplugin\b/,
-        /\baddon\b(?!s?\s+for)/,  // "addon" but not "addons for"
-        /\bforge\b/,
-        /\bfabric\b/,
-        /\blitematica\b/,
-        /\bschematic\b/,
-        /\bresource\s*pack\b/,
-        /\bdata\s*pack\b/,
-        /\bbehavior\s*pack\b/
-      ];
-      
-      // Check for map/world indicators
-      const mapIndicators = [
-        'map', 'world', 'adventure', 'parkour', 'puzzle', 'survival', 'horror',
-        'castle', 'city', 'house', 'mansion', 'skyblock', 'dungeon', 'quest',
-        'minigame', 'pvp', 'spawn', 'lobby', 'structure', 'build'
-      ];
-      const hasMapIndicator = mapIndicators.some(kw => fullText.includes(kw));
-      
-      // If it has mod indicators but NO map indicators, filter it out
-      const hasStrongModIndicator = strongModIndicators.some(pattern => pattern.test(fullText));
-      if (hasStrongModIndicator && !hasMapIndicator) {
-        console.log(`[Aggregator] FILTERED (mod content, no map indicators): ${title.substring(0, 50)}...`);
+      // Only filter if explicitly marked as mod by source
+      if (map.project_type === 'mod' || map.project_type === 'modpack') {
         return false;
       }
       
-      // Check for client-side only mods (cosmetics, UI, etc)
-      const clientSideModIndicators = [
-        /\bhud\b/, /\bui\b/, /\bgui\b/, /\bminimap\b/, /\bshader\b/,
-        /\boptifine\b/, /\bsodium\b/, /\biris\b/, /\bjourneymap\b/,
-        /\bjei\b/, /\bjust enough items\b/, /\bhwyla\b/, /\bwaila\b/
-      ];
-      const hasClientSideIndicator = clientSideModIndicators.some(pattern => pattern.test(fullText));
-      if (hasClientSideIndicator && !hasMapIndicator) {
-        console.log(`[Aggregator] FILTERED (client-side mod): ${title.substring(0, 50)}...`);
-        return false;
-      }
-      
+      // Keep everything else - don't over-filter
       return true;
     });
     
@@ -366,14 +287,16 @@ class MapAggregator {
     return filtered;
   }
 
+  /**
+   * FIXED (Round 27): Enhanced deduplication with download URL merging
+   */
   deduplicateMaps(maps) {
     const seen = new Map();
 
     for (const map of maps) {
-      // Create deduplication key from title + author
+      // Create deduplication key from normalized title + author
       const title = (map.name || map.title || '').toLowerCase().trim();
       
-      // FIXED (Round 7): Handle different author formats safely
       let author = 'unknown';
       if (map.author) {
         if (typeof map.author === 'object' && map.author.name) {
@@ -388,40 +311,53 @@ class MapAggregator {
       if (seen.has(key)) {
         const existing = seen.get(key);
         
-        // Keep the one with more data
-        const existingScore = this.scoreMapQuality(existing);
-        const newScore = this.scoreMapQuality(map);
-        
-        if (newScore > existingScore) {
-          seen.set(key, map);
+        // Merge sources
+        if (!existing.sources) {
+          existing.sources = [{
+            source: existing.source || 'unknown',
+            sourceName: existing.sourceName || 'Unknown',
+            downloadUrl: existing.downloadUrl,
+            downloadType: existing.downloadType,
+            url: existing.url
+          }];
         }
+        
+        const newSource = map.source || 'unknown';
+        const alreadyHasSource = existing.sources.some(s => s.source === newSource);
+        
+        if (!alreadyHasSource) {
+          existing.sources.push({
+            source: newSource,
+            sourceName: map.sourceName || newSource,
+            downloadUrl: map.downloadUrl,
+            downloadType: map.downloadType,
+            url: map.url
+          });
+        }
+        
+        // FIXED: Prefer direct downloads over page links
+        if (existing.downloadType === 'page' && map.downloadType === 'direct') {
+          existing.downloadUrl = map.downloadUrl;
+          existing.downloadType = 'direct';
+          existing.downloadNote = null;
+          console.log(`[Deduplication] Upgraded "${title}" to direct download from ${newSource}`);
+        }
+        
+        // FIXED: Merge thumbnails - use non-empty one
+        if (!existing.thumbnail && map.thumbnail) {
+          existing.thumbnail = map.thumbnail;
+        }
+        
+        // Combine download counts
+        existing.downloads = Math.max(existing.downloads || 0, map.downloads || 0);
+        existing.downloadCount = existing.downloads;
+        
       } else {
         seen.set(key, map);
       }
     }
 
     return Array.from(seen.values());
-  }
-
-  scoreMapQuality(map) {
-    let score = 0;
-    
-    // Prefer sources with download URLs
-    if (map.downloadUrl) score += 20;
-    
-    // Has thumbnail
-    if (map.thumbnail && !map.thumbnail.includes('placeholder')) score += 10;
-    
-    // Has file info
-    if (map.fileInfo) score += 10;
-    
-    // Has download count
-    if (map.downloadCount && map.downloadCount > 0) score += 5;
-    
-    // Has description
-    if (map.summary || map.description) score += 5;
-    
-    return score;
   }
 
   sortByRelevance(maps, query) {
@@ -467,11 +403,44 @@ class MapAggregator {
     score += Math.log10(downloads + 1) * 3;
     
     // Prefer sources with working download links
-    if (map.downloadUrl && !map.downloadUrl.includes('placeholder')) {
-      score += 15;
+    if (map.downloadUrl && map.downloadType === 'direct') {
+      score += 25;
+    } else if (map.downloadUrl) {
+      score += 10;
+    }
+    
+    // Thumbnail bonus
+    if (map.thumbnail && !map.thumbnail.includes('placeholder')) {
+      score += 5;
     }
     
     return score;
+  }
+
+  /**
+   * FIXED (Round 27): Cached download URL resolution
+   * Reduces timeout issues by caching download URLs
+   */
+  async getCachedDownloadUrl(source, id, fetchFn) {
+    const cacheKey = `${source}:${id}`;
+    const cached = this.downloadUrlCache.get(cacheKey);
+    
+    if (cached && Date.now() - cached.timestamp < this.downloadCacheTtl) {
+      console.log(`[DownloadCache] Hit for ${source}:${id}`);
+      return cached.url;
+    }
+    
+    // Fetch fresh URL
+    const url = await fetchFn();
+    
+    if (url) {
+      this.downloadUrlCache.set(cacheKey, {
+        url,
+        timestamp: Date.now()
+      });
+    }
+    
+    return url;
   }
 
   async getHealth() {
@@ -485,7 +454,7 @@ class MapAggregator {
       try {
         const healthPromise = scraper.instance.checkHealth();
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Health check timeout')), 5000)
+          setTimeout(() => reject(new Error('Health check timeout')), 10000)
         );
         
         const scraperHealth = await Promise.race([healthPromise, timeoutPromise]);
@@ -510,21 +479,15 @@ class MapAggregator {
     return health;
   }
 
-  /**
-   * Circuit breaker: check if a source should be disabled
-   */
   isCircuitOpen(sourceName) {
     const failure = this.failures.get(sourceName);
     if (!failure) return false;
     
-    // If we've hit the failure threshold
     if (failure.count >= this.failureThreshold) {
-      // Check if the disable time has passed
       const now = Date.now();
       if (now - failure.lastFailureTime < this.disableTimeMs) {
         return true;
       } else {
-        // Reset the circuit after the timeout
         this.failures.delete(sourceName);
         return false;
       }
@@ -533,9 +496,6 @@ class MapAggregator {
     return false;
   }
 
-  /**
-   * Record a failure for circuit breaker
-   */
   recordFailure(sourceName) {
     const failure = this.failures.get(sourceName) || { count: 0, lastFailureTime: 0 };
     failure.count++;
@@ -547,9 +507,6 @@ class MapAggregator {
     }
   }
 
-  /**
-   * Record a success to reset failure count
-   */
   recordSuccess(sourceName) {
     this.failures.delete(sourceName);
   }

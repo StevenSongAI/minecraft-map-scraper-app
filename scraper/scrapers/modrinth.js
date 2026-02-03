@@ -12,9 +12,74 @@ class ModrinthScraper extends BaseScraper {
       name: 'modrinth',
       baseUrl: 'https://api.modrinth.com/v2',
       sourceName: 'Modrinth',
+      // FIXED (Round 20): Lower threshold for circuit breaker to trigger sooner on timeouts
+      failureThreshold: options.failureThreshold || 3,
+      resetTimeout: options.resetTimeout || 60000, // 1 minute cooldown
       ...options
     });
-    this.requestTimeout = options.requestTimeout || 10000; // FIXED (Round 10): 10s timeout
+    // FIXED (Round 18): Increased timeout to 15s for reliability
+    this.requestTimeout = options.requestTimeout || 15000;
+    // FIXED (Round 18): Retry configuration
+    this.maxRetries = options.maxRetries || 3;
+    this.retryDelay = options.retryDelay || 1000;
+  }
+
+  /**
+   * FIXED (Round 20): Enhanced fetch with retry logic, exponential backoff, and circuit breaker integration
+   */
+  async fetchWithRetry(url, options = {}, retries = null) {
+    const maxRetries = retries !== null ? retries : this.maxRetries;
+    let lastError;
+    let timeoutCount = 0;
+    
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), this.requestTimeout);
+        
+        const response = await fetch(url, {
+          ...options,
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        // FIXED (Round 20): Record success to circuit breaker on successful request
+        this.circuitBreaker.onSuccess();
+        
+        return response;
+      } catch (error) {
+        lastError = error;
+        
+        // FIXED (Round 20): Track timeout errors specifically for circuit breaker
+        if (error.name === 'AbortError' || error.message.includes('timeout')) {
+          timeoutCount++;
+          console.warn(`[Modrinth] Timeout error (${timeoutCount}/${maxRetries}) for ${url}`);
+          
+          // If we've had multiple timeouts, trigger circuit breaker failure
+          if (timeoutCount >= 2) {
+            this.circuitBreaker.onFailure();
+            console.warn(`[Modrinth] Circuit breaker recorded timeout failure`);
+          }
+        }
+        
+        // Don't retry on 4xx errors (client errors)
+        if (error.status >= 400 && error.status < 500) {
+          throw error;
+        }
+        
+        // Exponential backoff: 1s, 2s, 4s
+        if (attempt < maxRetries - 1) {
+          const delay = this.retryDelay * Math.pow(2, attempt);
+          console.log(`[Modrinth] Retry ${attempt + 1}/${maxRetries} after ${delay}ms for ${url}`);
+          await this.sleep(delay);
+        }
+      }
+    }
+    
+    // FIXED (Round 20): Record final failure to circuit breaker
+    this.circuitBreaker.onFailure();
+    throw new Error(`Failed after ${maxRetries} attempts: ${lastError.message}`);
   }
 
   async search(query, options = {}) {
@@ -37,47 +102,25 @@ class ModrinthScraper extends BaseScraper {
   }
 
   async fetchSearchResults(query, limit) {
-    // CRITICAL FIX (Round 14): Filter by project_type using facets to exclude mods and modpacks
-    // This prevents mods and modpacks from appearing in map search results
+    // ROUND 36 FIX: Use project_type:map facet to only return maps, not mods/modpacks
     const encodedQuery = encodeURIComponent(query);
     
-    // Build facets to filter for map-related project types only
-    // Include: resourcepack, datapack (maps are often categorized as these)
-    // Exclude: mod, modpack (these are actual mods, not maps)
-    const facets = [
-      ['project_type:resourcepack'],
-      ['project_type:datapack']
-    ];
-    
-    // Add category facets to further refine map results
-    const categoryFacets = [
-      ['categories:world'],
-      ['categories:adventure'],
-      ['categories:worldgen'],
-      ['categories:map']
-    ];
-    
-    // Combine all facets
-    const allFacets = [...facets, ...categoryFacets];
-    
-    const searchUrl = `${this.baseUrl}/search?query=${encodedQuery}&limit=${Math.min(limit * 4, 60)}&offset=0&facets=${encodeURIComponent(JSON.stringify(allFacets))}`;
+    // CRITICAL FIX: Use facets to filter for maps only (project_type:map)
+    // This prevents mods and modpacks from appearing in search results
+    const facets = encodeURIComponent('[["project_type:map"]]');
+    const searchUrl = `${this.baseUrl}/search?query=${encodedQuery}&facets=${facets}&limit=${Math.min(limit * 4, 60)}&offset=0`;
     
     console.log(`[Modrinth] Fetching: ${searchUrl}`);
     
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout
-    
     try {
-      const response = await fetch(searchUrl, {
-        signal: controller.signal,
+      // FIXED (Round 18): Use fetchWithRetry for reliability
+      const response = await this.fetchWithRetry(searchUrl, {
         headers: {
           'User-Agent': 'MinecraftMapScraper/2.0 (+https://github.com/StevenSongAI/minecraft-map-scraper-app)',
           'Accept': 'application/json',
           'Accept-Encoding': 'gzip, deflate'
         }
       });
-      
-      clearTimeout(timeoutId);
       
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
@@ -86,73 +129,238 @@ class ModrinthScraper extends BaseScraper {
       const data = await response.json();
       const results = data.hits || [];
       
-      // CRITICAL FIX (Round 14): Filter out mods and modpacks by project_type
+      // CRITICAL FIX (Round 23): Aggressive filtering to exclude mods and modpacks
       const filteredResults = results.filter(hit => {
-        // STRICT: Only accept datapacks and resourcepacks, explicitly reject mods and modpacks
-        const projectType = hit.project_type;
+        const projectType = (hit.project_type || '').toLowerCase();
+        const text = `${hit.title || ''} ${hit.description || ''}`.toLowerCase();
+        const categories = (hit.categories || []).map(c => c.toLowerCase());
+        const tags = (hit.display_categories || []).map(c => c.toLowerCase());
+        const allText = `${text} ${categories.join(' ')} ${tags.join(' ')}`;
         
-        // Reject mods and modpacks completely
+        // REJECT mods and modpacks immediately by project_type
         if (projectType === 'mod' || projectType === 'modpack') {
           console.log(`[Modrinth] FILTERED (type=${projectType}): ${hit.title}`);
           return false;
         }
         
-        // Only accept datapacks and resourcepacks
-        if (projectType !== 'datapack' && projectType !== 'resourcepack') {
-          console.log(`[Modrinth] FILTERED (type=${projectType}): ${hit.title}`);
+        // REJECT if categories include mod-related tags
+        const modCategories = ['mod', 'modpack', 'forge', 'fabric', 'quilt', 'modded'];
+        if (categories.some(c => modCategories.includes(c))) {
+          console.log(`[Modrinth] FILTERED (mod category): ${hit.title}`);
           return false;
         }
         
-        const text = `${hit.title || ''} ${hit.description || ''}`.toLowerCase();
-        
-        // Secondary filter: Exclude obvious non-map content (weapons, armor, tech mods, etc.)
-        const exclusionPatterns = [
-          /\bweapon\b/, /\bgun\b/, /\barmor\b/, /\bsword\b/, /\bmekanism\b/, /\brobot\b/, 
-          /\bvehicle\b/, /\bcar\b/, /\bplane\b/, /\bhelicopter\b/, /\btank\b/,
-          /\bjetpack\b/, /\bdrill\b/, /\blaser\b/, /\bmissile\b/, /\brocket\b/,
-          /\bhud\b/, /\bminimap\b/, /\bshader\b/, /\boptifine\b/, /\bsodium\b/,
-          /\btexture pack\b/, /\bresource pack\b(?!.*map)/  // Texture packs that aren't maps
+        // STRONG mod indicators - reject immediately
+        const strongModIndicators = [
+          /\bmod\b(?!\s*ern|\s*el|\s*ify)/,  // "mod" but not "modern", "model", "modify"
+          /\bmodpack\b/,
+          /\bforge\b/,
+          /\bfabric\b/,
+          /\bquilt\b/,
+          /\boptifine\b/,
+          /\bsodium\b/,
+          /\biris\b/,
+          /\bshader\b/,
+          /\bminimap\b/,
+          /\bhud\b/,
+          /\bjei\b/,
+          /\bjourneymap\b/,
+          /\bjust enough items\b/,
+          /\bwaila\b/,
+          /\bhwyla\b/,
+          /\bmekanism\b/,
+          /\bthermal\b/,
+          /\bcreate\b/,
+          /\btinkers\b/,
+          /\bapplied energetics\b/,
+          /\brefined storage\b/,
+          /\b\.jar\b/,
+          /\b\.mrpack\b/
         ];
-        const hasExclusion = exclusionPatterns.some(pattern => pattern.test(text));
         
-        if (hasExclusion) {
-          return false; // Exclude obvious mods
+        if (strongModIndicators.some(p => p.test(allText))) {
+          console.log(`[Modrinth] FILTERED (mod indicator): ${hit.title}`);
+          return false;
         }
         
-        // Accept if it has any map-related keywords
-        const mapKeywords = ['map', 'world', 'adventure', 'parkour', 'puzzle', 'survival', 
-                            'horror', 'castle', 'city', 'house', 'mansion', 'dungeon', 
-                            'quest', 'minigame', 'pvp', 'spawn', 'structure', 'build'];
-        const hasMapKeyword = mapKeywords.some(kw => text.includes(kw));
+        // Reject tech/automation content
+        const techPatterns = [
+          /\bautomation\b/, /\bmachine\b/, /\bore processing\b/, /\bpower generation\b/,
+          /\bcable\b/, /\bpipe\b/, /\bconduit\b/, /\btank\b/, /\bbattery\b/,
+          /\bjetpack\b/, /\bdrill\b/, /\blaser\b/, /\bmissile\b/, /\brocket\b/,
+          /\bweapon\b/, /\bgun\b/, /\barmor\b/, /\bsword\b/, /\brobot\b/,
+          /\bvehicle\b/, /\bcar\b/, /\bplane\b/, /\bhelicopter\b/, /\btank\b/
+        ];
         
-        // Accept if it has worldgen category
-        const hasWorldGenCategory = hit.categories && hit.categories.some(cat => 
-          ['worldgen', 'world-generation', 'adventure', 'decoration', 'world'].includes(cat));
+        if (techPatterns.some(p => p.test(allText))) {
+          console.log(`[Modrinth] FILTERED (tech content): ${hit.title}`);
+          return false;
+        }
         
-        // Accept datapacks/resourcepacks that are map-related
-        return hasMapKeyword || hasWorldGenCategory;
+        // MUST have map-related keywords to be accepted
+        const mapKeywords = ['map', 'world', 'adventure', 'parkour', 'puzzle', 
+                            'survival', 'horror', 'castle', 'city', 'house', 
+                            'mansion', 'dungeon', 'quest', 'minigame', 'pvp', 
+                            'spawn', 'lobby', 'structure', 'build', 'creation',
+                            'terrain', 'environment', 'realm', 'kingdom', 'village'];
+        const hasMapKeyword = mapKeywords.some(kw => allText.includes(kw));
+        
+        if (!hasMapKeyword) {
+          console.log(`[Modrinth] FILTERED (no map keyword): ${hit.title}`);
+          return false;
+        }
+        
+        return true;
       });
       
       console.log(`[Modrinth] Found ${results.length} results, ${filteredResults.length} map-related`);
       
-      // FIXED (Round 14): Return all filtered results
-      const transformedResults = filteredResults.map(hit => this.transformHitToMapSync(hit));
+      // FIXED (Round 16): Enrich with direct download URLs and tags
+      const enrichedResults = await this.enrichResultsWithDirectDownloads(filteredResults, limit);
+      
+      const transformedResults = enrichedResults.map(hit => this.transformHitToMapSync(hit));
       return transformedResults;
       
     } catch (error) {
-      clearTimeout(timeoutId);
+      console.warn(`[Modrinth] fetchSearchResults error: ${error.message}`);
       throw error;
     }
+  }
+
+  /**
+   * CRITICAL FIX (Round 16): Enrich search results with direct download URLs
+   * Fetches version info for each project to get direct file URLs
+   */
+  async enrichResultsWithDirectDownloads(hits, limit) {
+    // Limit concurrent fetches to avoid rate limiting
+    const maxConcurrent = 3;
+    const enriched = [];
+    
+    console.log(`[Modrinth] Enriching ${hits.length} results with direct download URLs...`);
+    
+    for (let i = 0; i < hits.length; i += maxConcurrent) {
+      const batch = hits.slice(i, i + maxConcurrent);
+      
+      const batchPromises = batch.map(async (hit) => {
+        try {
+          const versionInfo = await this.fetchVersionInfo(hit.project_id);
+          return {
+            ...hit,
+            _directDownloadUrl: versionInfo?.downloadUrl || null,
+            _fileInfo: versionInfo?.fileInfo || null,
+            _versionNumber: versionInfo?.versionNumber || null
+          };
+        } catch (error) {
+          console.warn(`[Modrinth] Failed to enrich ${hit.title}: ${error.message}`);
+          return hit;
+        }
+      });
+      
+      const enrichedBatch = await Promise.all(batchPromises);
+      enriched.push(...enrichedBatch);
+      
+      // Small delay between batches to avoid rate limiting
+      if (i + maxConcurrent < hits.length) {
+        await this.sleep(200);
+      }
+    }
+    
+    const withDirectUrl = enriched.filter(h => h._directDownloadUrl).length;
+    console.log(`[Modrinth] Enrichment complete: ${withDirectUrl}/${enriched.length} have direct download URLs`);
+    
+    return enriched;
+  }
+
+  /**
+   * Fetch version info for a project to get direct download URL
+   */
+  async fetchVersionInfo(projectId) {
+    try {
+      const versionsUrl = `${this.baseUrl}/project/${projectId}/version`;
+      
+      // FIXED (Round 18): Use fetchWithRetry with shorter timeout for version info
+      const response = await this.fetchWithRetry(versionsUrl, {
+        headers: {
+          'User-Agent': this.getUserAgent(),
+          'Accept': 'application/json'
+        }
+      }, 2); // Only 2 retries for version info
+      
+      if (!response.ok) {
+        return null;
+      }
+      
+      const versions = await response.json();
+      if (!versions || versions.length === 0) {
+        return null;
+      }
+      
+      // Find first version with valid map files (not mods)
+      for (const version of versions) {
+        if (!version.files || version.files.length === 0) continue;
+        
+        // Find a map file (zip, mcworld) not a mod (jar, mrpack)
+        const mapFile = version.files.find(f => {
+          const filename = (f.filename || '').toLowerCase();
+          return filename.match(/\.(zip|mcworld|rar|7z)$/) && !filename.match(/\.(jar|mrpack|litemod)$/);
+        });
+        
+        if (mapFile) {
+          return {
+            downloadUrl: mapFile.url,
+            fileInfo: {
+              filename: mapFile.filename,
+              filesize: mapFile.size,
+              primary: mapFile.primary
+            },
+            versionNumber: version.version_number
+          };
+        }
+        
+        // If no map file but has primary file, use it (might be a datapack)
+        const primaryFile = version.files.find(f => f.primary) || version.files[0];
+        if (primaryFile) {
+          const filename = (primaryFile.filename || '').toLowerCase();
+          // Skip obvious mod files
+          if (filename.match(/\.(jar|mrpack|litemod)$/)) {
+            continue;
+          }
+          return {
+            downloadUrl: primaryFile.url,
+            fileInfo: {
+              filename: primaryFile.filename,
+              filesize: primaryFile.size,
+              primary: primaryFile.primary
+            },
+            versionNumber: version.version_number
+          };
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.warn(`[Modrinth] Error fetching version info for ${projectId}: ${error.message}`);
+      return null;
+    }
+  }
+
+  sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   transformHitToMapSync(hit) {
     // FIXED (Round 10): Get proper thumbnail and use sync transform
     // FIXED (Round 10): Use 'name' field to match CurseForge format
     // FIXED (Round 11): Better download URL handling with version info
+    // FIXED (Round 16): Use direct download URL if available, add tags from categories
     const projectId = hit.project_id || hit.slug;
     
-    // Use project page as default, will be updated with direct URL when available
-    const downloadUrl = `https://modrinth.com/project/${hit.slug}/versions`;
+    // CRITICAL FIX (Round 16): Use direct download URL if enriched, otherwise fallback to page
+    const hasDirectUrl = !!hit._directDownloadUrl;
+    const downloadUrl = hit._directDownloadUrl || `https://modrinth.com/project/${hit.slug}/versions`;
+    
+    // FIXED (Round 16): Extract tags from categories
+    const tags = this.extractTags(hit);
     
     return {
       id: projectId,
@@ -168,14 +376,15 @@ class ModrinthScraper extends BaseScraper {
       thumbnail: hit.icon_url || hit.gallery?.[0]?.url || '',
       screenshots: hit.gallery || [],
       downloadUrl: downloadUrl,
-      downloadType: 'page',
-      downloadNote: 'Visit Modrinth page to download',
-      fileInfo: null,
+      downloadType: hasDirectUrl ? 'direct' : 'page',
+      downloadNote: hasDirectUrl ? null : 'Visit Modrinth page to download',
+      fileInfo: hit._fileInfo || null,
       downloadCount: hit.downloads || 0,
       downloads: hit.downloads || 0,
       gameVersions: hit.versions || [],
-      primaryGameVersion: hit.versions?.[0] || null,
+      primaryGameVersion: hit.game_versions?.[0] || hit.versions?.[0] || null,
       category: this.detectCategory(hit.title, hit.description),
+      tags: tags,
       dateCreated: hit.date_created || new Date().toISOString(),
       dateModified: hit.date_modified || new Date().toISOString(),
       source: 'modrinth',
@@ -198,6 +407,43 @@ class ModrinthScraper extends BaseScraper {
   }
 
   /**
+   * FIXED (Round 16): Extract tags from Modrinth categories and project metadata
+   */
+  extractTags(hit) {
+    const tags = [];
+    
+    // Add categories as tags
+    if (hit.categories && Array.isArray(hit.categories)) {
+      tags.push(...hit.categories);
+    }
+    
+    // Add display categories if available
+    if (hit.display_categories && Array.isArray(hit.display_categories)) {
+      for (const cat of hit.display_categories) {
+        if (!tags.includes(cat)) {
+          tags.push(cat);
+        }
+      }
+    }
+    
+    // Add project type as tag
+    if (hit.project_type && !tags.includes(hit.project_type)) {
+      tags.push(hit.project_type);
+    }
+    
+    // Add loaders as tags ( datapacks/resourcepacks often have loaders)
+    if (hit.loaders && Array.isArray(hit.loaders)) {
+      for (const loader of hit.loaders) {
+        if (!tags.includes(loader)) {
+          tags.push(loader);
+        }
+      }
+    }
+    
+    return tags;
+  }
+
+  /**
    * CRITICAL FIX (Round 11): Fetch direct download URL for a project
    * This method can be called separately to get the actual download URL
    * Also filters out mod files (.jar, .mrpack) - only returns map files (.zip, .mcworld)
@@ -209,18 +455,14 @@ class ModrinthScraper extends BaseScraper {
       
       if (!targetVersionId) {
         const versionsUrl = `${this.baseUrl}/project/${projectId}/version`;
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000);
         
-        const versionsResponse = await fetch(versionsUrl, {
-          signal: controller.signal,
+        // FIXED (Round 18): Use fetchWithRetry
+        const versionsResponse = await this.fetchWithRetry(versionsUrl, {
           headers: {
             'User-Agent': this.getUserAgent(),
             'Accept': 'application/json'
           }
-        });
-        
-        clearTimeout(timeoutId);
+        }, 2);
         
         if (!versionsResponse.ok) {
           console.warn(`[Modrinth] Failed to fetch versions for ${projectId}: ${versionsResponse.status}`);
@@ -276,18 +518,13 @@ class ModrinthScraper extends BaseScraper {
       // FIXED (Round 11): Use correct endpoint format
       const versionUrl = `${this.baseUrl}/version/${targetVersionId}`;
       
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-      
-      const response = await fetch(versionUrl, {
-        signal: controller.signal,
+      // FIXED (Round 18): Use fetchWithRetry
+      const response = await this.fetchWithRetry(versionUrl, {
         headers: {
           'User-Agent': this.getUserAgent(),
           'Accept': 'application/json'
         }
-      });
-      
-      clearTimeout(timeoutId);
+      }, 2);
       
       if (!response.ok) {
         console.warn(`[Modrinth] Failed to fetch version ${targetVersionId}: ${response.status}`);
@@ -328,18 +565,14 @@ class ModrinthScraper extends BaseScraper {
     try {
       // First get versions list
       const versionsUrl = `${this.baseUrl}/project/${projectId}/version`;
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
       
-      const response = await fetch(versionsUrl, {
-        signal: controller.signal,
+      // FIXED (Round 18): Use fetchWithRetry
+      const response = await this.fetchWithRetry(versionsUrl, {
         headers: {
           'User-Agent': this.getUserAgent(),
           'Accept': 'application/json'
         }
-      });
-      
-      clearTimeout(timeoutId);
+      }, 2);
       
       if (!response.ok) {
         return null;
@@ -356,18 +589,14 @@ class ModrinthScraper extends BaseScraper {
       
       // CRITICAL FIX: Fetch the specific version for file details
       const versionDetailUrl = `${this.baseUrl}/version/${versionId}`;
-      const detailController = new AbortController();
-      const detailTimeoutId = setTimeout(() => detailController.abort(), 3000);
       
-      const detailResponse = await fetch(versionDetailUrl, {
-        signal: detailController.signal,
+      // FIXED (Round 18): Use fetchWithRetry
+      const detailResponse = await this.fetchWithRetry(versionDetailUrl, {
         headers: {
           'User-Agent': this.getUserAgent(),
           'Accept': 'application/json'
         }
-      });
-      
-      clearTimeout(detailTimeoutId);
+      }, 2);
       
       if (!detailResponse.ok) {
         return null;
@@ -417,22 +646,17 @@ class ModrinthScraper extends BaseScraper {
   }
 
   async checkHealth() {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
-    
     try {
       // Test API availability with a simple search
       const searchUrl = `${this.baseUrl}/search?query=castle&limit=1`;
       
-      const response = await fetch(searchUrl, {
-        signal: controller.signal,
+      // FIXED (Round 18): Use fetchWithRetry
+      const response = await this.fetchWithRetry(searchUrl, {
         headers: {
           'User-Agent': this.getUserAgent(),
           'Accept': 'application/json'
         }
-      });
-      
-      clearTimeout(timeoutId);
+      }, 2);
       
       let canSearch = false;
       if (response.ok) {
@@ -448,11 +672,10 @@ class ModrinthScraper extends BaseScraper {
         error: canSearch ? null : 'API not returning valid search results'
       };
     } catch (error) {
-      clearTimeout(timeoutId);
       return {
         ...this.getHealth(),
         accessible: false,
-        error: error.name === 'AbortError' ? 'Health check timeout' : error.message
+        error: error.message.includes('timeout') ? 'Health check timeout' : error.message
       };
     }
   }
