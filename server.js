@@ -59,8 +59,6 @@ const keywordMappings = {
   
   // Environment
   'island': ['island', 'isles', 'atoll'],
-  'underwater': ['underwater', 'ocean', 'sea', 'submerged', 'aquatic', 'marine'],
-  'atlantis': ['atlantis', 'sunken', 'lost city'],
   'reef': ['reef', 'coral', 'barrier reef'],
   'mountain': ['mountain', 'peak', 'alpine', 'cliff', 'highlands'],
   'forest': ['forest', 'woods', 'jungle', 'woodland', 'grove'],
@@ -88,18 +86,12 @@ const keywordMappings = {
 // STRICT antonym/contrast mappings - terms that should filter out results when mismatched
 // These are mutually exclusive categories
 const conflictingTerms = {
-  'futuristic': ['medieval', 'ancient', 'castle', 'knight', 'feudal', 'underwater', 'ocean', 'atlantis', 'sunken', 'submarine', 'drowned', 'reef', 'aquatic', 'marine', 'flooded', 'water'],
-  'modern': ['medieval', 'ancient', 'castle', 'fantasy', 'underwater', 'ocean', 'atlantis', 'sunken', 'drowned'],
-  'medieval': ['futuristic', 'scifi', 'space', 'tech', 'modern', 'cyberpunk', 'underwater', 'ocean', 'sunken'],
-  'underwater': ['castle', 'sky', 'mountain', 'air', 'futuristic', 'modern', 'tech', 'space', 'scifi'],
-  'ocean': ['castle', 'mountain', 'futuristic', 'modern', 'tech', 'space'],
-  'reef': ['castle', 'city', 'urban', 'mountain', 'desert', 'futuristic', 'modern'],
-  'skyblock': ['underwater', 'cave', 'dungeon', 'ocean', 'sunken'],
+  'futuristic': ['medieval', 'ancient', 'castle', 'knight', 'feudal'],
+  'modern': ['medieval', 'ancient', 'castle', 'fantasy'],
+  'medieval': ['futuristic', 'scifi', 'space', 'tech', 'modern', 'cyberpunk'],
   'horror': ['cute', 'cozy', 'peaceful', 'relaxing'],
-  'hell': ['heaven', 'paradise', 'angel', 'sky', 'underwater', 'ocean'],
-  'nether': ['overworld', 'end', 'sky', 'underwater', 'ocean'],
-  'city': ['underwater', 'sunken', 'atlantis'],
-  'castle': ['underwater', 'ocean', 'sunken', 'futuristic', 'modern', 'tech', 'scifi', 'space']
+  'hell': ['heaven', 'paradise', 'angel', 'sky'],
+  'nether': ['overworld', 'end', 'sky']
 };
 
 // Minimum relevance thresholds to filter false positives
@@ -162,14 +154,14 @@ function hasConflictingTerms(query, map) {
   
   // Check for conflicting terms - for each keyword in the query that has conflicts
   for (const [term, conflicts] of Object.entries(conflictingTerms)) {
-    // Check if query contains this keyword
-    const queryHasTerm = containsWord(queryLower, term) || queryLower.includes(term);
+    // Check if query contains this keyword - use word boundaries ONLY
+    const queryHasTerm = containsWord(queryLower, term);
     
     if (queryHasTerm) {
-      // Query contains this term, check if result has any conflicting terms
+      // Query contains this term, check if result has any conflicting terms - word boundaries ONLY
       for (const conflict of conflicts) {
         const resultHasConflict = containsWord(allText, conflict) || 
-                                  tagsLower.some(tag => tag.includes(conflict));
+                                  tagsLower.some(tag => containsWord(tag, conflict));
         if (resultHasConflict) {
           conflictCount++;
           if (conflictCount >= MAX_ALLOWED_CONFLICTS) {
@@ -197,42 +189,32 @@ function calculateRelevance(map, query, searchTerms) {
   const tagsLower = map.tags ? map.tags.map(t => t.toLowerCase()) : [];
   const allText = titleLower + ' ' + descLower + ' ' + tagsLower.join(' ');
   
-  // EXACT query match is most important - use word boundaries
+  // EXACT query match is most important - use word boundaries ONLY
   if (containsWord(titleLower, queryLower)) {
     score += 150;
     matchCount += 2;
     hasExactMatch = true;
-  } else if (titleLower.includes(queryLower)) {
-    score += 100;
-    matchCount += 1.5;
-    hasExactMatch = true;
   }
   
-  // Individual query word matches with word boundaries
+  // Individual query word matches with word boundaries ONLY
   queryWords.forEach(word => {
     if (containsWord(titleLower, word)) {
       score += 50;
       matchCount += 0.75;
-    } else if (titleLower.includes(word)) {
-      score += 30;
-      matchCount += 0.5;
     }
   });
   
-  // Expanded term matches (lower weight)
+  // Expanded term matches (lower weight) - word boundaries ONLY
   searchTerms.forEach(term => {
     if (term !== query && term.length > 2) {
       if (containsWord(titleLower, term)) {
         score += 25;
         matchCount += 0.4;
-      } else if (titleLower.includes(term)) {
-        score += 12;
-        matchCount += 0.2;
       }
     }
   });
   
-  // Description matches (lower weight than title)
+  // Description matches (lower weight than title) - word boundaries ONLY
   if (containsWord(descLower, queryLower)) {
     score += 40;
     matchCount += 1;
@@ -244,7 +226,7 @@ function calculateRelevance(map, query, searchTerms) {
     }
   });
   
-  // Tag matches
+  // Tag matches - word boundaries ONLY
   if (map.tags) {
     map.tags.forEach(tag => {
       const tagLower = tag.toLowerCase();
