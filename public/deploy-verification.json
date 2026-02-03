@@ -1,0 +1,10 @@
+{
+  "deployTimestamp": "2026-02-04-0015",
+  "changes": [
+    "HTTP-only scrapers (no Playwright)",
+    "Compound concept detection fixed",
+    "Download endpoint query params",
+    "Health check with search validation",
+    "5s timeout per source"
+  ]
+}
