@@ -3,8 +3,20 @@ const express = require('express');
 const path = require('path');
 const cors = require('cors');
 
+// Import multi-source scrapers
+const { MapAggregator } = require('../../scraper/scrapers');
+
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Initialize aggregator (lazy init on first search)
+let aggregator = null;
+function getAggregator() {
+  if (!aggregator) {
+    aggregator = new MapAggregator({ timeout: 6000, maxResultsPerSource: 10 });
+  }
+  return aggregator;
+}
 
 // CurseForge API Key - use environment variable only (empty = demo mode with mock data)
 const CURSEFORGE_API_KEY = process.env.CURSEFORGE_API_KEY || '';
@@ -1046,16 +1058,116 @@ function formatFileSize(bytes) {
 }
 
 // Health check endpoint
-app.get('/api/health', (req, res) => {
+app.get('/api/health', async (req, res) => {
   const isDemoMode = !process.env.CURSEFORGE_API_KEY || process.env.CURSEFORGE_API_KEY === 'demo';
+  
+  // Get scraper health if available
+  let scraperHealth = null;
+  try {
+    const agg = getAggregator();
+    scraperHealth = await agg.getHealth();
+  } catch (error) {
+    scraperHealth = { error: error.message };
+  }
+  
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
     apiConfigured: !!process.env.CURSEFORGE_API_KEY && process.env.CURSEFORGE_API_KEY !== 'demo',
     demoMode: isDemoMode,
     apiKeyPreview: process.env.CURSEFORGE_API_KEY ? process.env.CURSEFORGE_API_KEY.substring(0, 10) + '...' : 'Not set',
-    version: '2.0.1-fix'
+    version: '2.1.0-multi-source',
+    multiSourceEnabled: true,
+    scrapers: scraperHealth
   });
+});
+
+// Multi-source scraper health endpoint
+app.get('/api/sources/health', async (req, res) => {
+  try {
+    const agg = getAggregator();
+    const health = await agg.getHealth();
+    
+    // Add CurseForge status
+    const curseforgeConfigured = !!process.env.CURSEFORGE_API_KEY && process.env.CURSEFORGE_API_KEY !== 'demo';
+    
+    res.json({
+      timestamp: new Date().toISOString(),
+      sources: {
+        curseforge: {
+          name: 'CurseForge API',
+          enabled: true,
+          configured: curseforgeConfigured,
+          status: curseforgeConfigured ? 'healthy' : 'demo_mode'
+        },
+        ...health.scrapers.reduce((acc, scraper) => {
+          acc[scraper.name] = {
+            name: scraper.source || scraper.name,
+            enabled: scraper.enabled,
+            accessible: scraper.accessible,
+            status: scraper.accessible ? 'healthy' : 'unavailable',
+            error: scraper.error || null,
+            circuitBreaker: scraper.circuitBreaker?.state || 'unknown'
+          };
+          return acc;
+        }, {})
+      }
+    });
+  } catch (error) {
+    console.error('Sources health error:', error);
+    res.status(500).json({
+      error: 'Failed to get sources health',
+      message: error.message
+    });
+  }
+});
+
+// Unified search endpoint with multi-source aggregation
+app.get('/api/search-unified', async (req, res) => {
+  const query = req.query.q || '';
+  const limit = parseInt(req.query.limit) || 20;
+  
+  if (!query) {
+    return res.status(400).json({ error: 'Query parameter required' });
+  }
+  
+  try {
+    const agg = getAggregator();
+    
+    // Search with aggregation
+    const results = await agg.search(query, {
+      limit,
+      includeCurseForge: true,
+      curseForgeSearchFn: async (q, opts) => {
+        // Use existing CurseForge search logic
+        const searchTerms = expandQuery(q);
+        const maps = await searchCurseForge(searchTerms, opts.limit * 2);
+        return maps.map(m => ({
+          ...m,
+          source: 'curseforge',
+          name: m.title,
+          summary: m.description
+        }));
+      }
+    });
+    
+    res.json({
+      success: true,
+      query: query,
+      timestamp: results.timestamp,
+      responseTime: results.responseTime,
+      totalCount: results.totalCount,
+      sources: results.sources,
+      errors: results.errors,
+      maps: results.results
+    });
+  } catch (error) {
+    console.error('Unified search error:', error);
+    res.status(500).json({
+      error: 'Search failed',
+      message: error.message
+    });
+  }
 });
 
 // Start server
