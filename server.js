@@ -80,8 +80,8 @@ let aggregator = null;
 function getAggregator() {
   if (!aggregator && MapAggregator) {
     try {
-      // FIXED: Increased to 20 results per source for "2x+ more results" requirement
-      aggregator = new MapAggregator({ timeout: 5000, maxResultsPerSource: 20 });
+      // FIXED: Increased to 50 results per source for "2x+ more results" requirement (Round 7)
+      aggregator = new MapAggregator({ timeout: 5000, maxResultsPerSource: 50 });
       console.log('[Server] MapAggregator initialized successfully');
     } catch (error) {
       console.error('[Server] Failed to initialize MapAggregator:', error.message);
@@ -599,7 +599,7 @@ function isRelevantResult(map, query, searchTerms) {
 // API endpoint for natural language search
 app.get('/api/search', async (req, res) => {
   const query = req.query.q || '';
-  const limit = parseInt(req.query.limit) || 20;
+  const limit = parseInt(req.query.limit) || 60; // FIXED: Increased default from 20 to 60 (Round 7)
   
   if (!query) {
     return res.status(400).json({ error: 'Query parameter required' });
@@ -616,11 +616,11 @@ app.get('/api/search', async (req, res) => {
     const allResults = [];
     const sourceStats = {};
     
-    // FIXED: Increased search limits to get "2x+ more results" from multi-source
+    // FIXED: Increased search limits to get "2x+ more results" from multi-source (Round 7)
     // 1. Search CurseForge
     try {
       const cfStart = Date.now();
-      let cfResults = await searchCurseForge(searchTerms, limit * 3);  // Increased from 2x to 3x
+      let cfResults = await searchCurseForge(searchTerms, limit * 5);  // Increased to 5x to get more results
       const cfTime = Date.now() - cfStart;
       
       // Normalize CurseForge results
@@ -644,7 +644,7 @@ app.get('/api/search', async (req, res) => {
         const aggStart = Date.now();
         const agg = getAggregator();
         const aggResults = await agg.search(query, { 
-          limit: limit * 2,  // FIXED: Increased limit for aggregator to get more results
+          limit: limit * 3,  // FIXED: Increased limit for aggregator to 3x (Round 7)
           includeCurseForge: false // We already got CurseForge results
         });
         const aggTime = Date.now() - aggStart;

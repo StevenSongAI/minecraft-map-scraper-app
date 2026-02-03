@@ -42,6 +42,13 @@ class NineMinecraftScraper extends BaseScraper {
     
     console.log(`[9Minecraft] Fetching: ${searchUrl}`);
     
+    // FIXED (Round 7): Check robots.txt compliance
+    const robotsCheck = await this.checkRobotsTxt(searchUrl);
+    if (!robotsCheck.allowed) {
+      console.warn(`[9Minecraft] ${robotsCheck.reason}`);
+      throw new Error(`Blocked by robots.txt: ${robotsCheck.reason}`);
+    }
+    
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.requestTimeout);
     
@@ -49,7 +56,7 @@ class NineMinecraftScraper extends BaseScraper {
       const response = await fetch(searchUrl, {
         signal: controller.signal,
         headers: {
-          'User-Agent': this.getRandomUserAgent(),
+          'User-Agent': this.getUserAgent(), // FIXED (Round 7): Use scraper user agent
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
           'Accept-Language': 'en-US,en;q=0.9',
           'Accept-Encoding': 'gzip, deflate, br',
@@ -139,6 +146,8 @@ class NineMinecraftScraper extends BaseScraper {
         // Clean up title
         const cleanTitle = title.replace(/Map\s+for\s+Minecraft/i, '').trim();
         
+        // FIXED (Round 7): Mark 9Minecraft downloads as page visits, not direct downloads
+        // The downloadUrl is the map detail page where users need to click download
         maps.push({
           id: `9mc-${Date.now()}-${index}`,
           title: cleanTitle,
@@ -146,9 +155,11 @@ class NineMinecraftScraper extends BaseScraper {
           description: description,
           author: author || 'Unknown Author', // FIXED: Provide default if extraction fails
           url: fullUrl,
-          thumbnail: thumbnail,
+          thumbnail: thumbnail || 'https://via.placeholder.com/280x160?text=9Minecraft', // FIXED: Handle missing thumbnails
           downloads: 0, // 9Minecraft doesn't show download counts
-          downloadUrl: fullUrl, // Note: This will be the page URL; actual download requires page scraping
+          downloadUrl: fullUrl, // Page URL - users must visit to download
+          downloadType: 'page', // FIXED: Mark as page visit required (not direct download)
+          downloadNote: 'Visit page to download', // FIXED: Clear note for users
           category: this.detectCategory(cleanTitle, description),
           dateCreated: new Date().toISOString(),
           dateModified: new Date().toISOString(),
@@ -204,7 +215,7 @@ class NineMinecraftScraper extends BaseScraper {
       const response = await fetch(mapUrl, {
         signal: controller.signal,
         headers: {
-          'User-Agent': this.getRandomUserAgent(),
+          'User-Agent': this.getUserAgent(), // FIXED (Round 7): Use scraper user agent
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         }
       });
@@ -261,7 +272,7 @@ class NineMinecraftScraper extends BaseScraper {
       const response = await fetch(searchUrl, {
         signal: controller.signal,
         headers: { 
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'User-Agent': this.getUserAgent(), // FIXED (Round 7): Use scraper user agent
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
         }
       });

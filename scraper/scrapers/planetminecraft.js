@@ -50,17 +50,18 @@ class PlanetMinecraftScraper extends BaseScraper {
     
     console.log(`[Planet Minecraft HTTP] Fetching: ${searchUrl}`);
     
+    // FIXED (Round 7): Check robots.txt compliance
+    const robotsCheck = await this.checkRobotsTxt(searchUrl);
+    if (!robotsCheck.allowed) {
+      console.warn(`[Planet Minecraft] ${robotsCheck.reason}`);
+      throw new Error(`Blocked by robots.txt: ${robotsCheck.reason}`);
+    }
+    
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), this.requestTimeout);
     
-    // FIXED: Enhanced bot evasion with realistic browser headers
-    const userAgents = [
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:123.0) Gecko/20100101 Firefox/123.0',
-      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
-    ];
-    const userAgent = userAgents[Math.floor(Math.random() * userAgents.length)];
+    // FIXED (Round 7): Use ethical scraper user agent
+    const userAgent = this.getUserAgent();
     
     // Add small random delay to appear more human-like
     await new Promise(resolve => setTimeout(resolve, Math.random() * 1000 + 500));
@@ -204,7 +205,7 @@ class PlanetMinecraftScraper extends BaseScraper {
       const response = await fetch(searchUrl, {
         signal: controller.signal,
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
+          'User-Agent': this.getUserAgent() // FIXED (Round 7): Use scraper user agent
         }
       });
       

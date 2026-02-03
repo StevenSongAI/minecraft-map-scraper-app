@@ -291,17 +291,123 @@ class BaseScraper {
       cacheDir: options.cacheDir || path.join(process.cwd(), '.scraper-cache')
     });
     
-    // User agent rotation
-    this.userAgents = [
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.2 Safari/605.1.15'
-    ];
+    // FIXED: Use ethical scraper identification instead of impersonating browsers
+    // This complies with web scraping best practices
+    this.userAgent = 'MinecraftMapScraper/2.0 (+https://github.com/StevenSongAI/minecraft-map-scraper-app)';
+    
+    // Robots.txt cache
+    this.robotsTxtCache = new Map();
+  }
+
+  getUserAgent() {
+    return this.userAgent;
   }
 
   getRandomUserAgent() {
-    return this.userAgents[Math.floor(Math.random() * this.userAgents.length)];
+    // Keep this method for backward compatibility, but return scraper user agent
+    return this.userAgent;
+  }
+
+  /**
+   * Check if scraping is allowed by robots.txt
+   * Returns { allowed: boolean, reason: string }
+   */
+  async checkRobotsTxt(url) {
+    try {
+      const urlObj = new URL(url);
+      const robotsUrl = `${urlObj.protocol}//${urlObj.host}/robots.txt`;
+      
+      // Check cache first
+      if (this.robotsTxtCache.has(robotsUrl)) {
+        const cached = this.robotsTxtCache.get(robotsUrl);
+        if (Date.now() - cached.timestamp < 3600000) { // 1 hour cache
+          return cached.result;
+        }
+      }
+      
+      // Fetch robots.txt
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      
+      const response = await fetch(robotsUrl, {
+        signal: controller.signal,
+        headers: { 'User-Agent': this.userAgent }
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) {
+        // No robots.txt or error = allow by default
+        const result = { allowed: true, reason: 'No robots.txt found' };
+        this.robotsTxtCache.set(robotsUrl, { result, timestamp: Date.now() });
+        return result;
+      }
+      
+      const robotsTxt = await response.text();
+      
+      // Parse robots.txt for our user agent
+      const lines = robotsTxt.split('\n');
+      let isOurSection = false;
+      let disallowPaths = [];
+      let allowPaths = [];
+      
+      for (const line of lines) {
+        const trimmed = line.trim().toLowerCase();
+        
+        // Check if this section applies to us
+        if (trimmed.startsWith('user-agent:')) {
+          const agent = trimmed.substring('user-agent:'.length).trim();
+          isOurSection = agent === '*' || agent === 'minecraftmapscraper' || agent.includes('scraper');
+        }
+        
+        if (isOurSection) {
+          if (trimmed.startsWith('disallow:')) {
+            const path = trimmed.substring('disallow:'.length).trim();
+            if (path) disallowPaths.push(path);
+          } else if (trimmed.startsWith('allow:')) {
+            const path = trimmed.substring('allow:'.length).trim();
+            if (path) allowPaths.push(path);
+          }
+        }
+      }
+      
+      // Check if the URL path is disallowed
+      const urlPath = urlObj.pathname;
+      let allowed = true;
+      let reason = 'Allowed by robots.txt';
+      
+      for (const disallow of disallowPaths) {
+        if (disallow === '/') {
+          allowed = false;
+          reason = 'Disallowed by robots.txt: all paths blocked';
+          break;
+        }
+        if (urlPath.startsWith(disallow)) {
+          // Check if there's a more specific allow rule
+          let hasAllowOverride = false;
+          for (const allow of allowPaths) {
+            if (urlPath.startsWith(allow) && allow.length > disallow.length) {
+              hasAllowOverride = true;
+              break;
+            }
+          }
+          if (!hasAllowOverride) {
+            allowed = false;
+            reason = `Disallowed by robots.txt: ${disallow}`;
+            break;
+          }
+        }
+      }
+      
+      const result = { allowed, reason };
+      this.robotsTxtCache.set(robotsUrl, { result, timestamp: Date.now() });
+      return result;
+      
+    } catch (error) {
+      // On error, default to allow (fail open)
+      console.warn(`[${this.name}] robots.txt check failed: ${error.message}`);
+      return { allowed: true, reason: 'robots.txt check failed, defaulting to allow' };
+    }
   }
 
   async rateLimitedRequest(fn) {
