@@ -40,3 +40,4 @@ The `index.html` dashboard can be shared with your animator via iCloud. They jus
 2. Ask you to run searches (or run `scraper.py` themselves if they have Python)
 3. Browse and download maps directly
 # Railway Deployment Trigger
+# Deploy trigger Tue Feb  3 11:50:30 EST 2026
