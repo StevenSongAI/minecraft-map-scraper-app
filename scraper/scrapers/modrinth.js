@@ -37,10 +37,15 @@ class ModrinthScraper extends BaseScraper {
   }
 
   async fetchSearchResults(query, limit) {
-    // FIXED (Round 10): Search without project type restriction to get all content
-    // Then filter for map-related keywords
+    // CRITICAL FIX (Round 11): Only search for projects that could be maps
+    // Filter by categories that are map-related
     const encodedQuery = encodeURIComponent(query);
-    const searchUrl = `${this.baseUrl}/search?query=${encodedQuery}&limit=${Math.min(limit * 2, 40)}&offset=0`;
+    
+    // Add map-related category filters to reduce mod results
+    const mapCategories = ['adventure', 'worldgen', 'decoration'];
+    const facets = mapCategories.map(cat => `[%22categories:${cat}%22]`).join(',');
+    
+    const searchUrl = `${this.baseUrl}/search?query=${encodedQuery}&limit=${Math.min(limit * 2, 40)}&offset=0&facets=[${facets}]`;
     
     console.log(`[Modrinth] Fetching: ${searchUrl}`);
     
@@ -165,6 +170,7 @@ class ModrinthScraper extends BaseScraper {
   /**
    * CRITICAL FIX (Round 11): Fetch direct download URL for a project
    * This method can be called separately to get the actual download URL
+   * Also filters out mod files (.jar, .mrpack) - only returns map files (.zip, .mcworld)
    */
   async fetchDirectDownloadUrl(projectId, versionId = null) {
     try {
@@ -196,13 +202,44 @@ class ModrinthScraper extends BaseScraper {
           return null;
         }
         
-        // Find first version with files
-        const versionWithFiles = versions.find(v => v.files && v.files.length > 0);
-        if (!versionWithFiles) {
+        // CRITICAL FIX: Filter out mod files - only accept map files
+        const validMapExtensions = /\.(zip|mcworld|rar|7z)$/i;
+        const modExtensions = /\.(jar|mrpack|litemod)$/i;
+        
+        // Find first version with MAP files (not mod files)
+        let versionWithMapFiles = null;
+        let primaryFile = null;
+        
+        for (const version of versions) {
+          if (!version.files || version.files.length === 0) continue;
+          
+          // Check if any file is a map file (not a mod)
+          const mapFile = version.files.find(f => {
+            const filename = (f.filename || '').toLowerCase();
+            return validMapExtensions.test(filename) && !modExtensions.test(filename);
+          });
+          
+          if (mapFile) {
+            versionWithMapFiles = version;
+            primaryFile = mapFile;
+            break;
+          }
+        }
+        
+        // If no map files found, check if the primary file is a mod
+        if (!versionWithMapFiles) {
+          const firstVersion = versions.find(v => v.files && v.files.length > 0);
+          if (firstVersion) {
+            const firstFile = firstVersion.files.find(f => f.primary) || firstVersion.files[0];
+            if (firstFile && modExtensions.test(firstFile.filename)) {
+              console.log(`[Modrinth] FILTERED: ${firstFile.filename} is a mod file, not a map`);
+              return { isMod: true, filename: firstFile.filename }; // Return marker that this is a mod
+            }
+          }
           return null;
         }
         
-        targetVersionId = versionWithFiles.id;
+        targetVersionId = versionWithMapFiles.id;
       }
       
       // Now fetch the specific version to get download URL
@@ -235,6 +272,13 @@ class ModrinthScraper extends BaseScraper {
       
       // Get primary file or first file
       const primaryFile = versionData.files.find(f => f.primary) || versionData.files[0];
+      
+      // CRITICAL FIX: Check if it's a mod file
+      const modExtensions = /\.(jar|mrpack|litemod)$/i;
+      if (modExtensions.test(primaryFile.filename)) {
+        console.log(`[Modrinth] FILTERED: ${primaryFile.filename} is a mod file`);
+        return { isMod: true, filename: primaryFile.filename };
+      }
       
       return {
         downloadUrl: primaryFile.url,

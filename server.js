@@ -1852,6 +1852,15 @@ app.get('/api/resolve-download', async (req, res) => {
       
       const downloadInfo = await scraper.fetchDirectDownloadUrl(id);
       
+      // CRITICAL FIX (Round 11): Filter out mod files
+      if (downloadInfo && downloadInfo.isMod) {
+        return res.status(400).json({
+          error: 'MOD_FILE_REJECTED',
+          message: 'This project appears to be a mod, not a map. Only map files (.zip, .mcworld) are allowed.',
+          filename: downloadInfo.filename
+        });
+      }
+      
       if (downloadInfo && downloadInfo.downloadUrl) {
         return res.json({
           success: true,
