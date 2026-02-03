@@ -3,7 +3,7 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Force rebuild on every deploy by using a timestamp
-ARG BUILD_TIMESTAMP=2026-02-04-0300
+ARG BUILD_TIMESTAMP=2026-02-04-1731
 ENV BUILD_TIMESTAMP=${BUILD_TIMESTAMP}
 
 COPY package*.json ./
