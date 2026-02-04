@@ -911,17 +911,18 @@ async function searchCurseForge(searchTerms, limit) {
   const allResults = [];
   const seenIds = new Set();
   
-  // ROUND 45: Check if we're in demo mode (no valid API key - must be UUID format)
+  // ROUND 57 (BUILDER): Check if we have a valid API key (must be UUID format)
   const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const apiKey = process.env.CURSEFORGE_API_KEY;
-  const isDemoMode = !apiKey || apiKey === 'demo' || !uuidPattern.test(apiKey);
+  const hasValidApiKey = apiKey && apiKey !== 'demo' && uuidPattern.test(apiKey);
   
-  // If in demo mode, skip API calls entirely and return mock data
-  if (isDemoMode) {
-    console.log('DEMO MODE: Using mock data (no API key configured)');
-    const mockMaps = getMockMaps();
-    const filtered = filterMockMaps(mockMaps, searchTerms, searchTerms[0]);
-    return filtered.slice(0, limit);
+  // If no valid API key, skip CurseForge search and return empty array
+  // This prevents demo/mock data from being returned (violates "no demo mode" requirement)
+  // System will continue to work with real data from other sources
+  // When API key is provided, CurseForge results will be included
+  if (!hasValidApiKey) {
+    console.log('[CurseForge] API key not configured - skipping CurseForge search (will use other sources)');
+    return [];
   }
   
   // Search with primary query first (most specific), then expanded terms
