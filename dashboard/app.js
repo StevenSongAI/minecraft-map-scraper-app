@@ -418,7 +418,8 @@ function renderMapCard(map) {
     if (Array.isArray(map.gameVersions)) {
         versions = map.gameVersions.slice(0, 3);
     } else if (map.version) {
-        versions = [map.version];
+        // Handle comma-separated version strings like "1.20.2, 1.20.5, 1.20.1"
+        versions = map.version.split(',').map(v => v.trim()).slice(0, 3);
     }
     const versionsHtml = versions.length > 0 
         ? `<div class="map-versions">Minecraft: ${versions.map(v => `<span class="version-tag">${escapeHtml(v)}</span>`).join(', ')}</div>`
