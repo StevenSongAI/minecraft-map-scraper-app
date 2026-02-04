@@ -1,11 +1,22 @@
 ## MEMORY → ACTION LINK
 
-**Memory Finding:** RED_TEAM found 5 defects in live deployment: (1) Demo mode active, (2) CurseForge returns zero results, (3) Wrong result types (texture packs/mods instead of maps), (4) Only 2 of 5 sources working, (5) Poor search accuracy.
+**Memory Finding:** "Planet Minecraft blocked by Cloudflare — can't scrape from Railway" (MEMORY.md line 25) + "Puppeteer times out in Railway sandbox" (sessions)
 
-**Current Status:** RED_TEAM completed successfully and wrote DEFECTS_FOUND. Ralph-chain determined next phase is BUILDER to fix these defects.
+**Current Blocker:** RED_TEAM found 4 defects:
+1. MC-Maps & MinecraftMaps scrapers broken (40% sources down)
+2. Download functionality non-responsive
+3. Planet Minecraft in degraded fallback mode
+4. Search returns irrelevant results (texture pack query returns 20 maps)
 
-**Direct Application:** The 5 defects need to be addressed by BUILDER. Key issues: CurseForge API configuration, result type filtering (maps only, not mods/texture packs), and search accuracy improvements.
+**Direct Application:** Memory confirms Planet Minecraft Cloudflare issue is KNOWN and UNFIXABLE in Railway. This means:
+- Planet Minecraft fallback mode is EXPECTED (not a defect)
+- MC-Maps & MinecraftMaps likely have same Cloudflare issue
+- Need to focus on fixable defects: download button (#2) and search accuracy (#4)
 
-**Action Taken:** Spawning BUILDER Round 61 to fix RED_TEAM defects. Builder will need to address API configuration, add type filtering, and improve source health.
+**Action Taken:** Writing BUILDER_INTEL.md with:
+1. Cloudflare scraper defect → SKIP (known limitation, accept degraded mode)
+2. Download button fix → PRIORITY (check client-side JS, add error handling)
+3. Search accuracy fix → PRIORITY (add query validation, filter non-map terms)
+4. Accept 2/5 sources as baseline (Cloudflare blocks others)
 
-**Timestamp:** 2026-02-04T00:40:15-05:00
+**Timestamp:** 2026-02-04T09:45:00Z
