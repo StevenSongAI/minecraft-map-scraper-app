@@ -1,0 +1,18 @@
+name: Set Railway Environment Variables
+
+on:
+  workflow_dispatch:
+
+jobs:
+  set-env:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli@latest
+        
+      - name: Set CurseForge API Key
+        run: |
+          railway variables --set CURSEFORGE_API_KEY="${{ secrets.CURSEFORGE_API_KEY }}"
+          echo "✅ CURSEFORGE_API_KEY environment variable set on Railway"
+        env:
+          RAILWAY_TOKEN: ${{ secrets.STEVENS_RAILWAY_ACCOUNT }}
