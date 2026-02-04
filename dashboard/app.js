@@ -52,12 +52,11 @@ async function handleDownloadClick(e) {
     e.preventDefault();
     e.stopPropagation();
 
-    const url = downloadBtn.dataset.downloadUrl;
-    const filename = downloadBtn.dataset.filename || 'minecraft-map.zip';
     const mapId = downloadBtn.dataset.mapId;
+    const filename = downloadBtn.dataset.filename || 'minecraft-map.zip';
 
-    if (!url) {
-        console.error('[Dashboard] No download URL found');
+    if (!mapId) {
+        console.error('[Dashboard] No map ID found');
         return;
     }
 
@@ -68,43 +67,41 @@ async function handleDownloadClick(e) {
     downloadBtn.disabled = true;
 
     try {
-        // Step 1: Get download info from API
-        const downloadInfoUrl = `${API_BASE_URL}/api/download/${mapId}`;
-        console.log('[Dashboard] Getting download info from:', downloadInfoUrl);
+        // Fetch the file directly from the download endpoint
+        const downloadUrl = `${API_BASE_URL}/api/download?id=${mapId}`;
+        console.log('[Dashboard] Downloading from:', downloadUrl);
         
-        const infoResponse = await fetch(downloadInfoUrl);
-        if (!infoResponse.ok) {
-            const errorData = await infoResponse.json().catch(() => ({}));
-            throw new Error(errorData.error || errorData.message || `HTTP ${infoResponse.status}`);
-        }
+        const response = await fetch(downloadUrl);
         
-        const downloadInfo = await infoResponse.json();
-        if (!downloadInfo.success || !downloadInfo.downloadUrl) {
-            throw new Error('No download URL available from API');
-        }
-        
-        // Step 2: Download the actual file
-        console.log('[Dashboard] Downloading file from:', downloadInfo.downloadUrl);
-        const fileResponse = await fetch(downloadInfo.downloadUrl);
-        
-        if (!fileResponse.ok) {
-            throw new Error(`Download failed: HTTP ${fileResponse.status}`);
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.message || errorData.error || `HTTP ${response.status}`);
         }
         
         // Get the blob
-        const blob = await fileResponse.blob();
+        const blob = await response.blob();
         
         // Verify it's a reasonable file size
         if (blob.size < 100) {
             throw new Error('Downloaded file is too small, possibly an error');
         }
         
-        // Create download
+        // Extract filename from Content-Disposition header if available
+        const contentDisposition = response.headers.get('content-disposition');
+        let downloadFilename = filename;
+        if (contentDisposition) {
+            const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+            if (filenameMatch && filenameMatch[1]) {
+                downloadFilename = filenameMatch[1].replace(/['"]/g, '');
+            }
+        }
+        
+        // Create download using blob URL
         const blobUrl = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.style.display = 'none';
         a.href = blobUrl;
-        a.download = downloadInfo.fileName || filename;
+        a.download = downloadFilename;
         document.body.appendChild(a);
         a.click();
         
@@ -114,10 +111,10 @@ async function handleDownloadClick(e) {
             window.URL.revokeObjectURL(blobUrl);
         }, 100);
         
-        console.log('[Dashboard] Download complete:', downloadInfo.fileName || filename, `(${blob.size} bytes)`);
+        console.log('[Dashboard] Download complete:', downloadFilename, `(${blob.size} bytes)`);
         
         // Show success state
-        downloadBtn.textContent = '✓ Downloaded!';
+        downloadBtn.textContent = '✅ Downloaded';
         downloadBtn.classList.remove('loading');
         downloadBtn.classList.add('success');
         

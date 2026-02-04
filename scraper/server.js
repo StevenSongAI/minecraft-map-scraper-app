@@ -6,6 +6,7 @@ require('dotenv').config();
 const CurseForgeClient = require('./curseforge');
 const CacheManager = require('./cache');
 const { MapAggregator } = require('./scrapers');
+const { BLACKLIST_TERMS } = require('./config');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -535,6 +536,23 @@ app.get('/api/search', async (req, res) => {
 
     const query = q.trim();
     const pageSizeNum = Math.min(parseInt(pageSize) || 20, 50);
+
+    // Check for non-map search terms
+    const queryLower = query.toLowerCase();
+    const hasBlacklistedTerm = BLACKLIST_TERMS.some(term => 
+      queryLower.includes(term)
+    );
+    
+    if (hasBlacklistedTerm) {
+      return res.json({ 
+        query,
+        results: [],
+        count: 0,
+        message: 'This search appears to be for non-map content (mods, texture packs, etc.). Try searching for map names or themes instead.',
+        error: 'INVALID_QUERY_TYPE',
+        timestamp: new Date().toISOString()
+      });
+    }
 
     // Check cache first
     if (!nocache) {
