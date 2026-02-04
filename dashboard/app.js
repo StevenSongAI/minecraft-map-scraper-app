@@ -254,7 +254,7 @@ async function searchMaps(query) {
         setConnectionStatus('demo');
     }
     
-    return data.results || [];
+    return data.maps || [];
 }
 
 // Add user message to chat
