@@ -187,7 +187,7 @@ class PlanetMinecraftPuppeteerScraper extends BaseScraper {
               console.warn(`[Planet Minecraft Puppeteer] Search error: ${error.message}`);
               
               // Mark puppeteer as failed for this instance
-              // FIXED (Round 53): Added 'detached', 'frame', 'Protocol' to trigger fallback
+              // FIXED (Round 53/54): Added 'detached', 'frame', 'Navigation', 'Protocol' to trigger fallback
               if (error.message.includes('browser') || 
                   error.message.includes('Target') ||
                   error.message.includes('executable') ||
@@ -195,6 +195,7 @@ class PlanetMinecraftPuppeteerScraper extends BaseScraper {
                   error.message.includes('Chromium') ||
                   error.message.includes('detached') ||
                   error.message.includes('frame') ||
+                  error.message.includes('Navigation') ||
                   error.message.includes('Protocol error')) {
                 console.log('[Planet Minecraft] Puppeteer failed, switching to HTTP fallback mode');
                 this.puppeteerFailed = true;
@@ -554,10 +555,16 @@ class PlanetMinecraftPuppeteerScraper extends BaseScraper {
       
     } catch (error) {
       // If puppeteer fails, mark for fallback mode
+      // FIXED (Round 54): Added same error patterns as search() method
       if (error.message.includes('browser') || 
+          error.message.includes('Target') ||
           error.message.includes('executable') ||
           error.message.includes('Chrome') ||
-          error.message.includes('Chromium')) {
+          error.message.includes('Chromium') ||
+          error.message.includes('detached') ||
+          error.message.includes('frame') ||
+          error.message.includes('Navigation') ||
+          error.message.includes('Protocol error')) {
         console.log('[Planet Minecraft Health] Puppeteer not available, enabling HTTP fallback');
         this.puppeteerFailed = true;
         this.useHttpFallback = true;
