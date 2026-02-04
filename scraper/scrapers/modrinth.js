@@ -601,77 +601,116 @@ class ModrinthScraper extends BaseScraper {
   
   /**
    * FIXED (Round 58): Generate fallback search queries when results are low
-   * Tries variations with removed words, synonyms, and broader terms
+   * Tries variations with removed words, synonyms, broader terms, and category matching
    */
   generateFallbackQueries(query) {
     const queries = [];
     const lower = query.toLowerCase();
     const words = lower.split(/\s+/).filter(w => w.length > 0);
     
-    // Strategy 1: Remove words one at a time (focus on key terms)
-    const keywordPriority = {
-      'with': 0, 'the': 0, 'a': 0, 'in': 0, 'on': 0, 'and': 0, 'or': 0, // Stop words
-      'small': 1, 'medium': 1, 'large': 1, // Size modifiers (can remove)
-      'custom': 1, 'new': 1 // Descriptors
+    // Extended synonym mapping for Minecraft map categories
+    const synonyms = {
+      'castle': ['fortress', 'stronghold', 'palace', 'keep', 'medieval'],
+      'fortress': ['stronghold', 'castle', 'palace', 'keep'],
+      'stronghold': ['fortress', 'castle', 'medieval'],
+      'house': ['mansion', 'building', 'home', 'cottage'],
+      'mansion': ['house', 'palace', 'building'],
+      'city': ['town', 'village', 'metropolis', 'urban'],
+      'village': ['town', 'city', 'settlement'],
+      'medieval': ['fantasy', 'kingdom', 'castle', 'historical'],
+      'fantasy': ['medieval', 'magical', 'kingdom'],
+      'futuristic': ['scifi', 'sci-fi', 'modern', 'future', 'space'],
+      'sci-fi': ['futuristic', 'scifi', 'space', 'modern'],
+      'underwater': ['ocean', 'water', 'sea', 'aquatic'],
+      'ocean': ['underwater', 'water', 'sea'],
+      'water': ['ocean', 'underwater', 'sea', 'aquatic'],
+      'nether': ['hell', 'inferno', 'dark', 'demon'],
+      'hell': ['nether', 'dark', 'inferno'],
+      'survival': ['world', 'vanilla', 'adventure'],
+      'vanilla': ['survival', 'world', 'pure'],
+      'adventure': ['quest', 'explore', 'exploration', 'journey'],
+      'quest': ['adventure', 'mission', 'challenge'],
+      'puzzle': ['challenge', 'riddle', 'maze', 'logic'],
+      'parkour': ['jump', 'climbing', 'freerun', 'climbing'],
+      'pvp': ['combat', 'battle', 'fight', 'war'],
+      'combat': ['pvp', 'battle', 'fight', 'war'],
+      'horror': ['scary', 'spooky', 'dark', 'creepy', 'haunted'],
+      'scary': ['horror', 'spooky', 'creepy', 'dark'],
+      'prison': ['jail', 'escape', 'lockup'],
+      'jungle': ['tropical', 'wild', 'forest'],
+      'mountain': ['peak', 'highland', 'alpine'],
+      'desert': ['sandy', 'wasteland', 'arid'],
+      'dungeon': ['cave', 'underground', 'crypt'],
+      'skyblock': ['sky', 'island', 'block'],
+      'island': ['sky', 'terrain', 'land'],
+      'snow': ['ice', 'winter', 'frozen'],
+      'ice': ['snow', 'frozen', 'winter', 'cold']
     };
     
-    // Remove low-priority words
-    const reduced = words.filter(w => (keywordPriority[w] || 2) >= 2);
-    if (reduced.length < words.length && reduced.length > 0) {
+    // Priority 1: Try single-word main terms (highest probability)
+    if (words.length > 1) {
+      // Find the most likely "main" word (longest or most specific)
+      const mainWords = words
+        .filter(w => w.length > 3 && !['with', 'the', 'from', 'near', 'like'].includes(w))
+        .sort((a, b) => b.length - a.length);
+      
+      for (const mainWord of mainWords.slice(0, 3)) {
+        queries.push(mainWord);
+      }
+    }
+    
+    // Priority 2: Try removing filler words
+    const filler = ['with', 'the', 'a', 'in', 'on', 'and', 'or', 'from', 'to', 'by', 'at', 'of'];
+    const reduced = words.filter(w => !filler.includes(w));
+    if (reduced.length > 0 && reduced.length !== words.length) {
       queries.push(reduced.join(' '));
     }
     
-    // Strategy 2: Try single-word queries from main terms
-    if (words.length > 1) {
-      words.forEach(word => {
-        if (word.length > 3 && !keywordPriority[word]) {
-          queries.push(word);
+    // Priority 3: Try synonym replacements (most likely to help)
+    const seen = new Set(queries);
+    for (let i = 0; i < words.length; i++) {
+      const word = words[i];
+      if (synonyms[word]) {
+        // Try first 2 synonyms (most relevant)
+        for (const synonym of synonyms[word].slice(0, 2)) {
+          const synQuery = words.map((w, idx) => idx === i ? synonym : w).join(' ');
+          if (!seen.has(synQuery)) {
+            queries.push(synQuery);
+            seen.add(synQuery);
+          }
         }
-      });
+      }
     }
     
-    // Strategy 3: Synonym expansion
-    const synonyms = {
-      'castle': ['fortress', 'stronghold', 'palace', 'keep'],
-      'fortress': ['stronghold', 'castle', 'keep'],
-      'house': ['mansion', 'building', 'home'],
-      'city': ['town', 'village', 'metropolis'],
-      'medieval': ['fantasy', 'kingdom'],
-      'futuristic': ['scifi', 'sci-fi', 'modern', 'future'],
-      'underwater': ['ocean', 'water', 'sea'],
-      'nether': ['hell', 'inferno', 'dark'],
-      'survival': ['world', 'vanilla'],
-      'adventure': ['quest', 'explore', 'exploration'],
-      'puzzle': ['challenge', 'riddle'],
-      'parkour': ['jump', 'climbing', 'freerun'],
-      'pvp': ['combat', 'battle', 'fight'],
-      'horror': ['scary', 'spooky', 'dark', 'creepy']
-    };
+    // Priority 4: Try adding generic suffixes for compound queries
+    if (words.length === 1) {
+      const suffixes = ['map', 'world', 'terrain'];
+      for (const suffix of suffixes) {
+        const query = `${words[0]} ${suffix}`;
+        if (!seen.has(query)) {
+          queries.push(query);
+          seen.add(query);
+        }
+      }
+    }
     
-    // Add synonym variations
+    // Priority 5: Try adding category prefixes
+    const prefixes = ['minecraft', 'custom'];
     words.forEach(word => {
-      if (synonyms[word]) {
-        for (const synonym of synonyms[word]) {
-          const synQuery = words.map(w => w === word ? synonym : w).join(' ');
-          queries.push(synQuery);
+      if (word.length > 4) {
+        for (const prefix of prefixes) {
+          const query = `${prefix} ${word}`;
+          if (!seen.has(query)) {
+            queries.push(query);
+            seen.add(query);
+          }
         }
       }
     });
     
-    // Strategy 4: Try broader category terms
-    if (words.length === 1) {
-      const broadTerms = ['map', 'world', 'minecraft'];
-      broadTerms.forEach(term => {
-        queries.push(`${words[0]} ${term}`);
-      });
-    }
+    console.log(`[Modrinth] Generated ${queries.length} fallback queries (prioritized)`);
     
-    // Remove duplicates and limit to reasonable number
-    const uniqueQueries = [...new Set(queries)];
-    
-    console.log(`[Modrinth] Generated ${uniqueQueries.length} fallback queries for low results`);
-    
-    return uniqueQueries.slice(0, 4); // Try up to 4 fallback queries
+    return queries.slice(0, 6); // Try up to 6 fallback queries (more aggressive)
   }
 
   detectCategory(title, description) {
