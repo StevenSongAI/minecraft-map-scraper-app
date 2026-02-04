@@ -4,7 +4,7 @@
 
 **ALL QA AND RED TEAM TESTING MUST USE LIVE DEPLOYMENT URL ONLY**
 
-**Live URL:** https://web-production-631b7.up.railway.app
+**Live URL:** https://web-production-9af19.up.railway.app
 
 **FORBIDDEN:** localhost, 127.0.0.1, local testing, "works on my machine"
 

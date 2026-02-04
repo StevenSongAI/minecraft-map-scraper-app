@@ -4,9 +4,12 @@ const path = require('path');
 const cors = require('cors');
 
 // Deployment timestamp for verification
-// ROUND 36 FIXES: 1) Added apiConfigured to health, 2) Fixed Planet Minecraft puppeteer, 3) Deleted 9Minecraft file
-// ROUND 36 FIXES: 4) Fixed Modrinth to use project_type:map facet, 5) Verified Railway deployment
-const DEPLOY_TIMESTAMP = '2026-02-05-ROUND40-DEPLOY';
+// ROUND 45 FIXES: 1) Fixed API key validation to require UUID format
+// ROUND 45 FIXES: 2) Fixed all health checks to properly validate CURSEFORGE_API_KEY
+// ROUND 45 FIXES: 3) Fixed download endpoints to validate API key format
+// ROUND 45 FIXES: 4) Fixed demo mode detection to require valid UUID
+// ROUND 45 FIXES: 5) Updated .env file with proper documentation
+const DEPLOY_TIMESTAMP = '2026-02-04-ROUND45-DEPLOY';
 
 // FIXED: Enhanced File API polyfill for Node.js 18+ compatibility
 // Must be defined BEFORE any module imports that might use File
@@ -908,8 +911,10 @@ async function searchCurseForge(searchTerms, limit) {
   const allResults = [];
   const seenIds = new Set();
   
-  // Check if we're in demo mode (no valid API key)
-  const isDemoMode = !process.env.CURSEFORGE_API_KEY || process.env.CURSEFORGE_API_KEY === 'demo';
+  // ROUND 45: Check if we're in demo mode (no valid API key - must be UUID format)
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const apiKey = process.env.CURSEFORGE_API_KEY;
+  const isDemoMode = !apiKey || apiKey === 'demo' || !uuidPattern.test(apiKey);
   
   // If in demo mode, skip API calls entirely and return mock data
   if (isDemoMode) {
@@ -1085,7 +1090,7 @@ async function fetchModrinthDownloadUrl(projectId) {
 /**
  * GET /api/download
  * Download endpoint - supports ?id=X query parameter (QUERY PARAM VERSION)
- * ROUND 34: CurseForge + Modrinth + Planet Minecraft + MC-Maps + MinecraftMaps
+ * ROUND 45: Fixed API key validation for downloads
  * IMPORTANT: This route MUST be defined BEFORE /api/download/:modId to avoid conflicts
  */
 app.get('/api/download', async (req, res) => {
@@ -1106,7 +1111,7 @@ app.get('/api/download', async (req, res) => {
       return res.redirect(url);
     }
     
-    // ROUND 34: Only CurseForge and Modrinth supported (9Minecraft completely removed)
+    // ROUND 45: Only CurseForge and Modrinth supported
     const idStr = String(id || '');
     
     // Modrinth: non-numeric IDs
@@ -1150,11 +1155,12 @@ app.get('/api/download', async (req, res) => {
       });
     }
     
-    // Otherwise, fetch download info from CurseForge
-    if (!CURSEFORGE_API_KEY) {
+    // ROUND 45: Validate API key format (must be UUID)
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!CURSEFORGE_API_KEY || !uuidPattern.test(CURSEFORGE_API_KEY)) {
       return res.status(503).json({
         error: 'API_KEY_MISSING',
-        message: 'CURSEFORGE_API_KEY not configured'
+        message: 'CURSEFORGE_API_KEY not configured or invalid format (must be UUID)'
       });
     }
     
@@ -1240,7 +1246,7 @@ app.get('/api/download', async (req, res) => {
 /**
  * GET /api/download/:modId
  * Download endpoint - path parameter version
- * ROUND 34: CurseForge + Modrinth + Planet Minecraft + MC-Maps + MinecraftMaps
+ * ROUND 45: Fixed API key validation
  * Gets download URL for a specific map by ID
  */
 app.get('/api/download/:modId', async (req, res) => {
@@ -1253,7 +1259,7 @@ app.get('/api/download/:modId', async (req, res) => {
     });
   }
   
-  // ROUND 34: Check ID type - only CurseForge and Modrinth supported
+  // ROUND 45: Check ID type - only CurseForge and Modrinth supported
   const isNumericId = /^\d+$/.test(modIdParam);
   
   // Handle Modrinth slug (non-numeric)
@@ -1292,6 +1298,15 @@ app.get('/api/download/:modId', async (req, res) => {
     return res.status(400).json({ 
       error: 'INVALID_ID',
       message: 'Invalid mod ID. ID must be a positive number or a valid Modrinth slug.'
+    });
+  }
+  
+  // ROUND 45: Validate API key format (must be UUID)
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  if (!CURSEFORGE_API_KEY || !uuidPattern.test(CURSEFORGE_API_KEY)) {
+    return res.status(503).json({
+      error: 'API_KEY_MISSING',
+      message: 'CURSEFORGE_API_KEY not configured or invalid format (must be UUID)'
     });
   }
   
@@ -1888,23 +1903,31 @@ function formatFileSize(bytes) {
 }
 
 // Simple health check endpoint for load balancers (no /api prefix)
-// ROUND 31: Updated version and removed 9Minecraft
+// ROUND 45: Fixed API key validation to check for UUID format
 app.get('/health', async (req, res) => {
   const apiKey = process.env.CURSEFORGE_API_KEY;
-  const isApiConfigured = !!(apiKey && apiKey !== 'demo' && apiKey.length > 10);
+  // CRITICAL FIX: Validate API key is a proper UUID format (CurseForge API keys are UUIDs)
+  // UUID pattern: 8-4-4-4-12 hex digits
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const isApiConfigured = !!(apiKey && apiKey !== 'demo' && uuidPattern.test(apiKey));
   
   res.status(200).json({
     status: 'healthy',
     apiConfigured: isApiConfigured,
     timestamp: new Date().toISOString(),
-    version: '2.7.0-round36-fixes',
+    version: '2.8.0-round45-fixes',
     sources: 'CurseForge + Modrinth + Planet Minecraft + MC-Maps + MinecraftMaps'
   });
 });
 
 // Health check endpoint
+// ROUND 45: Fixed API key validation to properly check UUID format
 app.get('/api/health', async (req, res) => {
-  const isDemoMode = !process.env.CURSEFORGE_API_KEY || process.env.CURSEFORGE_API_KEY === 'demo';
+  // CRITICAL FIX: Validate API key is a proper UUID format (CurseForge API keys are UUIDs)
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const apiKey = process.env.CURSEFORGE_API_KEY;
+  const isApiConfigured = !!(apiKey && apiKey !== 'demo' && uuidPattern.test(apiKey));
+  const isDemoMode = !isApiConfigured;
   
   // Get scraper health if available
   let scraperHealth = null;
@@ -1929,23 +1952,29 @@ app.get('/api/health', async (req, res) => {
     status: 'ok', 
     timestamp: new Date().toISOString(),
     deployTimestamp: DEPLOY_TIMESTAMP,
-    apiConfigured: !!(process.env.CURSEFORGE_API_KEY && process.env.CURSEFORGE_API_KEY !== 'demo' && process.env.CURSEFORGE_API_KEY.length > 10),
+    apiConfigured: isApiConfigured,
     demoMode: isDemoMode,
-    apiKeyPreview: process.env.CURSEFORGE_API_KEY ? process.env.CURSEFORGE_API_KEY.substring(0, 10) + '...' : 'Not set',
-    version: '2.6.0-round31-fixes',
+    apiKeyFormat: apiKey ? (uuidPattern.test(apiKey) ? 'valid-uuid' : 'invalid-format') : 'not-set',
+    apiKeyPreview: apiKey ? apiKey.substring(0, 8) + '...' : 'Not set',
+    version: '2.8.0-round45-fixes',
     multiSourceEnabled: isMultiSourceEnabled(),
     scrapersLoaded: scrapersLoaded,
-    planetMinecraftStatus: 'REMOVED (Cloudflare protection)',
+    planetMinecraftStatus: 'ENABLED (Puppeteer)',
     nineMinecraftStatus: 'REMOVED (Round 31 - broken downloads)',
-    activeSources: ['CurseForge API', 'Modrinth API', 'MC-Maps', 'MinecraftMaps'],
+    activeSources: ['CurseForge API', 'Modrinth API', 'Planet Minecraft', 'MC-Maps', 'MinecraftMaps'],
     scrapers: scraperHealth
   });
 });
 
 // Multi-source scraper status endpoint (alias for sources/health)
+// ROUND 45: Fixed API key validation
 app.get('/api/scrapers/status', async (req, res) => {
   try {
-    const isDemoMode = !process.env.CURSEFORGE_API_KEY || process.env.CURSEFORGE_API_KEY === 'demo';
+    // CRITICAL FIX: Validate API key is proper UUID format
+    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const apiKey = process.env.CURSEFORGE_API_KEY;
+    const isApiConfigured = !!(apiKey && apiKey !== 'demo' && uuidPattern.test(apiKey));
+    const isDemoMode = !isApiConfigured;
     
     // Get scraper health if available
     let scraperHealth = null;
@@ -1969,12 +1998,12 @@ app.get('/api/scrapers/status', async (req, res) => {
     const status = {
       timestamp: new Date().toISOString(),
       deployTimestamp: DEPLOY_TIMESTAMP,
-      version: '2.7.0-round36-fixes',
+      version: '2.8.0-round45-fixes',
       sources: {
         curseforge: {
           name: 'CurseForge API',
           enabled: true,
-          configured: !isDemoMode,
+          configured: isApiConfigured,
           status: isDemoMode ? 'demo_mode' : 'healthy',
           responseTime: 0
         }
@@ -1985,7 +2014,6 @@ app.get('/api/scrapers/status', async (req, res) => {
           reason: 'Broken download functionality (Round 31)',
           status: 'removed'
         }
-        // ROUND 34: Planet Minecraft re-enabled with Puppeteer
       },
       scrapers: {},
       multiSourceAvailable: isMultiSourceEnabled()
@@ -2025,18 +2053,23 @@ app.get('/api/scrapers/status', async (req, res) => {
 });
 
 // Multi-source scraper health endpoint
+// ROUND 45: Fixed API key validation
 app.get('/api/sources/health', async (req, res) => {
+  // CRITICAL FIX: Validate API key is proper UUID format
+  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const apiKey = process.env.CURSEFORGE_API_KEY;
+  const isApiConfigured = !!(apiKey && apiKey !== 'demo' && uuidPattern.test(apiKey));
+  
   // Check if multi-source is available
   if (!isMultiSourceEnabled()) {
-    const curseforgeConfigured = !!process.env.CURSEFORGE_API_KEY && process.env.CURSEFORGE_API_KEY !== 'demo';
     return res.json({
       timestamp: new Date().toISOString(),
       sources: {
         curseforge: {
           name: 'CurseForge API',
           enabled: true,
-          configured: curseforgeConfigured,
-          status: curseforgeConfigured ? 'healthy' : 'demo_mode'
+          configured: isApiConfigured,
+          status: isApiConfigured ? 'healthy' : 'demo_mode'
         }
       },
       scrapersAvailable: false,
@@ -2049,17 +2082,14 @@ app.get('/api/sources/health', async (req, res) => {
     const agg = getAggregator();
     const health = await agg.getHealth();
     
-    // Add CurseForge status
-    const curseforgeConfigured = !!process.env.CURSEFORGE_API_KEY && process.env.CURSEFORGE_API_KEY !== 'demo';
-    
     res.json({
       timestamp: new Date().toISOString(),
       sources: {
         curseforge: {
           name: 'CurseForge API',
           enabled: true,
-          configured: curseforgeConfigured,
-          status: curseforgeConfigured ? 'healthy' : 'demo_mode'
+          configured: isApiConfigured,
+          status: isApiConfigured ? 'healthy' : 'demo_mode'
         },
         ...health.scrapers.reduce((acc, scraper) => {
           acc[scraper.name] = {

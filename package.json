@@ -1,8 +1,8 @@
 {
   "name": "minecraft-map-scraper",
-  "version": "1.0.0",
+  "version": "2.8.0-round45",
   "description": "Minecraft Map Scraper with Natural Language Search and CurseForge API Integration",
-  "deployTimestamp": "2026-02-04-1738-R38",
+  "deployTimestamp": "2026-02-04-ROUND45-FIXES",
   "main": "server.js",
   "scripts": {
     "start": "echo 'Round 38 Deploy' && node server.js",

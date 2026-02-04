@@ -1,83 +1,55 @@
 DEFECTS_FOUND
 
-## RED TEAM DEFECT REPORT - Minecraft Map Scraper
-**Live URL:** https://web-production-631b7.up.railway.app
-**Tested:** 2026-02-03
+RED TEAM ASSESSMENT - LIVE DEPLOYMENT TEST
+Live URL: https://web-production-9af19.up.railway.app
+Test Time: 2026-02-04T00:31:16Z
 
----
+====== CRITICAL DEFECTS FOUND ======
 
-### DEFECT 1: CRITICAL - Planet Minecraft Completely Blocked
-**Severity:** CRITICAL
-**Requirement Violated:** Multi-Source Web Scraping - "Primary additional sources: Planet Minecraft (largest repository after CurseForge)"
+DEFECT #1: DEMO MODE ACTIVE (CRITICAL FAILURE)
+Evidence: Health check returns "apiConfigured": false, "demoMode": true
+Requirement: "Demo/mock mode is FAILURE - app must use live CurseForge API"
+Requirement: "Health check must return apiConfigured: true"
+Impact: Application is not using real CurseForge API at all
 
-**Evidence:**
-- Health check: `"accessible": false`, `"statusCode": 403`, `"canSearch": false`
-- Error: "HTTP 403 Forbidden - Cloudflare bot protection active"
-- All searches return: `"planetminecraft": {"count": 0, "success": false}`
+DEFECT #2: MOCK DATA IDS (CRITICAL FAILURE)
+Evidence: Search results return mock IDs (1001, 1002, 1003, 1011, etc.)
+Requirement: "Results must have actual CurseForge IDs (not mock IDs like 1001, 1002)"
+Test Query: "futuristic city with railways" returned IDs 1001, 1002, 1003
+Impact: No real map data is being returned to users
 
-**Impact:** Primary multi-source requirement is NOT functional. The app claims "multiSourceEnabled": true but cannot access the most important secondary source.
+DEFECT #3: PLACEHOLDER IMAGES (CRITICAL FAILURE)
+Evidence: All thumbnails use "via.placeholder.com" URLs
+Requirement: "Each result must have working thumbnail images (not placeholders)"
+Example: "https://via.placeholder.com/280x160?text=Neo+Tokyo+2150"
+Impact: Users see placeholder images instead of actual map screenshots
 
----
+DEFECT #4: MULTI-SOURCE SCRAPING COMPLETELY BROKEN (CRITICAL FAILURE)
+Evidence: ALL non-CurseForge sources return 0 results consistently
+- modrinth: 0 results, "No results returned"
+- planetminecraft: 0 results, "No results returned"  
+- mcmaps: 0 results, "No results returned"
+- minecraftmaps: 0 results, "No results returned"
+Requirement: "Multi-source aggregation returns 2x+ more results than CurseForge alone"
+Requirement: "95%+ of scraped download links must be valid and working"
+Test Queries: "futuristic city with railways", "hell", "underwater city" - ALL showed 0 results from scrapers
+Impact: Multi-source feature is completely non-functional
 
-### DEFECT 2: HIGH - No Direct Download Links for 9Minecraft Results
-**Severity:** HIGH
-**Requirement Violated:** "Download buttons must return valid ZIP files"
+DEFECT #5: DOWNLOADS COMPLETELY BROKEN (CRITICAL FAILURE)
+Evidence: Download endpoint returns HTTP 500 error with "API error: 403"
+Test URL: https://web-production-9af19.up.railway.app/api/download/1001
+Response: {"error":"DOWNLOAD_ERROR","message":"Failed to get download URL","details":"API error: 403"}
+Requirement: "Download buttons must return valid ZIP files"
+Requirement: "HTTP 200 responses, not 403 errors or JSON error messages"
+Impact: Users cannot download any maps at all
 
-**Evidence:**
-- All 9Minecraft results have: `"downloadType": "page"`, `"downloadNote": "Visit 9Minecraft page for download link"`
-- Example: `"downloadUrl": "https://www.9minecraft.net/atlantis-mod/"` (links to page, not file)
-- No direct ZIP download available
+====== SUMMARY ======
+Status: DEFECTS_FOUND (5 critical defects)
+Deployment State: COMPLETELY NON-FUNCTIONAL
+- CurseForge API: Not configured (demo mode)
+- Search: Returns mock data only
+- Downloads: Completely broken (500 errors)
+- Multi-source scraping: 0% functional
+- Images: All placeholders
 
-**Impact:** Users cannot directly download from 9Minecraft results - they must navigate away to external sites.
-
----
-
-### DEFECT 3: HIGH - No Direct Download Links for Modrinth Results
-**Severity:** HIGH
-**Requirement Violated:** "Download buttons must return valid ZIP files"
-
-**Evidence:**
-- All Modrinth results have: `"downloadType": "page"`, `"downloadNote": "Visit Modrinth page to download"`
-- Example: `"downloadUrl": "https://modrinth.com/project/atlantis-firebeneathwater/versions"`
-
-**Impact:** Users cannot directly download from Modrinth results - they must navigate away to external sites.
-
----
-
-### DEFECT 4: MEDIUM - Search Returns MODS Instead of MAPS
-**Severity:** MEDIUM
-**Requirement Violated:** "Search must return results that semantically match the user's query intent"
-
-**Evidence:**
-- Query "underwater city" returns: "Atlantis Mod (1.21.1, 1.20.1) – Underwater City, Artifacts" (a MOD, not a MAP)
-- Query "medieval castle" returns: "Epic Structures Witch Huts Mod" (a MOD, not a MAP)
-- Query "hell" returns: "Hell's Survivor" categorized as "Horror" mod
-
-**Impact:** False positives - users searching for MAPS get MODS in results, causing confusion.
-
----
-
-### DEFECT 5: MEDIUM - Missing Thumbnails for Scraped Results
-**Severity:** MEDIUM
-**Requirement Violated:** "Each result must have working thumbnail images (not placeholders)"
-
-**Evidence:**
-- 9Minecraft result: `"thumbnail": ""` (empty string)
-- Example: "Underwater City – Lumina Nocturnale Map" has no thumbnail
-
-**Impact:** UI shows broken/empty thumbnails for scraped content, poor user experience.
-
----
-
-## Summary
-- **Total Defects Found:** 5
-- **Critical:** 1 (Planet Minecraft blocked)
-- **High:** 2 (No direct downloads for 2/3 secondary sources)
-- **Medium:** 2 (Wrong content type, missing thumbnails)
-
-The app CLAIMS multi-source support but:
-1. Planet Minecraft (primary source) is completely non-functional
-2. 9Minecraft and Modrinth provide NO direct downloads
-3. Search returns wrong content types (mods instead of maps)
-
-Only CurseForge works correctly.
+CONCLUSION: Live deployment is running in pure demo/mock mode with no real functionality. Application fails ALL absolute requirements.

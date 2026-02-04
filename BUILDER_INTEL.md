@@ -1,68 +1,87 @@
-# BUILDER INTEL - Round 44: Fix RED TEAM Defects
+# BUILDER INTEL - Round 45
 
-## Current Status
-- **ralph-status.txt:** DEFECTS_FOUND (5 defects from RED_TEAM)
-- **Live URL:** https://web-production-631b7.up.railway.app
-- **Deployment Status:** OLD code still live (Round 12), git push deployed commit 388050c but not reflected yet
+**Memory Finding:** "Fix API key configuration" - prior session found same demo mode issue
+**Current Task:** Fix 5 critical defects causing demo mode operation
+**Direct Application:** Check Railway environment variables and API initialization code
 
-## Defects to Fix (Priority Order)
+---
 
-### DEFECT 1 (CRITICAL): Planet Minecraft Blocked by Cloudflare
-**Issue:** HTTP 403 Forbidden - Cloudflare bot protection
-**Location:** `scraper/scrapers/planetminecraft.js`
-**Solution:** Already implemented puppeteer-extra with stealth plugin in git, needs deployment
-**Verification:** Check if deployed code includes stealth plugin imports
+## PRIORITY 1: Fix Demo Mode (Defects 1, 2, 3, 5)
 
-### DEFECT 2-3 (HIGH): No Direct Downloads for 9Minecraft/Modrinth
-**Issue:** downloadType:"page" instead of direct ZIP links
-**Locations:** 
-- `scraper/scrapers/nineminecraft.js`
-- `scraper/scrapers/modrinth.js`
-**Solution:** Parse download pages to extract direct file URLs
-**Note:** CurseForge already works correctly with direct downloads
+**Root Cause:** apiConfigured: false means CurseForge API initialization failed
 
-### DEFECT 4 (MEDIUM): Search Returns MODS not MAPS
-**Issue:** Semantic accuracy - "underwater city" returns "Atlantis Mod"
-**Location:** Scraper query filters
-**Solution:** Add content-type filters or post-filter results to exclude mods
+**Check These:**
+1. Railway environment variable: `CURSEFORGE_API_KEY`
+   - Run: `railway variables` or check Railway dashboard
+   - Verify key is set and not empty
+   
+2. API initialization code in `src/services/curseforge.js` or similar:
+   - Check if environment variable is read correctly
+   - Look for `process.env.CURSEFORGE_API_KEY`
+   - Verify API client initialization doesn't silently fail
+   
+3. Health check endpoint code:
+   - Find where `apiConfigured` flag is set
+   - Verify it actually tests API connectivity (not just env var existence)
 
-### DEFECT 5 (MEDIUM): Missing Thumbnails
-**Issue:** Some scraped results have empty thumbnail URLs
-**Location:** Result normalization in scrapers
-**Solution:** Add fallback thumbnail or exclude results without images
+**Expected Fix:**
+- If key missing: Set it in Railway
+- If key present but not loaded: Fix environment variable loading
+- If loaded but API fails: Check API key validity with CurseForge
 
-## Deployment Situation
+---
 
-**User Setup (CONFIRMED):**
-- ✅ Railway account created and upgraded to paid
-- ✅ GitHub connected to Railway
-- ✅ Token provided: a9c5dd4a-b333-400e-bc99-c24f0cc91c3d
-- ✅ Token stored in .railway-token
-- ✅ GitHub secret RAILWAY_TOKEN updated
-- ✅ Git push completed (commit 388050c)
+## PRIORITY 2: Fix Multi-Source Scraping (Defect 4)
 
-**Observation:** Railway CLI returns "Invalid token" but user says setup is complete. Auto-deploy via GitHub should work.
+**Evidence:** ALL scrapers return 0 results
 
-**Next Steps:**
-1. Verify GitHub Actions workflow exists and is configured
-2. If workflow missing, create .github/workflows/deploy.yml
-3. Check Railway dashboard for deployment logs
-4. If auto-deploy isn't working, use Railway dashboard manual redeploy
+**Check These:**
+1. Scraper circuit breakers might be open after errors
+2. Scraper initialization might be failing silently
+3. Network access from Railway might be restricted
 
-## File Paths
-- Scrapers: `/Users/stevenai/clawd/projects/minecraft-map-scraper/scraper/scrapers/`
-- Workflow: `/Users/stevenai/clawd/projects/minecraft-map-scraper/.github/workflows/deploy.yml`
-- Config: `/Users/stevenai/clawd/projects/minecraft-map-scraper/railway.json`
+**Files to Check:**
+- `src/services/aggregator.js` - scraper loading
+- Individual scraper files (modrinth.js, planetminecraft.js, etc.)
+- Circuit breaker state/reset logic
 
-## Success Criteria
-1. Live deployment shows new code (check /api/health version field)
-2. Planet Minecraft returns results (no 403 errors)
-3. Direct download links available for all sources
-4. Search filters out mods (only returns maps)
-5. All results have thumbnail images
+**Expected Fix:**
+- Reset circuit breakers or increase timeout
+- Add error logging to see why scrapers fail
+- Verify scrapers can make HTTP requests from Railway
 
-## Memory Insights
-From MEMORY.md: "When user says 'I already did X', believe them and investigate what I'm doing wrong"
-- User confirmed setup is complete
-- Focus on deployment mechanism, not token validity
-- Git push auto-deploy documented as working method
+---
+
+## VERIFICATION STEPS
+
+After fixes:
+1. Deploy to Railway
+2. Test health check: `curl https://web-production-9af19.up.railway.app/api/health`
+   - MUST show: `"apiConfigured": true`
+   - MUST show: `"demoMode": false`
+   
+3. Test search: `curl "https://web-production-9af19.up.railway.app/api/search?q=castle"`
+   - MUST return real CurseForge IDs (6-7 digits, not 1001-1003)
+   - MUST show real image URLs (not via.placeholder.com)
+   - MUST show results from multiple sources (not just CurseForge)
+   
+4. Test download: `curl "https://web-production-9af19.up.railway.app/api/download/<real-id>"`
+   - MUST return HTTP 200 or redirect
+   - MUST NOT return HTTP 500 "API error: 403"
+
+---
+
+## RED_TEAM FOUND THESE EXACT ERRORS
+
+```
+apiConfigured: false
+demoMode: true
+Mock IDs: 1001, 1002, 1003
+Placeholder images: via.placeholder.com
+All scrapers: 0 results
+Download: HTTP 500 "API error: 403"
+```
+
+**Your mission:** Make ALL of these indicators green on live deployment.
+
+**Timestamp:** 2026-02-03T19:55:00Z
