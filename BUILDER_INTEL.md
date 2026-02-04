@@ -27,10 +27,10 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 **Testing After Deploy:**
 ```bash
 # Test Planet Minecraft with Puppeteer
-curl "https://web-production-631b7.up.railway.app/api/search?query=parkour&source=planetminecraft"
+curl "https://web-production-9af19.up.railway.app/api/search?query=parkour&source=planetminecraft"
 
 # Check scraper health
-curl "https://web-production-631b7.up.railway.app/api/sources/health" | jq '.sources.planetminecraft'
+curl "https://web-production-9af19.up.railway.app/api/sources/health" | jq '.sources.planetminecraft'
 ```
 
 **Expected Result:**
