@@ -27,7 +27,26 @@
       },
       "report": "red-team-report.md",
       "blocker": null
+    },
+    {
+      "id": "builder-53",
+      "type": "builder",
+      "description": "Fix File API errors in scrapers - Modrinth syntax error, Planet Minecraft fallback",
+      "passes": true,
+      "notes": "Fixed syntax error in modrinth.js (missing filter closing brace). Fixed Planet Minecraft error handling for frame detached errors. Deployed to Railway via GitHub push. Modrinth now working (14 results). Planet Minecraft, MC-Maps, MinecraftMaps blocked by anti-scraping (403/Cloudflare). 2/4 sources working (was 1/4).",
+      "blocker": "Planet Minecraft, MC-Maps, MinecraftMaps blocked by anti-scraping measures. Would need Puppeteer+Chrome or proxy rotation to bypass.",
+      "commits": [
+        "8bc3f74 - Fix: Complete filter function in modrinth.js (Round 53)",
+        "f8c33f1 - Fix: Planet Minecraft error handling for frame detached errors (Round 53)"
+      ],
+      "deployment": {
+        "url": "https://web-production-631b7.up.railway.app",
+        "method": "GitHub push -> Railway auto-deploy",
+        "status": "LIVE",
+        "working_sources": ["curseforge (demo)", "modrinth"],
+        "blocked_sources": ["planetminecraft", "mcmaps", "minecraftmaps"]
+      }
     }
   ],
-  "status": "LOOPING"
+  "status": "IMPROVED"
 }
