@@ -19,4 +19,4 @@ jobs:
           echo "Attempting deployment..."
           railway up --service web --detach || echo "Deployment failed - check Railway dashboard"
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_TOKEN: ${{ secrets.STEVENS_RAILWAY }}
