@@ -17,6 +17,6 @@ jobs:
       - name: Deploy to Railway
         run: |
           echo "Attempting deployment..."
-          railway up --service="web-production-631b7" --detach || echo "Deployment failed - token may need renewal"
+          railway up --detach || echo "Deployment failed - check Railway dashboard"
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
