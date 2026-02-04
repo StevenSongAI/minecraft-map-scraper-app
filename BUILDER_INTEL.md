@@ -1,124 +1,81 @@
-# BUILDER INTEL - Round 54
+# BUILDER INTEL - Round 58
 
-**Updated:** 2026-02-03T22:10:00-05:00
+**Memory Finding:** Planet Minecraft blocked by Cloudflare from Railway deployments
 
-## CRITICAL FINDING (from BUILDER Round 53)
+**Current Task:** Add Chromium to Dockerfile for Puppeteer browser scraping
 
-**Problem:** Planet Minecraft scraper using Puppeteer locally, failing with "frame was detached" error. HTTP fallback not triggering.
+**Direct Application:** 
 
-**Root Cause:** Error handling in planetminecraft-puppeteer.js only triggers fallback on errors containing 'browser', 'Target', 'executable', 'Chrome', or 'Chromium'. "Frame was detached" errors don't match these patterns.
+**Dockerfile Change (CORRECT APPROACH):**
+```dockerfile
+# Use node:18-slim (NOT alpine - apt-get needed)
+FROM node:18-slim
 
-**Location:** `/Users/stevenai/clawd/projects/minecraft-map-scraper/scraper/scrapers/planetminecraft-puppeteer.js` (line ~180-210)
+# Install Chromium + dependencies
+RUN apt-get update && apt-get install -y \
+    chromium \
+    fonts-liberation \
+    [... all dependencies ...]
 
----
-
-## MEMORY-BASED SOLUTION
-
-**Prior Builder Success (from memory):**
-- Created `planetminecraft_simple.js` - HTTP-based scraper without Playwright
-- Updated aggregator to gracefully handle missing Playwright
-- Falls back to simple scraper automatically
-
-**Your Task:**
-1. **Check if HTTP-only scraper exists** (might be named `planetminecraft_simple.js` or similar)
-2. **If it exists:** Update `planetminecraft.js` to export the HTTP version
-3. **If it doesn't exist:** Fix the fallback logic to include "frame" / "detached" errors
-
----
-
-## FIX OPTION 1: Update Fallback Logic (Fastest)
-
-**File:** `/Users/stevenai/clawd/projects/minecraft-map-scraper/scraper/scrapers/planetminecraft-puppeteer.js`
-
-**Find this code (line ~180-210):**
-```javascript
-if (
-  err.message.includes('browser') ||
-  err.message.includes('Target') ||
-  err.message.includes('executable') ||
-  err.message.includes('Chrome') ||
-  err.message.includes('Chromium')
-) {
-  // Fallback to HTTP mode
+# Point Puppeteer to system Chromium
+ENV PUPPETEER_SKIP_DOWNLOAD=true
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 ```
 
-**Change to:**
-```javascript
-if (
-  err.message.includes('browser') ||
-  err.message.includes('Target') ||
-  err.message.includes('executable') ||
-  err.message.includes('Chrome') ||
-  err.message.includes('Chromium') ||
-  err.message.includes('frame') ||           // NEW: Catch frame detachment
-  err.message.includes('detached') ||        // NEW: Catch frame detachment
-  err.message.includes('Navigation failed')  // NEW: Catch navigation failures
-) {
-  // Fallback to HTTP mode
-```
+**File Path:** `/Users/stevenai/clawd/projects/minecraft-map-scraper/Dockerfile`
 
----
-
-## FIX OPTION 2: HTTP-Only Scraper (More Reliable)
-
-**If Option 1 doesn't work, create HTTP-only version:**
-
-1. **Check for existing HTTP scraper:**
-   ```bash
-   ls scraper/scrapers/planetminecraft*.js
-   ```
-
-2. **If found, update planetminecraft.js:**
-   ```javascript
-   const PlanetMinecraftHTTPScraper = require('./planetminecraft_simple');
-   module.exports = PlanetMinecraftHTTPScraper;
-   ```
-
-3. **If not found, extract HTTP fallback code from planetminecraft-puppeteer.js**
-   - The file already has `searchWithHTTPFallback` method
-   - Create standalone HTTP-only scraper that uses this method
-
----
-
-## Testing Process
-
-**Local test:**
+**Testing After Deploy:**
 ```bash
-cd /Users/stevenai/clawd/projects/minecraft-map-scraper
-node -e "
-const PlanetMinecraft = require('./scraper/scrapers/planetminecraft');
-const scraper = new PlanetMinecraft({ requestTimeout: 15000 });
-(async () => {
-  const results = await scraper.search('castle', { limit: 3 });
-  console.log('Results:', results.length);
-  if (results.length > 0) console.log('First:', results[0].title);
-  await scraper.closeBrowser();
-})();
-"
+# Test Planet Minecraft with Puppeteer
+curl "https://web-production-631b7.up.railway.app/api/search?query=parkour&source=planetminecraft"
+
+# Check scraper health
+curl "https://web-production-631b7.up.railway.app/api/sources/health" | jq '.sources.planetminecraft'
 ```
 
-**Expected:** Returns 3+ results, no "frame was detached" error
+**Expected Result:**
+- Planet Minecraft status changes from "unavailable" to "healthy"
+- Search returns real results (not 0)
+- Puppeteer launches successfully in Railway container
 
-**Deploy:**
-```bash
-git add .
-git commit -m "Fix Planet Minecraft Puppeteer fallback logic"
-git push origin main
-```
+**Next Steps After Dockerfile:**
+1. Test locally with `docker build -t test .`
+2. Git commit + push to trigger Railway deploy
+3. Wait 2-3 minutes for deployment
+4. Test live endpoint
+5. Check if Cloudflare is bypassed with proper browser headers
 
-**Wait ~2 min for Railway auto-deploy, then test:**
-```bash
-curl "https://web-production-631b7.up.railway.app/api/search?q=castle&limit=4"
-```
-
-**Success criteria:** Returns results from Planet Minecraft (not just CurseForge)
+**Timestamp:** 2026-02-03T23:02:30-05:00
 
 ---
 
-## Priority
+## TESTING PHASE UPDATE - 2026-02-03T23:33:30-05:00
 
-**Highest:** Fix Option 1 (add fallback error patterns) - fastest, least code change
+**Current Activity:** BUILDER is testing deployed Railway app
 
-**If Option 1 fails:** Try Option 2 (HTTP-only scraper)
+**Key Testing Commands:**
+```bash
+# 1. Check search results count
+curl -s 'https://web-production-9af19.up.railway.app/api/search?q=puzzle&limit=20' | jq '.count'
 
-**Timestamp:** 2026-02-03T22:10:00-05:00
+# 2. Check which sources returned results
+curl -s 'https://web-production-9af19.up.railway.app/api/search?q=puzzle&limit=20' | jq '.sources'
+
+# 3. Verify health status
+curl -s 'https://web-production-9af19.up.railway.app/api/sources/health' | jq
+```
+
+**Success Criteria:**
+- Search returns 5+ results total
+- At least 2 sources working (CurseForge + one other)
+- Response time < 10 seconds
+- Download links present in results
+
+**Common Issues:**
+- If count is 0: Check if sources are actually being queried
+- If timeout: Railway container may be cold-starting (retry)
+- If Puppeteer fails: Check Chromium installation in container logs
+
+**Railway App URL:** https://web-production-9af19.up.railway.app (note: different from previous 631b7 URL)
+
+**Next:** After verifying tests pass, write SUCCESS to ralph-status.txt

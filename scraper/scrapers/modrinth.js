@@ -102,18 +102,19 @@ class ModrinthScraper extends BaseScraper {
   }
 
   async fetchSearchResults(query, limit) {
+    // FIXED (Round 58): Added fallback search strategy for low-result queries
     // FIXED (Round 52): Removed project_type:map facet - Modrinth doesn't have this type
     // Instead, we search all projects and filter by content analysis
-    const encodedQuery = encodeURIComponent(query);
     
-    // Search without facet filter, then filter results manually
-    const searchUrl = `${this.baseUrl}/search?query=${encodedQuery}&limit=${Math.min(limit * 4, 60)}&offset=0`;
+    const encodedQuery = encodeURIComponent(query);
+    let results = [];
+    let searchUrl = `${this.baseUrl}/search?query=${encodedQuery}&limit=${Math.min(limit * 4, 60)}&offset=0`;
     
     console.log(`[Modrinth] Fetching: ${searchUrl}`);
     
     try {
       // FIXED (Round 18): Use fetchWithRetry for reliability
-      const response = await this.fetchWithRetry(searchUrl, {
+      let response = await this.fetchWithRetry(searchUrl, {
         headers: {
           'User-Agent': 'MinecraftMapScraper/2.0 (+https://github.com/StevenSongAI/minecraft-map-scraper-app)',
           'Accept': 'application/json',
@@ -125,11 +126,11 @@ class ModrinthScraper extends BaseScraper {
         throw new Error(`HTTP ${response.status}`);
       }
       
-      const data = await response.json();
-      const results = data.hits || [];
+      let data = await response.json();
+      results = data.hits || [];
       
       // CRITICAL FIX (Round 23): Aggressive filtering to exclude mods and modpacks
-      const filteredResults = results.filter(hit => {
+      let filteredResults = results.filter(hit => {
         const projectType = (hit.project_type || '').toLowerCase();
         const text = `${hit.title || ''} ${hit.description || ''}`.toLowerCase();
         const categories = (hit.categories || []).map(c => c.toLowerCase());
@@ -145,6 +146,48 @@ class ModrinthScraper extends BaseScraper {
         // ACCEPT maps and resource packs
         return true;
       });
+      
+      // FIXED (Round 58): Try fallback queries if results are too low
+      if (filteredResults.length < 5) {
+        const fallbackQueries = this.generateFallbackQueries(query);
+        
+        for (const fallbackQuery of fallbackQueries) {
+          if (filteredResults.length >= 5) break;
+          
+          console.log(`[Modrinth] Low results (${filteredResults.length}), trying fallback: "${fallbackQuery}"`);
+          
+          try {
+            const fallbackUrl = `${this.baseUrl}/search?query=${encodeURIComponent(fallbackQuery)}&limit=60&offset=0`;
+            const fallbackResponse = await this.fetchWithRetry(fallbackUrl, {
+              headers: {
+                'User-Agent': 'MinecraftMapScraper/2.0',
+                'Accept': 'application/json'
+              }
+            }, 2); // Only 2 retries for fallback queries
+            
+            if (fallbackResponse.ok) {
+              const fallbackData = await fallbackResponse.json();
+              const fallbackResults = fallbackData.hits || [];
+              const newFiltered = fallbackResults.filter(hit => {
+                const projectType = (hit.project_type || '').toLowerCase();
+                return projectType !== 'mod' && projectType !== 'modpack';
+              });
+              
+              // Add new results that aren't duplicates
+              for (const newHit of newFiltered) {
+                const isDuplicate = filteredResults.some(existing => existing.project_id === newHit.project_id);
+                if (!isDuplicate) {
+                  filteredResults.push(newHit);
+                  if (filteredResults.length >= 5) break;
+                }
+              }
+            }
+          } catch (fallbackError) {
+            console.warn(`[Modrinth] Fallback query failed: ${fallbackError.message}`);
+            continue;
+          }
+        }
+      }
       
       // FIXED (Round 16): Enrich with direct download URLs and tags
       const enrichedResults = await this.enrichResultsWithDirectDownloads(filteredResults, limit);
@@ -556,6 +599,81 @@ class ModrinthScraper extends BaseScraper {
     }
   }
   
+  /**
+   * FIXED (Round 58): Generate fallback search queries when results are low
+   * Tries variations with removed words, synonyms, and broader terms
+   */
+  generateFallbackQueries(query) {
+    const queries = [];
+    const lower = query.toLowerCase();
+    const words = lower.split(/\s+/).filter(w => w.length > 0);
+    
+    // Strategy 1: Remove words one at a time (focus on key terms)
+    const keywordPriority = {
+      'with': 0, 'the': 0, 'a': 0, 'in': 0, 'on': 0, 'and': 0, 'or': 0, // Stop words
+      'small': 1, 'medium': 1, 'large': 1, // Size modifiers (can remove)
+      'custom': 1, 'new': 1 // Descriptors
+    };
+    
+    // Remove low-priority words
+    const reduced = words.filter(w => (keywordPriority[w] || 2) >= 2);
+    if (reduced.length < words.length && reduced.length > 0) {
+      queries.push(reduced.join(' '));
+    }
+    
+    // Strategy 2: Try single-word queries from main terms
+    if (words.length > 1) {
+      words.forEach(word => {
+        if (word.length > 3 && !keywordPriority[word]) {
+          queries.push(word);
+        }
+      });
+    }
+    
+    // Strategy 3: Synonym expansion
+    const synonyms = {
+      'castle': ['fortress', 'stronghold', 'palace', 'keep'],
+      'fortress': ['stronghold', 'castle', 'keep'],
+      'house': ['mansion', 'building', 'home'],
+      'city': ['town', 'village', 'metropolis'],
+      'medieval': ['fantasy', 'kingdom'],
+      'futuristic': ['scifi', 'sci-fi', 'modern', 'future'],
+      'underwater': ['ocean', 'water', 'sea'],
+      'nether': ['hell', 'inferno', 'dark'],
+      'survival': ['world', 'vanilla'],
+      'adventure': ['quest', 'explore', 'exploration'],
+      'puzzle': ['challenge', 'riddle'],
+      'parkour': ['jump', 'climbing', 'freerun'],
+      'pvp': ['combat', 'battle', 'fight'],
+      'horror': ['scary', 'spooky', 'dark', 'creepy']
+    };
+    
+    // Add synonym variations
+    words.forEach(word => {
+      if (synonyms[word]) {
+        for (const synonym of synonyms[word]) {
+          const synQuery = words.map(w => w === word ? synonym : w).join(' ');
+          queries.push(synQuery);
+        }
+      }
+    });
+    
+    // Strategy 4: Try broader category terms
+    if (words.length === 1) {
+      const broadTerms = ['map', 'world', 'minecraft'];
+      broadTerms.forEach(term => {
+        queries.push(`${words[0]} ${term}`);
+      });
+    }
+    
+    // Remove duplicates and limit to reasonable number
+    const uniqueQueries = [...new Set(queries)];
+    
+    console.log(`[Modrinth] Generated ${uniqueQueries.length} fallback queries for low results`);
+    
+    return uniqueQueries.slice(0, 4); // Try up to 4 fallback queries
+  }
+
   detectCategory(title, description) {
     const text = ((title || '') + ' ' + (description || '')).toLowerCase();
     
