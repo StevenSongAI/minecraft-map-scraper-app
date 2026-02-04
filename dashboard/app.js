@@ -56,7 +56,6 @@ async function handleDownloadClick(e) {
     e.stopPropagation();
 
     const mapId = downloadBtn.dataset.mapId;
-    const filename = downloadBtn.dataset.filename || 'minecraft-map.zip';
 
     if (!mapId) {
         console.error('[Dashboard] No map ID found');
@@ -70,73 +69,39 @@ async function handleDownloadClick(e) {
     downloadBtn.disabled = true;
 
     try {
-        // Fetch the file directly from the download endpoint
         const downloadUrl = `${API_BASE_URL}/api/download?id=${mapId}`;
-        console.log('[Dashboard] Downloading from:', downloadUrl);
+        console.log('[Dashboard] Initiating download from:', downloadUrl);
         
-        const response = await fetch(downloadUrl);
+        // Create hidden iframe to trigger browser download
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = 'none';
+        iframe.setAttribute('aria-hidden', 'true');
+        iframe.src = downloadUrl;
+        document.body.appendChild(iframe);
         
-        console.log('[Dashboard] Download response:', {
-            ok: response.ok,
-            status: response.status,
-            contentType: response.headers.get('content-type'),
-            contentLength: response.headers.get('content-length')
-        });
-        
-        if (!response.ok) {
-            console.log('[Dashboard] Response not OK, attempting to parse error as JSON');
-            const errorData = await response.json().catch((e) => {
-                console.error('[Dashboard] Failed to parse error response as JSON:', e);
-                return {};
-            });
-            throw new Error(errorData.message || errorData.error || `HTTP ${response.status}`);
-        }
-        
-        // Get the blob
-        const blob = await response.blob();
-        
-        // Verify it's a reasonable file size
-        if (blob.size < 100) {
-            throw new Error('Downloaded file is too small, possibly an error');
-        }
-        
-        // Extract filename from Content-Disposition header if available
-        const contentDisposition = response.headers.get('content-disposition');
-        let downloadFilename = filename;
-        if (contentDisposition) {
-            const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
-            if (filenameMatch && filenameMatch[1]) {
-                downloadFilename = filenameMatch[1].replace(/['"]/g, '');
-            }
-        }
-        
-        // Create download using blob URL
-        const blobUrl = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = blobUrl;
-        a.download = downloadFilename;
-        document.body.appendChild(a);
-        a.click();
-        
-        // Cleanup
-        setTimeout(() => {
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(blobUrl);
-        }, 100);
-        
-        console.log('[Dashboard] Download complete:', downloadFilename, `(${blob.size} bytes)`);
+        console.log('[Dashboard] Download initiated successfully');
         
         // Show success state
-        downloadBtn.textContent = '✅ Downloaded';
+        downloadBtn.textContent = '✅ Downloading';
         downloadBtn.classList.remove('loading');
         downloadBtn.classList.add('success');
         
+        // Clean up iframe and reset button after download starts
         setTimeout(() => {
+            try {
+                if (iframe.parentNode) {
+                    document.body.removeChild(iframe);
+                }
+            } catch (err) {
+                // Iframe already removed, ignore
+            }
             downloadBtn.textContent = originalText;
             downloadBtn.classList.remove('success');
             downloadBtn.disabled = false;
-        }, 2000);
+        }, 3000);
         
     } catch (error) {
         console.error('[Dashboard] Download failed:', error);
