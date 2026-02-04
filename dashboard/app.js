@@ -1,7 +1,10 @@
 /**
  * Minecraft Map Scraper Dashboard
  * Chat-style interface for searching Minecraft maps via CurseForge API
+ * Version: 2026-02-04-14:39
  */
+
+console.log('[Dashboard] Version: 2026-02-04-14:39 - Download fix attempt');
 
 // Configuration - Use relative URL for same-origin deployments
 const API_BASE_URL = window.location.hostname === 'localhost' 
@@ -73,8 +76,19 @@ async function handleDownloadClick(e) {
         
         const response = await fetch(downloadUrl);
         
+        console.log('[Dashboard] Download response:', {
+            ok: response.ok,
+            status: response.status,
+            contentType: response.headers.get('content-type'),
+            contentLength: response.headers.get('content-length')
+        });
+        
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
+            console.log('[Dashboard] Response not OK, attempting to parse error as JSON');
+            const errorData = await response.json().catch((e) => {
+                console.error('[Dashboard] Failed to parse error response as JSON:', e);
+                return {};
+            });
             throw new Error(errorData.message || errorData.error || `HTTP ${response.status}`);
         }
         
