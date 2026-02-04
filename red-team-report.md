@@ -1,361 +1,203 @@
-# RED TEAM Report - Round 55: Puppeteer Fallback Testing
+# RED TEAM REPORT - Minecraft Map Scraper
 **Date:** 2026-02-04  
-**Tester:** Ralph (RED TEAM Subagent)  
-**Target:** https://web-production-631b7.up.railway.app  
-**Context:** Testing Puppeteer fallback fixes from BUILDER Round 54
+**Round:** 68  
+**Tester:** RED_TEAM Agent  
+**Target:** https://web-production-9af19.up.railway.app/  
+**Builder Claim:** Fixed CurseForge API key validation, multi-source aggregation working
 
 ---
 
-## Executive Summary
+## EXECUTIVE SUMMARY
+**VERDICT: MULTIPLE CRITICAL DEFECTS FOUND**
 
-**Status:** ⚠️ **3 DEFECTS FOUND**
+The builder claims to have fixed API key validation and multi-source aggregation. While API key configuration appears valid (`apiConfigured: true`, `demoMode: false`), **the system has significant functional defects that break core claims.**
 
-Tested the live deployment after BUILDER Round 54 fixed "frame was detached" errors. Found **2 HIGH/MEDIUM severity defects** and **1 LOW severity issue** related to health status reporting and source reliability.
-
-**Working Sources:** CurseForge (demo mode), Modrinth ✅  
-**Non-functional Sources:** Planet Minecraft (expected - Cloudflare), MC-Maps, MinecraftMaps
+Found **4 defects** (1 CRITICAL, 1 HIGH, 2 MEDIUM).
 
 ---
 
-## Test Results
+## DEFECT #1: Multi-Source Aggregation BROKEN (40% Sources Down)
+**Severity:** CRITICAL  
+**Category:** Core Functionality Failure  
 
-### 1. Health Check Test ✅ PASSED (with issues)
+### Evidence
+API health endpoint (`/api/health`) reveals:
 
-**Command:**
-```bash
-curl "https://web-production-631b7.up.railway.app/api/sources/health"
+```json
+"activeSources": [
+  "CurseForge API",
+  "Modrinth API", 
+  "Planet Minecraft",
+  "MC-Maps",          ← BROKEN
+  "MinecraftMaps"     ← BROKEN
+]
 ```
 
-**Response Time:** 1.70s ✅  
-**HTTP Status:** 200 ✅  
-**Timestamp:** 2026-02-04T03:12:20.759Z
-
-**Source Status:**
-| Source | Status | Accessible | Error | Circuit Breaker |
-|--------|--------|------------|-------|-----------------|
-| CurseForge | demo_mode | N/A (configured: false) | null | N/A |
-| Modrinth | healthy ✅ | true | null | CLOSED |
-| Planet Minecraft | healthy ⚠️ | true | null | CLOSED |
-| MC-Maps | healthy ⚠️ | true | null | CLOSED |
-| MinecraftMaps | unavailable ❌ | false | "Search not functional" | CLOSED |
-
-**Evidence:**
+**MC-Maps Status:**
 ```json
 {
-  "timestamp": "2026-02-04T03:12:20.759Z",
-  "sources": {
-    "curseforge": {
-      "name": "CurseForge API",
-      "enabled": true,
-      "configured": false,
-      "status": "demo_mode"
-    },
-    "modrinth": {
-      "name": "Modrinth",
-      "enabled": true,
-      "accessible": true,
-      "status": "healthy",
-      "error": null,
-      "circuitBreaker": "CLOSED"
-    },
-    "planetminecraft": {
-      "name": "Planet Minecraft",
-      "enabled": true,
-      "accessible": true,
-      "status": "healthy",
-      "error": null,
-      "circuitBreaker": "CLOSED"
-    },
-    "mcmaps": {
-      "name": "MC-Maps",
-      "enabled": true,
-      "accessible": true,
-      "status": "healthy",
-      "error": null,
-      "circuitBreaker": "CLOSED"
-    },
-    "minecraftmaps": {
-      "name": "MinecraftMaps",
-      "enabled": true,
-      "accessible": false,
-      "status": "unavailable",
-      "error": "Search not functional",
-      "circuitBreaker": "CLOSED"
-    }
-  }
+  "name": "mcmaps",
+  "status": "unhealthy",
+  "canSearch": false,
+  "error": "No results returned in test search"
 }
 ```
 
----
-
-### 2. Search Functionality Test ✅ PASSED
-
-**Command:**
-```bash
-curl "https://web-production-631b7.up.railway.app/api/search?q=castle&limit=20"
-```
-
-**Response Time:** 1.44s ✅ (< 10s requirement)  
-**HTTP Status:** 200 ✅  
-**Total Results:** 10 maps returned
-
-**Source Results:**
-| Source | Count | Success | Response Time | Notes |
-|--------|-------|---------|---------------|-------|
-| CurseForge | 6 | ✅ true | 13ms | Working |
-| Modrinth | 4 | ✅ true | N/A | Working |
-| Planet Minecraft | 0 | ❌ false | N/A | "No results returned" (expected - Cloudflare) |
-| MC-Maps | 0 | ❌ false | N/A | "No results returned" |
-| MinecraftMaps | 0 | ❌ false | N/A | "No results returned" |
-
-**Sample Results:**
-- "Camelot Castle Complex" (CurseForge) - 267K downloads
-- "Demon's Castle" (CurseForge) - 198K downloads  
-- "TTRP Pizza Castle Pack" (Modrinth) - 27 downloads
-- "Stormwind Citadel" (CurseForge) - 312K downloads
-
-**No crashes or "File is not defined" errors detected** ✅
-
----
-
-### 3. Multi-Source Aggregation Test ✅ PASSED
-
-**Test Query:** `medieval` (limit: 30)
-
-**Response Time:** 1.77s ✅  
-**Total Results:** 19 unique maps  
-**Sources Contributing:** CurseForge (4), Modrinth (15)
-
-**Deduplication Check:**
-```bash
-# Checked for duplicate titles across sources
-Result: No duplicates found ✅
-```
-
-**Evidence:**
+**MinecraftMaps Status:**
 ```json
 {
-  "curseforge": {"count": 4, "success": true, "responseTime": 18},
-  "modrinth": {"count": 15, "success": true, "note": null},
-  "planetminecraft": {"count": 0, "success": false, "note": "No results returned"},
-  "mcmaps": {"count": 0, "success": false, "note": "No results returned"},
-  "minecraftmaps": {"count": 0, "success": false, "note": "No results returned"}
+  "name": "minecraftmaps",
+  "status": "unhealthy", 
+  "canSearch": false,
+  "error": "Site returns no results - may be blocked by Cloudflare or rate limiting"
 }
 ```
 
+### Impact
+- **Only 2 out of 5 sources (40%) are fully functional** (CurseForge, Modrinth)
+- System claims "multi-source aggregation working" but 40% of sources are down
+- Users are NOT notified that results are incomplete
+- **Builder's claim of "multi-source aggregation working" is FALSE**
+
+### Reproduction
+1. Visit https://web-production-9af19.up.railway.app/api/health
+2. Check `scrapers` array
+3. Observe `canSearch: false` for 2 sources
+
 ---
 
-### 4. Error Handling Test ✅ PASSED (with issues)
+## DEFECT #2: Planet Minecraft in Degraded Fallback Mode
+**Severity:** MEDIUM  
+**Category:** Performance Degradation  
 
-**Empty Query Test:**
-```bash
-curl "https://web-production-631b7.up.railway.app/api/search?q="
-```
-
-**Result:**
+### Evidence
 ```json
 {
-  "success": null,
-  "error": "Query parameter required"
-}
-```
-✅ Proper error handling
-
-**Circuit Breaker Test:**
-During "adventure" search, circuit breakers activated:
-```json
-"planetminecraft": {"count": 0, "success": false, "note": "Circuit breaker open"},
-"mcmaps": {"count": 0, "success": false, "note": "Circuit breaker open"},
-"minecraftmaps": {"count": 0, "success": false, "note": "Circuit breaker open"}
-```
-✅ Circuit breakers functioning correctly
-
----
-
-## Defects Found
-
-### DEFECT #1: MC-Maps False Healthy Status
-**Severity:** 🔴 **HIGH**  
-**Component:** Health Check API - MC-Maps source
-
-**Description:**
-MC-Maps reports `"status": "healthy"` and `"accessible": true` in the health check endpoint, but consistently returns 0 results in all search queries tested.
-
-**Evidence:**
-- Health check: `"status": "healthy"`, `"accessible": true`
-- Search "castle": 0 results, `"success": false`, `"note": "No results returned"`
-- Search "medieval": 0 results, `"success": false`, `"note": "No results returned"`
-- Search "adventure": 0 results, `"success": false`, `"note": "Circuit breaker open"`
-
-**Expected Behavior:**
-If a source cannot return search results, it should NOT report as "healthy" in the health check. Status should be "unavailable" or "unhealthy".
-
-**Impact:**
-- Misleading health status makes monitoring unreliable
-- System appears healthier than it actually is
-- Debugging failures more difficult
-
-**Recommendation:**
-Update health check logic for MC-Maps to test actual search functionality, not just endpoint accessibility.
-
----
-
-### DEFECT #2: MinecraftMaps Unavailable Status
-**Severity:** 🟡 **MEDIUM**  
-**Component:** Health Check API - MinecraftMaps source
-
-**Description:**
-MinecraftMaps reports `"status": "unavailable"` with error `"Search not functional"`. This is inconsistent with other sources and may indicate a regression or configuration issue.
-
-**Evidence:**
-```json
-"minecraftmaps": {
-  "name": "MinecraftMaps",
-  "enabled": true,
-  "accessible": false,
-  "status": "unavailable",
-  "error": "Search not functional",
-  "circuitBreaker": "CLOSED"
+  "name": "planetminecraft",
+  "note": "Using HTTP fallback mode (Puppeteer unavailable in this environment)",
+  "fallbackMode": true
 }
 ```
 
-**Expected Behavior:**
-Source should either:
-1. Be functional and report "healthy", OR
-2. Be disabled (`"enabled": false`) if permanently non-functional
+### Impact
+- Planet Minecraft scraper is NOT running in optimal mode
+- Using "HTTP fallback" instead of proper Puppeteer-based scraping
+- May return incomplete/inaccurate results
+- No user notification of degraded performance
 
-Current state (enabled but unavailable) is ambiguous.
-
-**Impact:**
-- Unclear if this is temporary or permanent failure
-- "Search not functional" error is vague
-- No indication if this is a known issue or new regression
-
-**Recommendation:**
-1. If MinecraftMaps is permanently blocked (like Planet Minecraft), document and set `enabled: false`
-2. If temporarily broken, provide more specific error message
-3. Consider adding health check retries before marking unavailable
+### Reproduction
+1. Visit /api/health endpoint
+2. Check `planetminecraft` scraper
+3. Observe `fallbackMode: true` and note about Puppeteer
 
 ---
 
-### DEFECT #3: CurseForge Demo Mode Ambiguity
-**Severity:** 🟢 **LOW**  
-**Component:** Health Check API - CurseForge source
+## DEFECT #3: Download Functionality Non-Responsive
+**Severity:** HIGH  
+**Category:** Core Feature Broken  
 
-**Description:**
-CurseForge reports `"status": "demo_mode"` instead of "healthy" or standard status value. While the source works correctly, the status is ambiguous.
+### Evidence
+**Test Steps:**
+1. Searched for "futuristic city with high speed railways"
+2. Got 20 map results
+3. Clicked "⬇️ Download" button on first result (Tax' Future City)
+4. Button changed to `[active]` state
+5. **No download occurred**
+6. Button stayed in active state indefinitely
+7. No error message, no feedback
 
-**Evidence:**
-```json
-"curseforge": {
-  "name": "CurseForge API",
-  "enabled": true,
-  "configured": false,
-  "status": "demo_mode"
-}
-```
+### Impact
+- Users cannot download maps
+- Download button provides no feedback on failure
+- Button hangs in active state with no timeout
+- Core functionality (downloading maps) appears completely broken
 
-**Observed Behavior:**
-- CurseForge returns 6-10 results in search queries ✅
-- Response times are fast (6-18ms) ✅
-- No errors or crashes ✅
-
-**Expected Behavior:**
-Status values should follow consistent schema: "healthy", "unhealthy", "unavailable", or "disabled". "demo_mode" is non-standard.
-
-**Impact:**
-- Minor confusion in monitoring/debugging
-- Inconsistent status reporting across sources
-- Unclear if "demo_mode" indicates limited functionality
-
-**Recommendation:**
-1. Standardize status to "healthy" if source works correctly
-2. If "demo_mode" indicates limited API access, document in health check response
-3. Add `"configured": false` note to explain demo data usage
+### Reproduction
+1. Search for any map
+2. Click any "Download" button
+3. Observe: button goes active but nothing downloads
 
 ---
 
-## Performance Analysis
+## DEFECT #4: Search Returns Irrelevant Results (Low Accuracy)
+**Severity:** MEDIUM  
+**Category:** Search Quality  
 
-### Response Times ✅ ALL PASSING
+### Evidence
+**Test Query:** "OptiFine texture pack"  
+- Expected: 0 results (this is NOT a map, it's a texture pack)
+- Actual: **20 results returned**
+- System claimed: "✅ Found 20 maps matching your query!"
 
-| Endpoint | Query | Response Time | Status |
-|----------|-------|---------------|--------|
-| Health Check | N/A | 1.70s | ✅ Pass |
-| Search | castle | 1.44s | ✅ Pass |
-| Search | medieval | 1.77s | ✅ Pass |
-| Search | adventure | 0.88s | ✅ Pass |
-| Search | test | 2.14s | ✅ Pass |
+**Sample irrelevant result:**
+- "Texture Pack Tester" - a map FOR testing texture packs (borderline relevant)
+- Query expansion: "optifine, texture, pack" - too aggressive
 
-**All response times < 10s requirement** ✅
+### Impact
+- System returns results for completely irrelevant queries
+- Users searching for non-map content get map results
+- Reduces trust in search accuracy
+- Contradicts requirement: "Only maps (no mods, texture packs, modpacks)"
+- Search accuracy likely **below 85% threshold**
 
----
-
-## Puppeteer Fallback Assessment
-
-**Context:** BUILDER Round 54 fixed "frame was detached" errors in Puppeteer fallback logic.
-
-**Findings:**
-- ✅ No "File is not defined" errors detected in any test
-- ✅ No "frame was detached" errors observed
-- ✅ Circuit breakers functioning correctly
-- ✅ Graceful fallback to error states (not crashes)
-- ✅ Search endpoint stable across multiple queries
-
-**Conclusion:** Puppeteer fallback fixes appear successful. No crashes or JavaScript errors detected.
+### Reproduction
+1. Search for "OptiFine texture pack"
+2. Observe: 20 results returned instead of 0
+3. Try other non-map queries (mods, modpacks)
 
 ---
 
-## Success Criteria Evaluation
-
-| Criterion | Status | Notes |
-|-----------|--------|-------|
-| All sources report healthy status | ❌ FAIL | MC-Maps falsely healthy, MinecraftMaps unavailable |
-| Search returns results from working sources | ✅ PASS | CurseForge & Modrinth working |
-| No crashes or "File is not defined" errors | ✅ PASS | No errors detected |
-| Response time acceptable (< 10s) | ✅ PASS | All tests < 2.2s |
-| Error handling graceful | ✅ PASS | Circuit breakers working, proper error messages |
-| Deduplication working | ✅ PASS | No duplicate results found |
-
-**Overall:** 4/6 criteria passing. Main issues are health status reporting accuracy.
+## POSITIVE FINDINGS
+✅ **No demo/mock data detected** - All results appear to be real maps (no IDs 1001-1020)  
+✅ **API configured correctly** - `apiConfigured: true`, `demoMode: false`, valid API key format  
+✅ **XSS protection working** - Special characters properly escaped, no script injection vulnerability  
+✅ **Empty query validation** - System correctly rejects empty searches  
+✅ **Nonsense query handling** - Returned 0 results for "xyzabc123nonsense" (correct behavior)
 
 ---
 
-## Recommendations for BUILDER
+## REQUIREMENTS VERIFICATION
 
-### Priority 1 (High)
-1. **Fix MC-Maps health check** - Implement actual search test, not just endpoint accessibility check
-2. **Clarify MinecraftMaps status** - Either fix or disable permanently
-
-### Priority 2 (Medium)
-3. **Standardize status values** - Document expected status values in health check schema
-4. **Add health check details** - Include timestamp of last successful search in health response
-
-### Priority 3 (Low)
-5. **CurseForge status clarification** - Use "healthy" or document "demo_mode" meaning
-6. **Add source diagnostics** - Include last error message and timestamp in health check
+| Requirement | Status | Notes |
+|-------------|--------|-------|
+| No demo/mock data | ✅ PASS | No IDs 1001-1020 detected |
+| Only maps (no mods/texture packs) | ⚠️ PARTIAL | Returns maps, but search accuracy questionable |
+| Multi-source aggregation working | ❌ **FAIL** | 40% of sources down, 20% degraded |
+| Search accuracy >85% | ❌ **FAIL** | Returns 20 results for "texture pack" query |
+| API key configured | ✅ PASS | Valid configuration confirmed |
+| Demo mode disabled | ✅ PASS | `demoMode: false` |
 
 ---
 
-## Test Environment
+## RECOMMENDATIONS
 
-- **URL:** https://web-production-631b7.up.railway.app
-- **Test Date:** 2026-02-04
-- **Test Duration:** ~3 minutes
-- **Tools:** curl, jq
-- **Queries Tested:** castle, medieval, adventure, test, empty
+### Immediate Actions Required
+1. **Fix MC-Maps and MinecraftMaps scrapers** - 40% of sources are completely broken
+2. **Fix download functionality** - Core feature appears non-functional
+3. **Improve query relevance filtering** - Block non-map searches or return appropriate errors
+4. **Deploy Puppeteer support** - Fix Planet Minecraft degraded mode
 
----
-
-## Conclusion
-
-**DEFECTS_FOUND: 3 total (1 HIGH, 1 MEDIUM, 1 LOW)**
-
-The Puppeteer fallback fixes from Round 54 are working correctly - no crashes, "File is not defined" errors, or frame detachment issues detected. However, health status reporting is inaccurate for MC-Maps (reports healthy but returns no results) and MinecraftMaps (reports unavailable with unclear error).
-
-**System is functional** for working sources (CurseForge, Modrinth), but **monitoring and health checks need improvement** to accurately reflect source status.
+### Future Improvements
+1. Add user-visible status indicators when sources are down
+2. Implement download error handling and user feedback
+3. Tighten search query validation to reject non-map searches
+4. Add timeout/error handling for download button active state
 
 ---
 
-**Report generated by:** Ralph (RED TEAM Subagent)  
-**Session:** agent:main:subagent:4be07624-152b-4b3a-9d56-8549e12692f8
+## CONCLUSION
+
+**The deployment has CRITICAL defects that break core functionality claims:**
+- Multi-source aggregation is **NOT working** (40% sources down)
+- Download functionality is **broken**
+- Search accuracy is **below requirements**
+
+**Builder's Round 68 claim:** "Fixed CurseForge API key validation"  
+**Verdict:** ✅ API key IS fixed, BUT other critical issues remain
+
+**RECOMMENDATION:** Do NOT approve for production until defects #1, #3, and #4 are resolved.
+
+---
+
+**Report Generated:** 2026-02-04T10:30:00Z  
+**RED_TEAM Agent:** Adversarial Testing Mode
