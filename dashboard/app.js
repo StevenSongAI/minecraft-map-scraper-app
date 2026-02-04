@@ -431,7 +431,7 @@ function renderMapCard(map) {
         <div class="map-card" data-map-id="${map.id}">
             ${thumbnail}
             <div class="map-info">
-                <h3 class="map-title">${escapeHtml(map.name)} ${sourceBadge}</h3>
+                <h3 class="map-title">${escapeHtml(map.title)} ${sourceBadge}</h3>
                 <div class="map-author">
                     by <a href="${escapeHtml(authorUrl)}" target="_blank" rel="noopener">${escapeHtml(authorName)}</a>
                 </div>
@@ -450,7 +450,7 @@ function renderMapCard(map) {
                 <div class="map-actions">
                     <button class="btn btn-primary download-btn" 
                             data-download-url="${escapeHtml(downloadApiUrl)}" 
-                            data-filename="${escapeHtml(map.name.replace(/[^a-zA-Z0-9]/g, '_') + '.zip')}" 
+                            data-filename="${escapeHtml((map.title || 'map').replace(/[^a-zA-Z0-9]/g, '_') + '.zip')}" 
                             data-map-id="${map.id}">
                         Download
                     </button>
