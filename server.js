@@ -1140,8 +1140,8 @@ async function streamDownload(res, downloadUrl, filename) {
       downloadFilename += '.zip';
     }
 
-    const contentType = response.headers.get('content-type') || 'application/zip';
-    res.setHeader('Content-Type', contentType);
+    // Always use application/zip for downloads (upstream may send incorrect content-type)
+    res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename="${downloadFilename}"`);
     
     const contentLength = response.headers.get('content-length');
