@@ -1,12 +1,56 @@
 # Minecraft Map Scraper - Progress Report
 
-**Latest Round:** 61 - RED TEAM Defect Analysis & Fixes
-**Timestamp:** 2026-02-06T00:00:00Z
-**Status:** 🔴 DEFECTS FIXED - Production Ready (pending CurseForge API key)
+**Latest Round:** 68 - CurseForge API Key Validation Fix
+**Timestamp:** 2026-02-05T09:07:00Z
+**Status:** 🟢 PRODUCTION LIVE - CurseForge API Working
 
 **🚀 LIVE DEPLOYMENT:** https://web-production-9af19.up.railway.app/
 
 **⚠️ CRITICAL:** All QA and RED TEAM testing MUST use the live URL above. NO localhost testing.
+
+---
+
+## 🟢 Round 68 - API Key Validation Fix (DEPLOYED & VERIFIED)
+
+### Root Cause
+CurseForge API keys come in `$2a$10$...` format (bcrypt-style strings). Round 45 added UUID-only validation (`/^[0-9a-f]{8}-...$/`) that rejected these valid keys as "invalid-format". This caused `apiConfigured: false` and `demoMode: true` despite the correct API key being present in Railway env vars.
+
+### Fix Applied
+Created `isValidCurseForgeApiKey()` function accepting multiple key formats (UUID, `$2a$` bcrypt-style, any 20+ char key). Replaced all 8 UUID-only validation instances in `server.js`.
+
+### Verification Evidence (Live Railway URL)
+
+**Health Endpoint:** `curl https://web-production-9af19.up.railway.app/api/health`
+```
+version: 2.9.0-round68-apikey-fix
+deployTimestamp: 2026-02-05-ROUND68-APIKEY-FIX
+apiConfigured: True
+demoMode: False
+apiKeyFormat: valid
+apiKeyPreview: $2a$10$N...
+```
+
+**Search Test:** `curl "https://web-production-9af19.up.railway.app/api/search?q=adventure"`
+```
+Total maps: 60
+CurseForge raw count: 134
+Sample results (all REAL CurseForge IDs, zero mock IDs):
+  ID: 818511 | Sculk Stoppers - Campaign Adventure
+  ID: 231519 | Jurassic Park Adventure Map
+  ID: 963481 | Cobblemon Adventure Maps
+  ID: 232083 | Legend of Zelda OOT Adventure Map
+  ID: 308727 | Daruma - An Open World RPG Adventure
+  ID: 232604 | Star Wars Adventure Map v1.0
+Mock IDs (1001-1020) found: 0 ✅
+```
+
+### Git Commit
+`f73b2c2` - "ROUND 68 FIX: Accept CurseForge $2a$ format API keys (not just UUID)"
+
+### Files Modified
+- `server.js` - Added `isValidCurseForgeApiKey()`, replaced 8 UUID-only checks, updated version to 2.9.0
+
+---
 
 ---
 
