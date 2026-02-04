@@ -104,7 +104,8 @@ class ModrinthScraper extends BaseScraper {
   async fetchSearchResults(query, limit) {
     // FIXED (Round 58): Added fallback search strategy for low-result queries
     // FIXED (Round 52): Removed project_type:map facet - Modrinth doesn't have this type
-    // Instead, we search all projects and filter by content analysis
+    // FIXED (Round 61 - RED TEAM): Stricter filtering - Modrinth has NO maps, only mods/packs
+    // Use content analysis to find map-like projects (most will fail)
     
     const encodedQuery = encodeURIComponent(query);
     let results = [];
@@ -129,21 +130,56 @@ class ModrinthScraper extends BaseScraper {
       let data = await response.json();
       results = data.hits || [];
       
-      // CRITICAL FIX (Round 23): Aggressive filtering to exclude mods and modpacks
+      // CRITICAL FIX (Round 61 - RED TEAM): ULTRA-STRICT filtering to exclude mods and texture packs
+      // Modrinth only has: mod, modpack, resourcepack - NO MAPS EXIST
       let filteredResults = results.filter(hit => {
         const projectType = (hit.project_type || '').toLowerCase();
-        const text = `${hit.title || ''} ${hit.description || ''}`.toLowerCase();
+        const title = (hit.title || '').toLowerCase();
+        const description = (hit.description || '').toLowerCase();
+        const text = `${title} ${description}`.toLowerCase();
         const categories = (hit.categories || []).map(c => c.toLowerCase());
-        const tags = (hit.display_categories || []).map(c => c.toLowerCase());
-        const allText = `${text} ${categories.join(' ')} ${tags.join(' ')}`;
         
-        // REJECT mods and modpacks immediately by project_type
-        if (projectType === 'mod' || projectType === 'modpack') {
-          console.log(`[Modrinth] FILTERED (type=${projectType}): ${hit.title}`);
+        // REJECT mods - these are code modifications
+        if (projectType === 'mod') {
+          console.log(`[Modrinth] FILTERED (mod): ${hit.title}`);
           return false;
         }
         
-        // ACCEPT maps and resource packs
+        // REJECT modpacks - these are collections of mods
+        if (projectType === 'modpack') {
+          console.log(`[Modrinth] FILTERED (modpack): ${hit.title}`);
+          return false;
+        }
+        
+        // REJECT resource packs - these are texture/sound packs, not maps
+        if (projectType === 'resourcepack') {
+          console.log(`[Modrinth] FILTERED (resourcepack): ${hit.title}`);
+          return false;
+        }
+        
+        // REJECT if categories contain mod-related tags
+        const modKeywords = ['fabric', 'forge', 'neoforge', 'bukkit', 'spigot', 'paper', 'plugin'];
+        if (categories.some(cat => modKeywords.includes(cat))) {
+          console.log(`[Modrinth] FILTERED (mod-category): ${hit.title}`);
+          return false;
+        }
+        
+        // REJECT if description is mostly about mods/mechanics
+        if (text.includes('mod ') && !text.includes('world') && !text.includes('map')) {
+          console.log(`[Modrinth] FILTERED (mod-keywords): ${hit.title}`);
+          return false;
+        }
+        
+        // REJECT if no map-like keywords found
+        const mapKeywords = ['map', 'world', 'adventure', 'survival', 'puzzle', 'parkour', 'pvp', 'castle', 'city', 'island', 'skyblock'];
+        const hasMapKeyword = mapKeywords.some(kw => text.includes(kw));
+        if (!hasMapKeyword) {
+          console.log(`[Modrinth] FILTERED (no-map-keywords): ${hit.title}`);
+          return false;
+        }
+        
+        // ONLY ACCEPT if all above checks pass
+        console.log(`[Modrinth] ACCEPTED: ${hit.title}`);
         return true;
       });
       

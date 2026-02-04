@@ -280,9 +280,12 @@ class MapAggregator {
       const title = (map.name || map.title || '').toLowerCase();
       const description = (map.summary || map.description || '').toLowerCase();
       const downloadUrl = (map.downloadUrl || '').toLowerCase();
+      const source = map.source || '';
       
-      // CRITICAL: Filter by file extension - ALWAYS remove mod files
+      // CRITICAL FIX (Round 61 - RED TEAM): ULTRA-STRICT filtering to exclude mods and texture packs
+      // Filter by file extension - ALWAYS remove mod files and texture packs
       if (/\.(jar|mrpack|litemod)(\?.*)?$/i.test(downloadUrl)) {
+        console.log(`[Aggregator] FILTERED: ${title} (mod file)`);
         return false;
       }
       
@@ -290,16 +293,55 @@ class MapAggregator {
       if (map.fileInfo?.filename) {
         const filename = map.fileInfo.filename.toLowerCase();
         if (/\.(jar|mrpack|litemod)$/i.test(filename)) {
+          console.log(`[Aggregator] FILTERED: ${title} (mod file in fileInfo)`);
           return false;
         }
       }
       
-      // Only filter if explicitly marked as mod by source
-      if (map.project_type === 'mod' || map.project_type === 'modpack') {
+      // Filter by project type - reject mods, modpacks, and resource packs
+      if (map.project_type === 'mod' || map.project_type === 'modpack' || map.project_type === 'resourcepack') {
+        console.log(`[Aggregator] FILTERED: ${title} (project_type=${map.project_type})`);
         return false;
       }
       
-      // Keep everything else - don't over-filter
+      // Filter by title patterns (texture packs, resource packs, etc.)
+      const excludePatterns = [
+        /texture\s*pack/i,
+        /resource\s*pack/i,
+        /shader\s*pack/i,
+        /data\s*pack/i,
+        /mod\s+pack/i,
+        /^.+\s+mod\s*$/i
+      ];
+      
+      if (excludePatterns.some(pattern => pattern.test(title))) {
+        console.log(`[Aggregator] FILTERED: ${title} (title pattern match)`);
+        return false;
+      }
+      
+      // Filter by description patterns - obvious mod descriptions
+      const modOnlyPatterns = [
+        /^a mod\s/i,
+        /^this mod\s/i,
+        /addon\s+for\s+minecraft\s+that/i
+      ];
+      
+      if (modOnlyPatterns.some(pattern => pattern.test(description))) {
+        console.log(`[Aggregator] FILTERED: ${title} (mod-only description)`);
+        return false;
+      }
+      
+      // For Modrinth source - require map-specific keywords
+      if (source === 'modrinth') {
+        const mapKeywords = ['map', 'world', 'adventure', 'survival', 'puzzle', 'parkour', 'challenge', 'pvp', 'castle', 'city'];
+        const hasMapKeyword = mapKeywords.some(kw => title.includes(kw) || description.includes(kw));
+        if (!hasMapKeyword) {
+          console.log(`[Aggregator] FILTERED: ${title} (modrinth non-map)`);
+          return false;
+        }
+      }
+      
+      // ACCEPT if all checks pass
       return true;
     });
     

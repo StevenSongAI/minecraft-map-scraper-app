@@ -9,7 +9,7 @@ const cors = require('cors');
 // ROUND 45 FIXES: 3) Fixed download endpoints to validate API key format
 // ROUND 45 FIXES: 4) Fixed demo mode detection to require valid UUID
 // ROUND 45 FIXES: 5) Updated .env file with proper documentation
-const DEPLOY_TIMESTAMP = '2026-02-04-ROUND45-DEPLOY';
+const DEPLOY_TIMESTAMP = '2026-02-05-ROUND68-APIKEY-FIX';
 
 // FIXED: Enhanced File API polyfill for Node.js 18+ compatibility
 // Must be defined BEFORE any module imports that might use File
@@ -133,6 +133,21 @@ function isMultiSourceEnabled() {
 
 // CurseForge API Key - use environment variable only (empty = demo mode with mock data)
 const CURSEFORGE_API_KEY = process.env.CURSEFORGE_API_KEY || '';
+
+// ROUND 68 FIX: CurseForge API keys come in multiple formats:
+// - UUID format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+// - Bcrypt-style format: $2a$10$... (this IS the real key, NOT a hash)
+// Previous code only accepted UUID, causing valid $2a$ keys to be rejected as "invalid-format"
+function isValidCurseForgeApiKey(key) {
+  if (!key || key === '' || key === 'demo') return false;
+  // UUID format
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(key)) return true;
+  // CurseForge $2a$ bcrypt-style format (these are legitimate API keys, not password hashes)
+  if (/^\$2[aby]?\$\d{1,2}\$.{20,}$/.test(key)) return true;
+  // Any key longer than 20 chars that doesn't look empty
+  if (key.length > 20) return true;
+  return false;
+}
 const CURSEFORGE_BASE_URL = 'https://api.curseforge.com/v1';
 const MINECRAFT_GAME_ID = 432;
 const WORLDS_CLASS_ID = 17; // Minecraft Worlds/Maps category
@@ -911,10 +926,9 @@ async function searchCurseForge(searchTerms, limit) {
   const allResults = [];
   const seenIds = new Set();
   
-  // ROUND 57 (BUILDER): Check if we have a valid API key (must be UUID format)
-  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  // ROUND 68 FIX: Use proper validation that accepts $2a$ format keys
   const apiKey = process.env.CURSEFORGE_API_KEY;
-  const hasValidApiKey = apiKey && apiKey !== 'demo' && uuidPattern.test(apiKey);
+  const hasValidApiKey = isValidCurseForgeApiKey(apiKey);
   
   // If no valid API key, skip CurseForge search and return empty array
   // This prevents demo/mock data from being returned (violates "no demo mode" requirement)
@@ -1156,12 +1170,11 @@ app.get('/api/download', async (req, res) => {
       });
     }
     
-    // ROUND 45: Validate API key format (must be UUID)
-    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!CURSEFORGE_API_KEY || !uuidPattern.test(CURSEFORGE_API_KEY)) {
+    // ROUND 68 FIX: Use proper validation that accepts $2a$ format keys
+    if (!isValidCurseForgeApiKey(CURSEFORGE_API_KEY)) {
       return res.status(503).json({
         error: 'API_KEY_MISSING',
-        message: 'CURSEFORGE_API_KEY not configured or invalid format (must be UUID)'
+        message: 'CURSEFORGE_API_KEY not configured or invalid format'
       });
     }
     
@@ -1302,12 +1315,11 @@ app.get('/api/download/:modId', async (req, res) => {
     });
   }
   
-  // ROUND 45: Validate API key format (must be UUID)
-  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  if (!CURSEFORGE_API_KEY || !uuidPattern.test(CURSEFORGE_API_KEY)) {
+  // ROUND 68 FIX: Use proper validation that accepts $2a$ format keys
+  if (!isValidCurseForgeApiKey(CURSEFORGE_API_KEY)) {
     return res.status(503).json({
       error: 'API_KEY_MISSING',
-      message: 'CURSEFORGE_API_KEY not configured or invalid format (must be UUID)'
+      message: 'CURSEFORGE_API_KEY not configured or invalid format'
     });
   }
   
@@ -1904,30 +1916,25 @@ function formatFileSize(bytes) {
 }
 
 // Simple health check endpoint for load balancers (no /api prefix)
-// ROUND 45: Fixed API key validation to check for UUID format
+// ROUND 68 FIX: Accept $2a$ format CurseForge API keys (not just UUID)
 app.get('/health', async (req, res) => {
   const apiKey = process.env.CURSEFORGE_API_KEY;
-  // CRITICAL FIX: Validate API key is a proper UUID format (CurseForge API keys are UUIDs)
-  // UUID pattern: 8-4-4-4-12 hex digits
-  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  const isApiConfigured = !!(apiKey && apiKey !== 'demo' && uuidPattern.test(apiKey));
+  const isApiConfigured = isValidCurseForgeApiKey(apiKey);
   
   res.status(200).json({
     status: 'healthy',
     apiConfigured: isApiConfigured,
     timestamp: new Date().toISOString(),
-    version: '2.8.0-round45-fixes',
+    version: '2.9.0-round68-apikey-fix',
     sources: 'CurseForge + Modrinth + Planet Minecraft + MC-Maps + MinecraftMaps'
   });
 });
 
 // Health check endpoint
-// ROUND 45: Fixed API key validation to properly check UUID format
+// ROUND 68 FIX: Accept $2a$ format CurseForge API keys (not just UUID)
 app.get('/api/health', async (req, res) => {
-  // CRITICAL FIX: Validate API key is a proper UUID format (CurseForge API keys are UUIDs)
-  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const apiKey = process.env.CURSEFORGE_API_KEY;
-  const isApiConfigured = !!(apiKey && apiKey !== 'demo' && uuidPattern.test(apiKey));
+  const isApiConfigured = isValidCurseForgeApiKey(apiKey);
   const isDemoMode = !isApiConfigured;
   
   // Get scraper health if available
@@ -1955,9 +1962,9 @@ app.get('/api/health', async (req, res) => {
     deployTimestamp: DEPLOY_TIMESTAMP,
     apiConfigured: isApiConfigured,
     demoMode: isDemoMode,
-    apiKeyFormat: apiKey ? (uuidPattern.test(apiKey) ? 'valid-uuid' : 'invalid-format') : 'not-set',
+    apiKeyFormat: apiKey ? (isApiConfigured ? 'valid' : 'invalid-format') : 'not-set',
     apiKeyPreview: apiKey ? apiKey.substring(0, 8) + '...' : 'Not set',
-    version: '2.8.0-round45-fixes',
+    version: '2.9.0-round68-apikey-fix',
     multiSourceEnabled: isMultiSourceEnabled(),
     scrapersLoaded: scrapersLoaded,
     planetMinecraftStatus: 'ENABLED (Puppeteer)',
@@ -1968,13 +1975,11 @@ app.get('/api/health', async (req, res) => {
 });
 
 // Multi-source scraper status endpoint (alias for sources/health)
-// ROUND 45: Fixed API key validation
+// ROUND 68 FIX: Accept $2a$ format CurseForge API keys
 app.get('/api/scrapers/status', async (req, res) => {
   try {
-    // CRITICAL FIX: Validate API key is proper UUID format
-    const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     const apiKey = process.env.CURSEFORGE_API_KEY;
-    const isApiConfigured = !!(apiKey && apiKey !== 'demo' && uuidPattern.test(apiKey));
+    const isApiConfigured = isValidCurseForgeApiKey(apiKey);
     const isDemoMode = !isApiConfigured;
     
     // Get scraper health if available
@@ -2085,12 +2090,10 @@ app.post('/api/scrapers/reset', async (req, res) => {
 });
 
 // Multi-source scraper health endpoint
-// ROUND 45: Fixed API key validation
+// ROUND 68 FIX: Accept $2a$ format CurseForge API keys
 app.get('/api/sources/health', async (req, res) => {
-  // CRITICAL FIX: Validate API key is proper UUID format
-  const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   const apiKey = process.env.CURSEFORGE_API_KEY;
-  const isApiConfigured = !!(apiKey && apiKey !== 'demo' && uuidPattern.test(apiKey));
+  const isApiConfigured = isValidCurseForgeApiKey(apiKey);
   
   // Check if multi-source is available
   if (!isMultiSourceEnabled()) {
