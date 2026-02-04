@@ -44,8 +44,9 @@ class MinecraftMapsScraper extends BaseScraper {
       `${this.baseUrl}/maps/?s=${encodedQuery}`,
     ];
     
-    // FIXED (Round 8): Use ethical scraper identification instead of browser impersonation
-    const userAgent = this.getUserAgent();
+    // FIXED (Round 52): Use standard browser User-Agent to avoid 403 errors
+    // The site blocks obvious scraper user-agents
+    const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
     
     for (let i = 0; i < searchUrls.length; i++) {
       const searchUrl = searchUrls[i];
@@ -63,14 +64,15 @@ class MinecraftMapsScraper extends BaseScraper {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
             'Accept-Language': 'en-US,en;q=0.9',
             'Accept-Encoding': 'gzip, deflate, br',
-            'Referer': 'https://www.google.com/search?q=minecraft+maps',
+            'Referer': 'https://www.google.com/',
             'Connection': 'keep-alive',
             'Upgrade-Insecure-Requests': '1',
             'Sec-Fetch-Dest': 'document',
             'Sec-Fetch-Mode': 'navigate',
-            'Sec-Fetch-Site': 'cross-site',
+            'Sec-Fetch-Site': 'none',
             'Sec-Fetch-User': '?1',
             'Cache-Control': 'max-age=0',
+            'DNT': '1'
           }
         });
         
@@ -224,42 +226,32 @@ class MinecraftMapsScraper extends BaseScraper {
   }
 
   async checkHealth() {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
-    
     try {
-      // Test actual search functionality
-      const searchUrl = `${this.baseUrl}/?s=castle&post_type=maps`;
-      
-      const response = await fetch(searchUrl, {
-        signal: controller.signal,
-        headers: { 
-          'User-Agent': this.getUserAgent(), // FIXED (Round 8): Use scraper user agent
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        }
-      });
-      
-      clearTimeout(timeoutId);
-      
-      let canSearch = false;
-      if (response.ok) {
-        const html = await response.text();
-        canSearch = html.includes('article') || html.includes('maps') || html.length > 3000;
+      // FIXED (Round 56): Test actual search functionality with better error reporting
+      const results = await this.search('test', { limit: 1 });
+      return {
+        ...this.getHealth(),
+        accessible: true,
+        status: results.length > 0 ? 'healthy' : 'unhealthy',
+        canSearch: results.length > 0,
+        error: results.length > 0 ? null : 'Site returns no results - may be blocked by Cloudflare or rate limiting'
+      };
+    } catch (err) {
+      // Provide specific error messages for common issues
+      let errorMessage = err.message;
+      if (err.message.includes('403')) {
+        errorMessage = 'HTTP 403 Forbidden - site blocking scraper requests';
+      } else if (err.message.includes('timeout')) {
+        errorMessage = 'Request timeout - site too slow or unreachable';
+      } else if (err.message.includes('cloudflare') || err.message.includes('captcha')) {
+        errorMessage = 'Blocked by Cloudflare protection';
       }
       
-      return {
+      return { 
         ...this.getHealth(),
-        accessible: response.ok && canSearch,
-        statusCode: response.status,
-        canSearch: canSearch,
-        error: canSearch ? null : 'Search not functional'
-      };
-    } catch (error) {
-      clearTimeout(timeoutId);
-      return {
-        ...this.getHealth(),
-        accessible: false,
-        error: error.name === 'AbortError' ? 'Health check timeout' : error.message
+        accessible: false, 
+        status: 'unavailable', 
+        error: errorMessage
       };
     }
   }

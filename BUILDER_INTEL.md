@@ -1,87 +1,124 @@
-# BUILDER INTEL - Round 45
+# BUILDER INTEL - Round 54
 
-**Memory Finding:** "Fix API key configuration" - prior session found same demo mode issue
-**Current Task:** Fix 5 critical defects causing demo mode operation
-**Direct Application:** Check Railway environment variables and API initialization code
+**Updated:** 2026-02-03T22:10:00-05:00
 
----
+## CRITICAL FINDING (from BUILDER Round 53)
 
-## PRIORITY 1: Fix Demo Mode (Defects 1, 2, 3, 5)
+**Problem:** Planet Minecraft scraper using Puppeteer locally, failing with "frame was detached" error. HTTP fallback not triggering.
 
-**Root Cause:** apiConfigured: false means CurseForge API initialization failed
+**Root Cause:** Error handling in planetminecraft-puppeteer.js only triggers fallback on errors containing 'browser', 'Target', 'executable', 'Chrome', or 'Chromium'. "Frame was detached" errors don't match these patterns.
 
-**Check These:**
-1. Railway environment variable: `CURSEFORGE_API_KEY`
-   - Run: `railway variables` or check Railway dashboard
-   - Verify key is set and not empty
-   
-2. API initialization code in `src/services/curseforge.js` or similar:
-   - Check if environment variable is read correctly
-   - Look for `process.env.CURSEFORGE_API_KEY`
-   - Verify API client initialization doesn't silently fail
-   
-3. Health check endpoint code:
-   - Find where `apiConfigured` flag is set
-   - Verify it actually tests API connectivity (not just env var existence)
-
-**Expected Fix:**
-- If key missing: Set it in Railway
-- If key present but not loaded: Fix environment variable loading
-- If loaded but API fails: Check API key validity with CurseForge
+**Location:** `/Users/stevenai/clawd/projects/minecraft-map-scraper/scraper/scrapers/planetminecraft-puppeteer.js` (line ~180-210)
 
 ---
 
-## PRIORITY 2: Fix Multi-Source Scraping (Defect 4)
+## MEMORY-BASED SOLUTION
 
-**Evidence:** ALL scrapers return 0 results
+**Prior Builder Success (from memory):**
+- Created `planetminecraft_simple.js` - HTTP-based scraper without Playwright
+- Updated aggregator to gracefully handle missing Playwright
+- Falls back to simple scraper automatically
 
-**Check These:**
-1. Scraper circuit breakers might be open after errors
-2. Scraper initialization might be failing silently
-3. Network access from Railway might be restricted
-
-**Files to Check:**
-- `src/services/aggregator.js` - scraper loading
-- Individual scraper files (modrinth.js, planetminecraft.js, etc.)
-- Circuit breaker state/reset logic
-
-**Expected Fix:**
-- Reset circuit breakers or increase timeout
-- Add error logging to see why scrapers fail
-- Verify scrapers can make HTTP requests from Railway
+**Your Task:**
+1. **Check if HTTP-only scraper exists** (might be named `planetminecraft_simple.js` or similar)
+2. **If it exists:** Update `planetminecraft.js` to export the HTTP version
+3. **If it doesn't exist:** Fix the fallback logic to include "frame" / "detached" errors
 
 ---
 
-## VERIFICATION STEPS
+## FIX OPTION 1: Update Fallback Logic (Fastest)
 
-After fixes:
-1. Deploy to Railway
-2. Test health check: `curl https://web-production-9af19.up.railway.app/api/health`
-   - MUST show: `"apiConfigured": true`
-   - MUST show: `"demoMode": false`
-   
-3. Test search: `curl "https://web-production-9af19.up.railway.app/api/search?q=castle"`
-   - MUST return real CurseForge IDs (6-7 digits, not 1001-1003)
-   - MUST show real image URLs (not via.placeholder.com)
-   - MUST show results from multiple sources (not just CurseForge)
-   
-4. Test download: `curl "https://web-production-9af19.up.railway.app/api/download/<real-id>"`
-   - MUST return HTTP 200 or redirect
-   - MUST NOT return HTTP 500 "API error: 403"
+**File:** `/Users/stevenai/clawd/projects/minecraft-map-scraper/scraper/scrapers/planetminecraft-puppeteer.js`
 
----
-
-## RED_TEAM FOUND THESE EXACT ERRORS
-
-```
-apiConfigured: false
-demoMode: true
-Mock IDs: 1001, 1002, 1003
-Placeholder images: via.placeholder.com
-All scrapers: 0 results
-Download: HTTP 500 "API error: 403"
+**Find this code (line ~180-210):**
+```javascript
+if (
+  err.message.includes('browser') ||
+  err.message.includes('Target') ||
+  err.message.includes('executable') ||
+  err.message.includes('Chrome') ||
+  err.message.includes('Chromium')
+) {
+  // Fallback to HTTP mode
 ```
 
-**Your mission:** Make ALL of these indicators green on live deployment.
+**Change to:**
+```javascript
+if (
+  err.message.includes('browser') ||
+  err.message.includes('Target') ||
+  err.message.includes('executable') ||
+  err.message.includes('Chrome') ||
+  err.message.includes('Chromium') ||
+  err.message.includes('frame') ||           // NEW: Catch frame detachment
+  err.message.includes('detached') ||        // NEW: Catch frame detachment
+  err.message.includes('Navigation failed')  // NEW: Catch navigation failures
+) {
+  // Fallback to HTTP mode
+```
 
-**Timestamp:** 2026-02-03T19:55:00Z
+---
+
+## FIX OPTION 2: HTTP-Only Scraper (More Reliable)
+
+**If Option 1 doesn't work, create HTTP-only version:**
+
+1. **Check for existing HTTP scraper:**
+   ```bash
+   ls scraper/scrapers/planetminecraft*.js
+   ```
+
+2. **If found, update planetminecraft.js:**
+   ```javascript
+   const PlanetMinecraftHTTPScraper = require('./planetminecraft_simple');
+   module.exports = PlanetMinecraftHTTPScraper;
+   ```
+
+3. **If not found, extract HTTP fallback code from planetminecraft-puppeteer.js**
+   - The file already has `searchWithHTTPFallback` method
+   - Create standalone HTTP-only scraper that uses this method
+
+---
+
+## Testing Process
+
+**Local test:**
+```bash
+cd /Users/stevenai/clawd/projects/minecraft-map-scraper
+node -e "
+const PlanetMinecraft = require('./scraper/scrapers/planetminecraft');
+const scraper = new PlanetMinecraft({ requestTimeout: 15000 });
+(async () => {
+  const results = await scraper.search('castle', { limit: 3 });
+  console.log('Results:', results.length);
+  if (results.length > 0) console.log('First:', results[0].title);
+  await scraper.closeBrowser();
+})();
+"
+```
+
+**Expected:** Returns 3+ results, no "frame was detached" error
+
+**Deploy:**
+```bash
+git add .
+git commit -m "Fix Planet Minecraft Puppeteer fallback logic"
+git push origin main
+```
+
+**Wait ~2 min for Railway auto-deploy, then test:**
+```bash
+curl "https://web-production-631b7.up.railway.app/api/search?q=castle&limit=4"
+```
+
+**Success criteria:** Returns results from Planet Minecraft (not just CurseForge)
+
+---
+
+## Priority
+
+**Highest:** Fix Option 1 (add fallback error patterns) - fastest, least code change
+
+**If Option 1 fails:** Try Option 2 (HTTP-only scraper)
+
+**Timestamp:** 2026-02-03T22:10:00-05:00

@@ -25,8 +25,8 @@ class MapAggregator {
     this.maxResultsPerSource = options.maxResultsPerSource || 25; // FIXED: Balance between speed and results
     
     // Circuit breaker settings
-    this.failureThreshold = 3;
-    this.disableTimeMs = 5 * 60 * 1000; // 5 minutes
+    this.failureThreshold = 5;  // FIXED (Round 52): Increased from 3 to 5 to be more lenient
+    this.disableTimeMs = 2 * 60 * 1000; // FIXED (Round 52): Reduced from 5 min to 2 min
     this.failures = new Map(); // Track failures per source
     
     // Download URL cache to avoid repeated fetches
@@ -124,13 +124,20 @@ class MapAggregator {
       downloadUrlsResolved: 0
     };
 
+    // FIXED (Round 52): Log current circuit breaker status before search
+    console.log(`[Aggregator] Circuit breaker status:`, 
+      this.scrapers.map(s => `${s.name}: ${this.isCircuitOpen(s.name) ? 'OPEN' : 'closed'}`).join(', ')
+    );
+
     // Create search promises for all enabled scrapers with individual timeouts
     const searchPromises = [];
     const scraperNames = [];
 
     // Add scraper searches (with circuit breaker check)
     for (const scraper of this.scrapers) {
-      if (scraper.enabled && !this.isCircuitOpen(scraper.name)) {
+      const circuitOpen = this.isCircuitOpen(scraper.name);
+      if (scraper.enabled && !circuitOpen) {
+        console.log(`[Aggregator] Starting search for ${scraper.name}...`);
         searchPromises.push(
           this.searchWithTimeout(
             scraper.name,
@@ -142,12 +149,19 @@ class MapAggregator {
           )
         );
         scraperNames.push(scraper.name);
-      } else if (this.isCircuitOpen(scraper.name)) {
+      } else if (circuitOpen) {
         console.log(`[Aggregator] ${scraper.name} disabled by circuit breaker`);
         results.sources[scraper.name] = {
           count: 0,
           success: false,
           note: 'Circuit breaker open'
+        };
+      } else if (!scraper.enabled) {
+        console.log(`[Aggregator] ${scraper.name} is disabled`);
+        results.sources[scraper.name] = {
+          count: 0,
+          success: false,
+          note: 'Scraper disabled'
         };
       }
     }
@@ -194,12 +208,18 @@ class MapAggregator {
         };
         allMaps.push(...maps);
         
+        // FIXED (Round 52): Only record success if we got results
+        // Empty results don't count as failure - the scraper worked but query had no matches
         if (hasResults) {
+          console.log(`[Aggregator] ${sourceName} returned ${maps.length} results - recording success`);
           this.recordSuccess(sourceName);
         } else {
-          this.recordFailure(sourceName);
+          console.log(`[Aggregator] ${sourceName} returned 0 results (query may have no matches)`);
+          // Don't record failure for empty results - the scraper worked correctly
         }
       } else {
+        // Only record failure for actual errors, not empty results
+        console.warn(`[Aggregator] ${sourceName} failed: ${result.reason?.message || 'Unknown error'}`);
         results.sources[sourceName] = {
           count: 0,
           success: false,
@@ -503,15 +523,35 @@ class MapAggregator {
     
     if (failure.count >= this.failureThreshold) {
       const now = Date.now();
-      if (now - failure.lastFailureTime < this.disableTimeMs) {
+      const timeSinceFailure = now - failure.lastFailureTime;
+      if (timeSinceFailure < this.disableTimeMs) {
+        const remainingMs = this.disableTimeMs - timeSinceFailure;
+        console.log(`[Circuit Breaker] ${sourceName} disabled for ${Math.ceil(remainingMs / 1000)}s (${failure.count} failures)`);
         return true;
       } else {
+        // FIXED (Round 52): Auto-reset circuit breaker after disable time expires
+        console.log(`[Circuit Breaker] ${sourceName} auto-reset after ${this.disableTimeMs / 1000}s cooldown`);
         this.failures.delete(sourceName);
         return false;
       }
     }
     
     return false;
+  }
+
+  /**
+   * FIXED (Round 52): Manual reset of circuit breaker for a source
+   * Call this to forcibly re-enable a source
+   */
+  resetCircuitBreaker(sourceName) {
+    if (sourceName) {
+      this.failures.delete(sourceName);
+      console.log(`[Circuit Breaker] Manually reset for ${sourceName}`);
+    } else {
+      // Reset all
+      this.failures.clear();
+      console.log('[Circuit Breaker] All circuit breakers reset');
+    }
   }
 
   recordFailure(sourceName) {

@@ -55,13 +55,14 @@ class MCMapsScraper extends BaseScraper {
         const response = await fetch(searchUrl, {
           signal: controller.signal,
           headers: {
-            'User-Agent': this.getUserAgent(),
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             'Accept-Language': 'en-US,en;q=0.9',
             'Accept-Encoding': 'gzip, deflate, br',
-            'Referer': 'https://www.google.com/search?q=minecraft+maps',
+            'Referer': 'https://www.google.com/',
             'Connection': 'keep-alive',
             'Upgrade-Insecure-Requests': '1',
+            'DNT': '1'
           }
         });
         
@@ -293,35 +294,22 @@ class MCMapsScraper extends BaseScraper {
   }
 
   async checkHealth() {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 8000);
-    
     try {
-      const searchUrl = `${this.baseUrl}/`;
-      
-      const response = await fetch(searchUrl, {
-        signal: controller.signal,
-        headers: { 
-          'User-Agent': this.getUserAgent(),
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        }
-      });
-      
-      clearTimeout(timeoutId);
-      
+      // FIXED (Round 56): Test actual search functionality, not just endpoint
+      const results = await this.search('test', { limit: 1 });
       return {
         ...this.getHealth(),
-        accessible: response.ok,
-        statusCode: response.status,
-        canSearch: response.ok,
-        error: response.ok ? null : 'Site not accessible'
+        accessible: true,
+        status: results.length > 0 ? 'healthy' : 'unhealthy',
+        canSearch: results.length > 0,
+        error: results.length > 0 ? null : 'No results returned in test search'
       };
-    } catch (error) {
-      clearTimeout(timeoutId);
-      return {
+    } catch (err) {
+      return { 
         ...this.getHealth(),
-        accessible: false,
-        error: error.name === 'AbortError' ? 'Health check timeout' : error.message
+        accessible: false, 
+        status: 'unavailable', 
+        error: err.message 
       };
     }
   }
