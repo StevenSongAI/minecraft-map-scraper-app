@@ -2131,7 +2131,8 @@ app.get('/api/sources/health', async (req, res) => {
             name: scraper.source || scraper.name,
             enabled: scraper.enabled,
             accessible: scraper.accessible,
-            status: scraper.accessible ? 'healthy' : 'unavailable',
+            // FIXED (Round 56): Use the actual status from scraper health check, not just accessible boolean
+            status: scraper.status || (scraper.accessible ? 'healthy' : 'unavailable'),
             error: scraper.error || null,
             circuitBreaker: scraper.circuitBreaker?.state || 'unknown'
           };
