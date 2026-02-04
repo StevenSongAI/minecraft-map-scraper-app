@@ -1291,8 +1291,8 @@ app.get('/api/download', async (req, res) => {
         downloadUrl = `https://www.curseforge.com/api/v1/mods/${mapId}/files/${latestFile.id}/download`;
       }
       
-      // Redirect to download URL (302)
-      return res.redirect(302, downloadUrl);
+      // Stream the download instead of redirecting
+      await streamDownload(res, downloadUrl, null);
       
     } catch (error) {
       console.error('[Download] Error:', error.message);
@@ -1440,8 +1440,8 @@ app.get('/api/download/:modId', async (req, res) => {
       downloadUrl = `https://www.curseforge.com/api/v1/mods/${modId}/files/${latestFile.id}/download`;
     }
     
-    // FIXED: Redirect to download URL instead of returning JSON
-    return res.redirect(302, downloadUrl);
+    // Stream the download instead of redirecting
+    await streamDownload(res, downloadUrl, null);
   } catch (error) {
     console.error('Download error:', error);
     res.status(500).json({ 
@@ -1471,7 +1471,8 @@ app.get('/api/download/:source/:id', async (req, res) => {
       case 'modrinth':
         const modrinthResult = await fetchModrinthDownloadUrl(id);
         if (modrinthResult && modrinthResult.isValid) {
-          return res.redirect(302, modrinthResult.url);
+          await streamDownload(res, modrinthResult.url, null);
+          return;
         }
         return res.status(404).json({
           error: 'DOWNLOAD_NOT_FOUND',
