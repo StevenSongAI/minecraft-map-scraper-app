@@ -187,11 +187,15 @@ class PlanetMinecraftPuppeteerScraper extends BaseScraper {
               console.warn(`[Planet Minecraft Puppeteer] Search error: ${error.message}`);
               
               // Mark puppeteer as failed for this instance
+              // FIXED (Round 53): Added 'detached', 'frame', 'Protocol' to trigger fallback
               if (error.message.includes('browser') || 
                   error.message.includes('Target') ||
                   error.message.includes('executable') ||
                   error.message.includes('Chrome') ||
-                  error.message.includes('Chromium')) {
+                  error.message.includes('Chromium') ||
+                  error.message.includes('detached') ||
+                  error.message.includes('frame') ||
+                  error.message.includes('Protocol error')) {
                 console.log('[Planet Minecraft] Puppeteer failed, switching to HTTP fallback mode');
                 this.puppeteerFailed = true;
                 this.useHttpFallback = true;
