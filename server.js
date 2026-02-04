@@ -154,7 +154,7 @@ const WORLDS_CLASS_ID = 17; // Minecraft Worlds/Maps category
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static('.'));
+app.use(express.static('dashboard')); // FIXED: Serve dashboard directory instead of root (download fix)
 
 // STRICT keyword mappings - only closely related terms
 // Removed overly broad associations that cause false positives
