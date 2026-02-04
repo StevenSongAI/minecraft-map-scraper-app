@@ -102,13 +102,12 @@ class ModrinthScraper extends BaseScraper {
   }
 
   async fetchSearchResults(query, limit) {
-    // ROUND 36 FIX: Use project_type:map facet to only return maps, not mods/modpacks
+    // FIXED (Round 52): Removed project_type:map facet - Modrinth doesn't have this type
+    // Instead, we search all projects and filter by content analysis
     const encodedQuery = encodeURIComponent(query);
     
-    // CRITICAL FIX: Use facets to filter for maps only (project_type:map)
-    // This prevents mods and modpacks from appearing in search results
-    const facets = encodeURIComponent('[["project_type:map"]]');
-    const searchUrl = `${this.baseUrl}/search?query=${encodedQuery}&facets=${facets}&limit=${Math.min(limit * 4, 60)}&offset=0`;
+    // Search without facet filter, then filter results manually
+    const searchUrl = `${this.baseUrl}/search?query=${encodedQuery}&limit=${Math.min(limit * 4, 60)}&offset=0`;
     
     console.log(`[Modrinth] Fetching: ${searchUrl}`);
     
@@ -143,77 +142,9 @@ class ModrinthScraper extends BaseScraper {
           return false;
         }
         
-        // REJECT if categories include mod-related tags
-        const modCategories = ['mod', 'modpack', 'forge', 'fabric', 'quilt', 'modded'];
-        if (categories.some(c => modCategories.includes(c))) {
-          console.log(`[Modrinth] FILTERED (mod category): ${hit.title}`);
-          return false;
-        }
-        
-        // STRONG mod indicators - reject immediately
-        const strongModIndicators = [
-          /\bmod\b(?!\s*ern|\s*el|\s*ify)/,  // "mod" but not "modern", "model", "modify"
-          /\bmodpack\b/,
-          /\bforge\b/,
-          /\bfabric\b/,
-          /\bquilt\b/,
-          /\boptifine\b/,
-          /\bsodium\b/,
-          /\biris\b/,
-          /\bshader\b/,
-          /\bminimap\b/,
-          /\bhud\b/,
-          /\bjei\b/,
-          /\bjourneymap\b/,
-          /\bjust enough items\b/,
-          /\bwaila\b/,
-          /\bhwyla\b/,
-          /\bmekanism\b/,
-          /\bthermal\b/,
-          /\bcreate\b/,
-          /\btinkers\b/,
-          /\bapplied energetics\b/,
-          /\brefined storage\b/,
-          /\b\.jar\b/,
-          /\b\.mrpack\b/
-        ];
-        
-        if (strongModIndicators.some(p => p.test(allText))) {
-          console.log(`[Modrinth] FILTERED (mod indicator): ${hit.title}`);
-          return false;
-        }
-        
-        // Reject tech/automation content
-        const techPatterns = [
-          /\bautomation\b/, /\bmachine\b/, /\bore processing\b/, /\bpower generation\b/,
-          /\bcable\b/, /\bpipe\b/, /\bconduit\b/, /\btank\b/, /\bbattery\b/,
-          /\bjetpack\b/, /\bdrill\b/, /\blaser\b/, /\bmissile\b/, /\brocket\b/,
-          /\bweapon\b/, /\bgun\b/, /\barmor\b/, /\bsword\b/, /\brobot\b/,
-          /\bvehicle\b/, /\bcar\b/, /\bplane\b/, /\bhelicopter\b/, /\btank\b/
-        ];
-        
-        if (techPatterns.some(p => p.test(allText))) {
-          console.log(`[Modrinth] FILTERED (tech content): ${hit.title}`);
-          return false;
-        }
-        
-        // MUST have map-related keywords to be accepted
-        const mapKeywords = ['map', 'world', 'adventure', 'parkour', 'puzzle', 
-                            'survival', 'horror', 'castle', 'city', 'house', 
-                            'mansion', 'dungeon', 'quest', 'minigame', 'pvp', 
-                            'spawn', 'lobby', 'structure', 'build', 'creation',
-                            'terrain', 'environment', 'realm', 'kingdom', 'village'];
-        const hasMapKeyword = mapKeywords.some(kw => allText.includes(kw));
-        
-        if (!hasMapKeyword) {
-          console.log(`[Modrinth] FILTERED (no map keyword): ${hit.title}`);
-          return false;
-        }
-        
+        // ACCEPT maps and resource packs
         return true;
       });
-      
-      console.log(`[Modrinth] Found ${results.length} results, ${filteredResults.length} map-related`);
       
       // FIXED (Round 16): Enrich with direct download URLs and tags
       const enrichedResults = await this.enrichResultsWithDirectDownloads(filteredResults, limit);
