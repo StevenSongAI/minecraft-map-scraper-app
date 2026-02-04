@@ -1103,6 +1103,69 @@ async function fetchModrinthDownloadUrl(projectId) {
 }
 
 /**
+ * Helper function to stream a download from a URL
+ */
+async function streamDownload(res, downloadUrl, filename) {
+  try {
+    console.log(`[Download] Streaming file from: ${downloadUrl}`);
+    
+    const response = await fetch(downloadUrl, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+        'Accept': 'application/zip,application/x-zip-compressed,application/octet-stream,*/*',
+        'Referer': 'https://www.curseforge.com/'
+      },
+      redirect: 'follow'
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    // Determine filename
+    let downloadFilename = filename;
+    if (!downloadFilename) {
+      const contentDisposition = response.headers.get('content-disposition');
+      if (contentDisposition) {
+        const match = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (match) downloadFilename = match[1].replace(/['"]/g, '');
+      }
+      if (!downloadFilename) {
+        downloadFilename = downloadUrl.split('/').pop() || 'minecraft-map.zip';
+        downloadFilename = downloadFilename.replace(/[^a-zA-Z0-9._-]/g, '_');
+      }
+    }
+
+    if (!downloadFilename.match(/\.(zip|rar|mcworld)$/i)) {
+      downloadFilename += '.zip';
+    }
+
+    const contentType = response.headers.get('content-type') || 'application/zip';
+    res.setHeader('Content-Type', contentType);
+    res.setHeader('Content-Disposition', `attachment; filename="${downloadFilename}"`);
+    
+    const contentLength = response.headers.get('content-length');
+    if (contentLength) {
+      res.setHeader('Content-Length', contentLength);
+    }
+
+    // Stream response
+    const reader = response.body.getReader();
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      res.write(Buffer.from(value));
+    }
+    res.end();
+    
+    console.log(`[Download] Stream complete: ${downloadFilename}`);
+  } catch (error) {
+    console.error(`[Download] Stream error:`, error.message);
+    throw error;
+  }
+}
+
+/**
  * GET /api/download
  * Download endpoint - supports ?id=X query parameter (QUERY PARAM VERSION)
  * ROUND 45: Fixed API key validation for downloads
@@ -1121,9 +1184,10 @@ app.get('/api/download', async (req, res) => {
       });
     }
     
-    // If URL is provided directly, redirect to it
+    // If URL is provided directly, stream it
     if (url && !source) {
-      return res.redirect(url);
+      await streamDownload(res, url, null);
+      return;
     }
     
     // ROUND 45: Only CurseForge and Modrinth supported
@@ -1158,7 +1222,8 @@ app.get('/api/download', async (req, res) => {
         return res.redirect(302, `https://modrinth.com/project/${id}/versions`);
       }
       
-      return res.redirect(302, result.url);
+      await streamDownload(res, result.url, null);
+      return;
     }
     
     // CurseForge numeric ID handling (default)
@@ -1302,7 +1367,8 @@ app.get('/api/download/:modId', async (req, res) => {
       return res.redirect(302, `https://modrinth.com/project/${modIdParam}/versions`);
     }
     
-    return res.redirect(302, result.url);
+    await streamDownload(res, result.url, null);
+    return;
   }
   
   // CurseForge numeric ID
