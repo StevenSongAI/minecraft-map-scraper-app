@@ -395,13 +395,17 @@ function addResultsMessage(results) {
 
 // Render a single map card
 function renderMapCard(map) {
+    // Handle title field - could be map.title or map.name depending on API source
+    const mapTitle = map.title || map.name || 'Unnamed Map';
+    
     const thumbnail = map.thumbnail 
-        ? `<img src="${escapeHtml(map.thumbnail)}" alt="${escapeHtml(map.name)}" class="map-thumbnail" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22200%22><rect fill=%22%23333%22 width=%22300%22 height=%22200%22/><text fill=%22%23666%22 x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22>🗺️</text></svg>'">`
+        ? `<img src="${escapeHtml(map.thumbnail)}" alt="${escapeHtml(mapTitle)}" class="map-thumbnail" loading="lazy" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22200%22><rect fill=%22%23333%22 width=%22300%22 height=%22200%22/><text fill=%22%23666%22 x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22>🗺️</text></svg>'">`
         : `<div class="map-thumbnail-placeholder">🗺️</div>`;
     
-    const authorName = map.author?.name || 'Unknown';
-    const authorUrl = map.author?.url || '#';
-    const downloads = formatNumber(map.downloadCount || 0);
+    // Handle author as either object or string
+    const authorName = (typeof map.author === 'object') ? (map.author?.name || 'Unknown') : (map.author || 'Unknown');
+    const authorUrl = (typeof map.author === 'object') ? (map.author?.url || '#') : '#';
+    const downloads = formatNumber(map.downloadCount || map.downloads || 0);
     const description = map.summary || map.description || 'No description available.';
     
     // Limit description length
@@ -409,16 +413,21 @@ function renderMapCard(map) {
         ? description.substring(0, 150) + '...' 
         : description;
     
-    // Get up to 3 versions
-    const versions = (map.gameVersions || []).slice(0, 3);
+    // Get up to 3 versions - handle both gameVersions array and version string
+    let versions = [];
+    if (Array.isArray(map.gameVersions)) {
+        versions = map.gameVersions.slice(0, 3);
+    } else if (map.version) {
+        versions = [map.version];
+    }
     const versionsHtml = versions.length > 0 
-        ? `<div class="map-versions">${versions.map(v => `<span class="version-tag">${escapeHtml(v)}</span>`).join('')}</div>`
-        : '';
+        ? `<div class="map-versions">Minecraft: ${versions.map(v => `<span class="version-tag">${escapeHtml(v)}</span>`).join(', ')}</div>`
+        : '<div class="map-versions">Minecraft: <span class="version-tag">Unknown</span></div>';
     
     // Download URL - use our API for downloads
-    const viewUrl = map.slug 
+    const viewUrl = map.url || (map.slug 
         ? `https://www.curseforge.com/minecraft/worlds/${map.slug}`
-        : '#';
+        : '#');
     
     // Build download URL - use /api/download/:id endpoint
     const downloadApiUrl = `${API_BASE_URL}/api/download/${map.id}`;
@@ -431,7 +440,7 @@ function renderMapCard(map) {
         <div class="map-card" data-map-id="${map.id}">
             ${thumbnail}
             <div class="map-info">
-                <h3 class="map-title">${escapeHtml(map.title)} ${sourceBadge}</h3>
+                <h3 class="map-title">${escapeHtml(mapTitle)} ${sourceBadge}</h3>
                 <div class="map-author">
                     by <a href="${escapeHtml(authorUrl)}" target="_blank" rel="noopener">${escapeHtml(authorName)}</a>
                 </div>
@@ -450,7 +459,7 @@ function renderMapCard(map) {
                 <div class="map-actions">
                     <button class="btn btn-primary download-btn" 
                             data-download-url="${escapeHtml(downloadApiUrl)}" 
-                            data-filename="${escapeHtml((map.title || 'map').replace(/[^a-zA-Z0-9]/g, '_') + '.zip')}" 
+                            data-filename="${escapeHtml(mapTitle.replace(/[^a-zA-Z0-9]/g, '_') + '.zip')}" 
                             data-map-id="${map.id}">
                         Download
                     </button>
