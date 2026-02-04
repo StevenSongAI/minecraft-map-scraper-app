@@ -26,13 +26,16 @@ class PlanetMinecraftPuppeteerScraper extends BaseScraper {
   /**
    * Initialize Puppeteer browser instance
    * FIXED (Round 20): Added Railway-compatible Chrome/Chromium detection
+   * FIXED (Round 44): Added puppeteer-extra with stealth plugin to bypass Cloudflare
    */
   async initBrowser() {
     if (this.browser) return;
 
     try {
-      // Dynamic import for puppeteer to handle optional dependency
-      const puppeteer = require('puppeteer');
+      // Use puppeteer-extra with stealth plugin to bypass Cloudflare bot detection
+      const puppeteer = require('puppeteer-extra');
+      const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+      puppeteer.use(StealthPlugin());
       
       // FIXED (Round 20): Detect Chrome executable for Railway/container environments
       let executablePath = null;

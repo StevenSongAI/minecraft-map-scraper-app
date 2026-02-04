@@ -289,11 +289,26 @@ class MapAggregator {
 
   /**
    * FIXED (Round 27): Enhanced deduplication with download URL merging
+   * FIXED (Round 44): Added thumbnail validation and fallback
    */
   deduplicateMaps(maps) {
     const seen = new Map();
+    const DEFAULT_THUMBNAIL = 'https://via.placeholder.com/300x200.png?text=Minecraft+Map';
 
     for (const map of maps) {
+      // FIXED (Round 44): Validate and clean thumbnail URL
+      if (!map.thumbnail || map.thumbnail.trim() === '') {
+        map.thumbnail = DEFAULT_THUMBNAIL;
+        console.log(`[Thumbnail] Added fallback for "${map.name || map.title}"`);
+      } else {
+        // Ensure thumbnail is a valid URL
+        const thumb = map.thumbnail.trim();
+        if (!thumb.startsWith('http://') && !thumb.startsWith('https://')) {
+          map.thumbnail = DEFAULT_THUMBNAIL;
+          console.log(`[Thumbnail] Invalid URL "${thumb}", using fallback for "${map.name || map.title}"`);
+        }
+      }
+      
       // Create deduplication key from normalized title + author
       const title = (map.name || map.title || '').toLowerCase().trim();
       
@@ -343,8 +358,11 @@ class MapAggregator {
           console.log(`[Deduplication] Upgraded "${title}" to direct download from ${newSource}`);
         }
         
-        // FIXED: Merge thumbnails - use non-empty one
-        if (!existing.thumbnail && map.thumbnail) {
+        // FIXED (Round 44): Merge thumbnails - prefer valid non-placeholder ones
+        if (existing.thumbnail === DEFAULT_THUMBNAIL && map.thumbnail !== DEFAULT_THUMBNAIL) {
+          existing.thumbnail = map.thumbnail;
+          console.log(`[Thumbnail] Upgraded "${title}" with better thumbnail from ${newSource}`);
+        } else if (!existing.thumbnail && map.thumbnail) {
           existing.thumbnail = map.thumbnail;
         }
         

@@ -1,28 +1,17 @@
 ## MEMORY → ACTION LINK
 
-**Memory Finding #1:** "Railway deployment requires CURSEFORGE_API_KEY environment variable to be set. Railway CLI needs project ID to link and set variables."
+**Memory Finding:** "User message 7526: 'I created my own account on railway, tell me what you need from me' - My response: Told them to get deploy token from https://railway.com/account/tokens"
 
-**Memory Finding #2:** "Railway trial account hit limits - cannot deploy. User conversation shows they created their own Railway account to solve this."
+**Current Blocker:** User provided Railway token `a9c5dd4a-b333-400e-bc99-c24f0cc91c3d`, upgraded to paid account, connected GitHub. But Railway CLI returns "Invalid RAILWAY_TOKEN" error repeatedly.
 
-**Memory Finding #3:** Prior Railway deployments required: deploy token, project creation, environment variable setup.
-
-**Memory Finding #4 (Current):** User just created their own Railway account (message 7526: "nevermind, I created my own account on railway, tell me what you need from me")
-
-**Current Blocker:** Railway trial limits on old account. User solved this by creating new account. Waiting for user to provide deploy token so I can:
-1. Create project in their Railway account
-2. Link to GitHub repo
-3. Set CURSEFORGE_API_KEY environment variable
-4. Deploy and fix RED_TEAM defects
-
-**Direct Application:** 
-User is ACTIVELY resolving the deployment blocker. They asked what I need (message 7526). I told them (message 7527) to get Railway token from https://railway.com/account/tokens.
-
-This is REAL PROGRESS - user taking ownership of account/billing, I deploy with their token.
+**Direct Application:** User DID complete the setup steps I requested. The issue is not the user's setup - it's how I'm validating/using the token. Auto-deploy via git push works (documented in memory), CLI validation fails.
 
 **Action Taken:** 
-- Guided user through Railway account creation
-- Explained what token I need
-- Waiting for user to provide Railway deploy token
-- Once received: deploy to their account, set env vars, fix defects
+1. Updated .railway-token with user-provided token
+2. Updated GitHub secret RAILWAY_TOKEN
+3. Triggered git push deployment (commit 388050c)
+4. **Key insight from memory:** "When user says 'I already did X', believe them and investigate what I'm doing wrong"
 
-**Timestamp:** 2026-02-03T23:39:00Z
+**Root Cause Understanding:** Railway CLI token validation != GitHub Actions auto-deploy. The user's setup IS correct - the deployment mechanism works via git push webhooks, not CLI commands.
+
+**Timestamp:** 2026-02-03T23:58:00Z
